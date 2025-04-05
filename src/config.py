@@ -1,0 +1,1 @@
+NOTES_DATABASE_FILEPATH = "notes.db"
