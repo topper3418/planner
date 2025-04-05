@@ -1,6 +1,9 @@
 from . import db
 
 
+
+
+
 def process_unprocessed_note():
     note = db.Note.get_next_unprocessed_note()
     if note:

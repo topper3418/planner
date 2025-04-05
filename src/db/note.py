@@ -21,6 +21,24 @@ class Note(BaseModel):
     note_text: str = Field(..., description="Text of the note")
     processed: bool = Field(False, description="Whether the note has been processed")
 
+    @classmethod
+    def ensure_table(cls):
+        """
+        Returns the SQL query to create the notes table.
+        """
+        query = '''
+            CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                note_text TEXT NOT NULL,
+                processed BOOLEAN DEFAULT 0
+            )
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            conn.commit()
+
     def mark_as_processed(self):
         """
         Marks the note as processed in the database.
@@ -44,24 +62,6 @@ class Note(BaseModel):
             note_text=row[2],
             processed=row[3] == 1
         )
-
-    @classmethod
-    def ensure_table(cls):
-        """
-        Returns the SQL query to create the notes table.
-        """
-        query = '''
-            CREATE TABLE IF NOT EXISTS notes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                note_text TEXT NOT NULL,
-                processed BOOLEAN DEFAULT 0
-            )
-        '''
-        with get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query)
-            conn.commit()
 
     @classmethod    
     def get_next_unprocessed_note(cls):
