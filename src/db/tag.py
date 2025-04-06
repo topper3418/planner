@@ -31,7 +31,7 @@ class Tag(BaseModel):
             cursor.execute(query)
             conn.commit()
 
-    def update(self):
+    def save(self):
         """
         Updates the tag in the database.
         """
@@ -44,7 +44,7 @@ class Tag(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, name: str):
+    def create(cls, name, description=None, color=None):
         """
         Creates a new tag in the database.
         """
@@ -57,7 +57,15 @@ class Tag(BaseModel):
             conn.commit()
             if cursor.lastrowid is None:
                 raise ValueError("Failed to create tag")
-            return cls(id=cursor.lastrowid, name=name, description='', color='')
+            tag = cls(id=cursor.lastrowid, name=name, description='', color='')
+            # less common, likely just for the default inserts
+            if description or color:
+                if description:
+                    tag.description = description
+                if color:
+                    tag.color = color
+                tag.save()
+            return tag
 
     @classmethod
     def get_all(cls):

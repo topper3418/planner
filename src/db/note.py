@@ -1,7 +1,11 @@
 import sqlite3
+import logging
 from pydantic import BaseModel, Field
 
 from src.config import NOTES_DATABASE_FILEPATH
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_connection(connection_path: str = NOTES_DATABASE_FILEPATH):
@@ -43,6 +47,7 @@ class Note(BaseModel):
         """
         Marks the note as processed in the database.
         """
+        logger.debug(f"marking note {self.id} as processed...")
         query = '''
             UPDATE notes SET processed = 1 WHERE id = ?
         '''
@@ -98,7 +103,7 @@ class Note(BaseModel):
                 return None
 
     @classmethod
-    def create(cls, note_text):
+    def create(cls, note_text, timestamp=None, processed=False):
         """
         Inserts a new note into the database.
         """
@@ -109,7 +114,32 @@ class Note(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, (note_text,))
             conn.commit()
-            return cls.get_by_id(cursor.lastrowid)
+            if cursor.lastrowid is None:
+                raise Exception("Failed to create note.")
+            note = cls.get_by_id(cursor.lastrowid)
+            if note is None:
+                raise Exception("Failed to retrieve created note.")
+            # less common, likely only in tests
+            if timestamp or processed:
+                if timestamp:
+                    note.timestamp = timestamp
+                if processed:
+                    note.processed = processed
+                note.save()
+            return note
+
+    def save(self):
+        """
+        Updates the note in the database.
+        """
+        query = '''
+            UPDATE notes SET timestamp = ?, note_text = ?, processed = ? WHERE id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.timestamp, self.note_text, self.processed, self.id))
+            conn.commit()
+
 
     @classmethod
     def read(cls, before=None, after=None, search=None, limit=15):

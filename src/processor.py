@@ -1,4 +1,8 @@
+import logging
+
 from . import db
+
+logger = logging.getLogger(__name__) 
 
 
 
@@ -9,10 +13,11 @@ def process_unprocessed_note():
     if note:
         # Here you would process the note (e.g., send it to OpenAI)
         # For demonstration, we'll just print it
-        print(f"Processing note: {note.note_text}")
+        logger.info(f"Processing note: {note.note_text}")
         
         # After processing, mark the note as processed
         note.mark_as_processed()
+        return note
     else:
         print("No unprocessed notes found.")
 
