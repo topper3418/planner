@@ -5,3 +5,7 @@ function note() {
 function notes() {
     python main.py read "$@"
 }
+
+function test() {
+    pytest --log-cli-level=DEBUG 
+}
