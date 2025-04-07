@@ -26,19 +26,19 @@ def test_annotation(mock_sqlite3_connect):
     # SETUP: ensure tables are created
     db.ensure_tables()
 
-    # SETUP: insert the default tags
-    db.insert_default_tags()
-    # make sure the tags were inserted correctly
-    tags = db.Tag.get_all()
-    assert len(tags) > 0
-    assert all(tag.id is not None for tag in tags)
-    tag_names = [tag.name for tag in tags]
-    assert "Action" in tag_names
-    assert "Todo" in tag_names
-    assert "Curiosity" in tag_names
-    assert "Discovery" in tag_names
-    tag_descriptions = [tag.description for tag in tags]
-    assert not any(description is None for description in tag_descriptions)
+    # SETUP: insert the default topic
+    db.insert_default_topics()
+    # make sure the topic were inserted correctly
+    topics = db.Topic.get_all()
+    assert len(topics) > 0
+    assert all(topic.id is not None for topic in topics)
+    topic_names = [topic.name for topic in topics]
+    assert "Action" in topic_names
+    assert "Todo" in topic_names
+    assert "Curiosity" in topic_names
+    assert "Discovery" in topic_names
+    topic_descriptions = [topic.description for topic in topics]
+    assert not any(description is None for description in topic_descriptions)
 
     # create a test note to work with
     initial_note = db.Note.create(

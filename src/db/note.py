@@ -48,13 +48,9 @@ class Note(BaseModel):
         Marks the note as processed in the database.
         """
         logger.debug(f"marking note {self.id} as processed...")
-        query = '''
-            UPDATE notes SET processed = 1 WHERE id = ?
-        '''
-        with get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, (self.id,))
-            conn.commit()
+        self.processed = True
+        self.save()
+        logger.info(f"Note {self.id} marked as processed.")
 
     @classmethod
     def from_sqlite_row(cls, row):
