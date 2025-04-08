@@ -1,6 +1,6 @@
 import logging
 
-from . import db
+from .. import db
 
 logger = logging.getLogger(__name__) 
 
