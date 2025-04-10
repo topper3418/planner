@@ -1,6 +1,7 @@
 import logging
 
 from .. import db
+from .categorizor import categorize_note
 
 logger = logging.getLogger(__name__) 
 

@@ -7,6 +7,7 @@ from src import db, processor
 
 logger = logging.getLogger(__name__)
 
+
 @pytest.fixture(scope="session")
 def mock_sqlite3_connect():
     # Create an in-memory database with shared cache that persists across tests
@@ -22,30 +23,42 @@ def mock_sqlite3_connect():
     conn.close()
     logger.info('successfully closed in-memory database')
 
-def test_annotation(mock_sqlite3_connect):
+
+@pytest.fixture(scope="session")
+def setup_database(mock_sqlite3_connect):
     # SETUP: ensure tables are created
     db.ensure_tables()
 
     # SETUP: insert the default category
     db.insert_default_categories()
+
+
+def test_category_insertion(setup_database):
     # make sure the category were inserted correctly
     categories = db.Category.get_all()
     assert len(categories) > 0
-    assert all(topic.id is not None for topic in categories)
-    topic_names = [topic.name for topic in categories]
-    assert "Action" in topic_names
-    assert "Todo" in topic_names
-    assert "Curiosity" in topic_names
-    assert "Discovery" in topic_names
-    topic_descriptions = [topic.description for topic in categories]
-    assert not any(description is None for description in topic_descriptions)
+    assert all(category.id is not None for category in categories)
+    category_names = [category.name for category in categories]
+    assert "Action" in category_names
+    assert "Todo" in category_names
+    assert "Curiosity" in category_names
+    assert "Discovery" in category_names
+    category_descriptions = [category.description for category in categories]
+    assert not any(description is None for description in category_descriptions)
 
-    # create a test note to work with
+
+@pytest.fixture(scope="session")
+def initial_note(setup_database):
     initial_note = db.Note.create(
         "I just woke up",
         timestamp="2025-4-05 10:00:00",
         processed=False,
     )
+    return initial_note
+
+
+def test_create_note(initial_note):
+    # create a test note to work with
     assert initial_note is not None
     # make sure the note was inserted correctly
     assert initial_note.id is not None
@@ -53,12 +66,10 @@ def test_annotation(mock_sqlite3_connect):
     assert initial_note.timestamp == "2025-4-05 10:00:00"
     assert initial_note.processed == False
 
+
+def test_process_note(initial_note):
     # try to annotate the note
-    note = processor.process_unprocessed_note()
-    assert note is not None
-    assert note.processed == True
+    category = processor.categorize_note(initial_note)
+    assert category is not None
+    assert category.name == "Action"
     
-    # Here's where you can call your function to test
-    # For example: result = your_function(note_id)
-    # Then add assertions about the result
-    # YOUR_FUNCTION_CALL_HERE
