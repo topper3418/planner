@@ -102,7 +102,7 @@ default_categories = [
     Category(
         id=0, 
         name="Action", 
-        description="Documents an action taken by the user", 
+        description="Documents an action taken by the user. This pertains to an action that was taken, not a task to be completed. It also excludes something that seems like an action, but is actually an observation. This does include future tense actions that sounds like I am going to do it immediately. For example, I am -> action, I just -> action, I will -> not an action", 
         color="blue"
     ),
     Category(
@@ -119,8 +119,8 @@ default_categories = [
     ),
     Category(
         id=0,
-        name="Discovery",
-        description="Documents something the user has learned",
+        name="Observation",
+        description="Documents something the user has learned. This does not include things that the user has done, a user cannot observe their own action",
         color="green"
     )
 ]

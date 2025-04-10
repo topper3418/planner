@@ -42,7 +42,7 @@ def test_category_insertion(setup_database):
     assert "Action" in category_names
     assert "Todo" in category_names
     assert "Curiosity" in category_names
-    assert "Discovery" in category_names
+    assert "Observation" in category_names
     category_descriptions = [category.description for category in categories]
     assert not any(description is None for description in category_descriptions)
 
