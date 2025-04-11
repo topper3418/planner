@@ -57,7 +57,7 @@ class GrokChatClient(ChatClient):
             base_url="https://api.x.ai/v1"
         )
 
-    def chat(self, content: str, role: str = 'user', retries: int = 3) -> str:
+    def chat(self, content: str, role: str = 'user', retries: int = 3) -> dict:
         """
         Send a message to the chat client and return the response content.
         Retries on failure up to the specified number of retries.
@@ -78,9 +78,9 @@ class GrokChatClient(ChatClient):
                 self.history.append(message)
                 # Parse the response to ensure it’s valid JSON
                 try:
-                    json.loads(message.content.strip())
+                    response_obj = json.loads(message.content.strip())
                     logger.debug(f"Chat response: {message.content}")
-                    return message.content
+                    return response_obj
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse response: {message.content}")
                     retries -= 1

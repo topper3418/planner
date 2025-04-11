@@ -23,7 +23,7 @@ class Note(BaseModel):
     id: int = Field(..., description="Unique identifier for the note")
     timestamp: str = Field(..., description="Timestamp of the note")
     note_text: str = Field(..., description="Text of the note")
-    processed: bool = Field(False, description="Whether the note has been processed")
+    processed_note_text: str = Field("", description="The text of the note, as processed by the LLM")
 
     @classmethod
     def ensure_table(cls):
@@ -35,22 +35,13 @@ class Note(BaseModel):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 note_text TEXT NOT NULL,
-                processed BOOLEAN DEFAULT 0
+                processed_note_text TEXT DEFAULT 0
             )
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query)
             conn.commit()
-
-    def mark_as_processed(self):
-        """
-        Marks the note as processed in the database.
-        """
-        logger.debug(f"marking note {self.id} as processed...")
-        self.processed = True
-        self.save()
-        logger.info(f"Note {self.id} marked as processed.")
 
     @classmethod
     def from_sqlite_row(cls, row):
@@ -61,7 +52,7 @@ class Note(BaseModel):
             id=row[0],
             timestamp=row[1],
             note_text=row[2],
-            processed=row[3] == 1
+            processed_note_text=row[3]
         )
 
     @classmethod    
@@ -70,7 +61,7 @@ class Note(BaseModel):
         Returns the SQL query to fetch the next unprocessed note.
         """
         query = '''
-            SELECT * FROM notes WHERE processed = 0
+            SELECT * FROM notes WHERE processed_note_text = ""
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
@@ -80,6 +71,15 @@ class Note(BaseModel):
                 return cls.from_sqlite_row(unprocessed_note)
             else:
                 return None
+
+    def refresh(self):
+        copy = self.get_by_id(self.id)
+        if copy is None:
+            raise Exception("Failed to refresh note.")
+        self.timestamp = copy.timestamp
+        self.note_text = copy.note_text
+        self.processed_note_text = copy.processed_note_text
+        return self
 
     @classmethod
     def get_by_id(cls, note_id):
@@ -99,7 +99,7 @@ class Note(BaseModel):
                 return None
 
     @classmethod
-    def create(cls, note_text, timestamp=None, processed=False):
+    def create(cls, note_text, timestamp=None, processed_note_text=None):
         """
         Inserts a new note into the database.
         """
@@ -116,11 +116,11 @@ class Note(BaseModel):
             if note is None:
                 raise Exception("Failed to retrieve created note.")
             # less common, likely only in tests
-            if timestamp or processed:
+            if timestamp or processed_note_text:
                 if timestamp:
                     note.timestamp = timestamp
-                if processed:
-                    note.processed = processed
+                if processed_note_text:
+                    note.processed_note_text = processed_note_text
                 note.save()
             return note
 
@@ -129,11 +129,11 @@ class Note(BaseModel):
         Updates the note in the database.
         """
         query = '''
-            UPDATE notes SET timestamp = ?, note_text = ?, processed = ? WHERE id = ?
+            UPDATE notes SET timestamp = ?, note_text = ?, processed_note_text = ? WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.timestamp, self.note_text, self.processed, self.id))
+            cursor.execute(query, (self.timestamp, self.note_text, self.processed_note_text, self.id))
             conn.commit()
 
 
@@ -142,7 +142,7 @@ class Note(BaseModel):
         """
         Fetches notes from the database with optional filters.
         """
-        query = """SELECT id, timestamp, note_text, processed FROM notes WHERE 1=1"""
+        query = """SELECT id, timestamp, note_text, processed_note_text FROM notes WHERE 1=1"""
         params = []
 
         if before:

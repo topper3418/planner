@@ -26,7 +26,7 @@ def categorize_note(note: db.Note) -> db.Category:
     response = client.chat(note.model_dump_json(), role="user")
     
     # Parse the response to get the category name
-    category_name = json.loads(response.strip()).get('category')
+    category_name = response.get('category')
     logger.info(f"note {note.note_text} categorized as {category_name}")
     
     # Find the category in the database
@@ -34,5 +34,5 @@ def categorize_note(note: db.Note) -> db.Category:
     
     if not category:
         raise ValueError(f"Category '{category_name}' not found in database.")
-    
+
     return category
