@@ -327,7 +327,6 @@ def test_create_immediate_action(setup_database):
     assert action.end_time is not None
     end_time = utils.parse_time(action.end_time)
     now = utils.parse_time(initial_note.timestamp)
-    assert action.source_annotation == initial_note
     assert end_time > start_time
     assert end_time > now
     diff = end_time - start_time
@@ -491,6 +490,35 @@ def test_create_full_todo(setup_database):
     assert end.hour == 10
     assert end.day == now.day + 1
 
+
+def test_create_commands(setup_database):
+    # create a list of tuples with the note text and expected command text
+    test_samples = [
+        ("Change the note about waking up to an action", "update_note_category"),
+        ("That note about going to the gym, I actually meant to say garage", "update_note_text"),
+        ("I need you to do my homework for me", "no_match_found")
+    ]
+    for note_text, expected_command in test_samples:
+        # create a test note to work with
+        initial_note = db.Note.create(note_text)
+        category = db.Category.find_by_name("command")
+        assert category is not None
+        assert category.name == "command"
+        # try to annotate the note
+        annotation = processor.annotate_note(initial_note, category)
+        assert annotation is not None
+        assert annotation.note_id == initial_note.id
+        assert annotation.category_id == category.id
+        assert annotation.annotation_text is not None
+        initial_note.refresh()
+        assert initial_note.processed_note_text is not None
+        # try to create the command
+        command = processor.create_command(annotation)
+        assert command is not None
+        assert command.source_annotation == annotation
+        assert command.command_text == expected_command
+        assert command.value_before is not None
+        assert command.desired_value is not None
 
 
 

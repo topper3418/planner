@@ -5,6 +5,7 @@ from .categorizor import categorize_note
 from .annotator import annotate_note
 from .create_action import create_action
 from .create_todo import create_todo
+from .create_command import create_command
 
 logger = logging.getLogger(__name__) 
 
@@ -46,6 +47,12 @@ def process_unprocessed_note(note: db.Note):
             logger.error(f"Failed to create todo: {annotation.annotation_text}")
             note.processing_error = "Failed to create todo"
     # if it is a command, route the command
+    elif category.name == "command":
+        command = create_command(annotation)
+        if command is None:
+            logger.error(f"Failed to create command: {annotation.annotation_text}")
+            note.processing_error = "Failed to create command"
+        # build the routing out here. will probably need a "controller module"
     
     return note
 
