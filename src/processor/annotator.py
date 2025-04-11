@@ -7,15 +7,6 @@ from .. import db
 logger = logging.getLogger(__name__)
 
 
-sys_message_map = {
-    "action": "annotate_action",
-    "todo": "annotate_todo",
-    "curiosity": "annotate_curiosity",
-    "observation": "annotate_observation",
-    "command": "annotate_command",
-}
-
-
 def annotate_note(note: db.Note, category: db.Category) -> db.Annotation:
     """
     Annotate a note using the GrokChatClient.
@@ -24,11 +15,11 @@ def annotate_note(note: db.Note, category: db.Category) -> db.Annotation:
     client = GrokChatClient()
 
     # Load the system message
-    client.load_system_message(sys_message_map[category.name])
+    client.load_system_message("annotate_" + category.name)
     logger.debug(f"system message is:\n{client.system_message}")
     
     # Send the note text to the chat client for annotation
-    response = client.chat(note.note_text, role="user")
+    response = client.chat(note.model_dump_json(), role="user")
     
     # Parse the response to get the annotation text
     processed_note_text = response.get(category.name)

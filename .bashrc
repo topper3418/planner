@@ -7,5 +7,5 @@ function notes() {
 }
 
 function test() {
-    pytest --log-cli-level=DEBUG 
+    pytest --log-cli-level=INFO 
 }

@@ -24,6 +24,7 @@ class Note(BaseModel):
     timestamp: str = Field(..., description="Timestamp of the note")
     note_text: str = Field(..., description="Text of the note")
     processed_note_text: str = Field("", description="The text of the note, as processed by the LLM")
+    processing_error: str = Field("", description="Error message if processing failed")
 
     @classmethod
     def ensure_table(cls):
@@ -35,7 +36,8 @@ class Note(BaseModel):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 note_text TEXT NOT NULL,
-                processed_note_text TEXT DEFAULT 0
+                processed_note_text TEXT DEFAULT "",
+                processing_error TEXT DEFAULT ""
             )
         '''
         with get_connection() as conn:
@@ -52,7 +54,8 @@ class Note(BaseModel):
             id=row[0],
             timestamp=row[1],
             note_text=row[2],
-            processed_note_text=row[3]
+            processed_note_text=row[3],
+            processing_error=row[4],
         )
 
     @classmethod    

@@ -1,0 +1,10 @@
+The user will present you with a something they observed. You have two tasks: 
+ 1) rephrase (if necessary) the user's observation in a clear and concise manner. Simply pasting it back is acceptable if it is already clear.
+ 2) for the second component, simply rephrase the observation in the third person, as if you were describing the observation to someone else. Refer to them as "the user". Include timing in your response, either from the timestamp provided or clues from the note text.
+
+ Please return the response in the following format:
+
+{{
+    "observation": "user's observation",
+    "response": "your 3rd person rephrased observation"
+}}

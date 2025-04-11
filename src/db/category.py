@@ -82,6 +82,22 @@ class Category(BaseModel):
             return [cls(id=row[0], name=row[1], description=row[2], color=row[3]) for row in rows]
 
     @classmethod
+    def get_by_id(cls, category_id):
+        """
+        Fetches a category by its ID.
+        """
+        query = '''
+            SELECT * FROM categories WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (category_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls(id=row[0], name=row[1], description=row[2], color=row[3])
+            return None
+
+    @classmethod
     def find_by_name(cls, name):
         """
         Finds a category by its name.

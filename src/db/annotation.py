@@ -1,8 +1,11 @@
 import sqlite3
-from pydantic import BaseModel, Field
+from typing import ClassVar, Optional
+
+from pydantic import BaseModel, Field, PrivateAttr
 
 from src.config import NOTES_DATABASE_FILEPATH
-from src.db import category
+from .category import Category
+from .note import Note
 
 
 class Annotation(BaseModel):
@@ -15,6 +18,48 @@ class Annotation(BaseModel):
     note_id: int = Field(..., description="Unique identifier for the note")
     category_id: int = Field(..., description="Unique identifier for the category")
     annotation_text: str = Field(..., description="The note reframed around the category") 
+    
+    _note: Optional[Note] = PrivateAttr(default=None)
+    @property
+    def note(self) -> Note:
+        """
+        Returns the note associated with the annotation.
+        """
+        if self._note is None:
+            self._note = Note.get_by_id(self.note_id)
+            if self._note is None:
+                raise ValueError(f"Note with ID {self.note_id} not found")
+        return self._note
+    @note.setter
+    def note(self, note: Note):
+        """
+        Sets the note associated with the annotation.
+        """
+        if not isinstance(note, Note):
+            raise ValueError("note must be an instance of Note")
+        self._note = note
+        self.note_id = note.id
+
+    _category: Optional[Category] = PrivateAttr(default=None)
+    @property
+    def category(self) -> Category:
+        """
+        Returns the category associated with the annotation.
+        """
+        if self._category is None:
+            self._category = Category.get_by_id(self.category_id)
+            if self._category is None:
+                raise ValueError(f"Category with ID {self.category_id} not found")
+        return self._category
+    @category.setter
+    def category(self, category: Category):
+        """
+        Sets the category associated with the annotation.
+        """
+        if not isinstance(category, Category):
+            raise ValueError("category must be an instance of Category")
+        self._category = category
+        self.category_id = category.id
 
     @classmethod
     def ensure_table(cls):
