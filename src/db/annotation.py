@@ -95,7 +95,36 @@ class Annotation(BaseModel):
             conn.commit()
             if cursor.lastrowid is None:
                 raise ValueError("Failed to create annotation")
-            return cls(id=cursor.lastrowid, note_id=note_id, category_id=category_id, annotation_text=annotation_text)
+            return cls.get_by_id(cursor.lastrowid)
+
+    @classmethod
+    def from_sqlite_row(cls, row):
+        """
+        Converts a SQLite row to an Annotation instance.
+        """
+        return cls(
+            id=row[0],
+            note_id=row[1],
+            category_id=row[2],
+            annotation_text=row[3]
+        )
+
+    @ classmethod
+    def get_by_id(cls, annotation_id: int):
+        """
+        Retrieves an annotation by its ID.
+        """
+        query = '''
+            SELECT * FROM annotations WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (annotation_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls.from_sqlite_row(row)
+            else:
+                raise ValueError(f"Annotation with ID {annotation_id} not found")
 
     @classmethod
     def get_annotations_for_note(cls, note_id: int):

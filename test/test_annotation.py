@@ -257,7 +257,7 @@ def test_create_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_note == initial_note
+    assert action.source_annotation == annotation
     assert "gym" in action.action_text
     assert action.start_time == initial_note.timestamp
 
@@ -285,7 +285,7 @@ def test_create_recent_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_note == initial_note
+    assert action.source_annotation == annotation
     assert "kitchen" in action.action_text
     start_time = utils.parse_time(action.start_time)
     assert action.end_time is not None
@@ -320,14 +320,14 @@ def test_create_immediate_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_note == initial_note
+    assert action.source_annotation == annotation
     assert "garden" in action.action_text
     assert action.start_time == initial_note.timestamp
     start_time = utils.parse_time(action.start_time)
     assert action.end_time is not None
     end_time = utils.parse_time(action.end_time)
     now = utils.parse_time(initial_note.timestamp)
-    assert action.source_note == initial_note
+    assert action.source_annotation == initial_note
     assert end_time > start_time
     assert end_time > now
     diff = end_time - start_time
@@ -357,7 +357,7 @@ def test_create_retroactive_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_note == initial_note
+    assert action.source_annotation == annotation
     assert "kitchen" in action.action_text
     start_time = utils.parse_time(action.start_time)
     assert action.end_time is not None
@@ -392,7 +392,7 @@ def test_create_retroactive_action_2(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_note == initial_note
+    assert action.source_annotation == annotation
     assert "work" in action.action_text.lower()
     assert "out" in action.action_text.lower()
     start_time = utils.parse_time(action.start_time)
@@ -426,7 +426,7 @@ def test_create_basic_todo(setup_database):
     # try to create the todo
     todo = processor.create_todo(annotation)
     assert todo is not None
-    assert todo.source_note == initial_note
+    assert todo.source_annotation == annotation
 
 
 def test_create_open_todo(setup_database):
@@ -449,7 +449,7 @@ def test_create_open_todo(setup_database):
     # try to create the todo
     todo = processor.create_todo(annotation)
     assert todo is not None
-    assert todo.source_note == initial_note
+    assert todo.source_annotation == annotation
     assert todo.target_start_time is not None
     assert todo.target_end_time is None
     assert todo.todo_text is not None
@@ -479,7 +479,7 @@ def test_create_full_todo(setup_database):
     # try to create the todo
     todo = processor.create_todo(annotation)
     assert todo is not None
-    assert todo.source_note == initial_note
+    assert todo.source_annotation == annotation
     assert todo.target_start_time is not None
     assert todo.target_end_time is not None
     assert todo.todo_text is not None

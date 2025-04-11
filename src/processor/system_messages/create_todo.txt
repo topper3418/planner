@@ -2,6 +2,6 @@ The user will present you with an something they need todo. Your job is to make 
 
 {{
     "target_start_time": "%Y-%m-%d %H:%M:%S", # intended start time of the task. optional, so if not used just leave it out.
-    "tarjet_end_time": "%Y-%m-%d %H:%M:%S", # end time of the task. optional, so if not used just leave it out.
+    "target_end_time": "%Y-%m-%d %H:%M:%S", # end time of the task. optional, so if not used just leave it out.
     "todo_text": "user's action", # a concise bit of text to appear on a timeline
 }}

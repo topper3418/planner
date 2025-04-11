@@ -10,8 +10,6 @@ def create_action(annotation: db.Annotation):
     """
     Create an action from an annotation.
     """
-    if not annotation:
-        raise ValueError("annotation is None")
     if annotation.category.name != "action":
         raise ValueError(f"annotation category is not action: {annotation.category.name}")
     client = GrokChatClient()
@@ -33,13 +31,13 @@ def create_action(annotation: db.Annotation):
             action_text=action_text,
             start_time=start_time,
             end_time=response.get('end_time'),
-            source_note_id=annotation.note_id,
+            source_annotation_id=annotation.id,
         )
     except TypeError as e:
         raise ValueError(f"Invalid response format: {e}")
     logger.info("action created:\n" + str(action))
     if action:
-        action.source_note = annotation.note
+        action.source_annotation = annotation
     return action
 
 

@@ -1,11 +1,10 @@
-from datetime import datetime
 import sqlite3
 import logging
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
 from src.config import NOTES_DATABASE_FILEPATH
-from .note import Note
+from .annotation import Annotation
 
 
 logger = logging.getLogger(__name__)
@@ -27,25 +26,25 @@ class Action(BaseModel):
     start_time: str = Field(..., description="Start time of the action")
     end_time: Optional[str] = Field(None, description="End time of the action")
     action_text: str = Field(..., description="Text of the action")
-    source_note_id: int = Field(..., description="ID of the source note")
+    source_annotation_id: int = Field(..., description="ID of the source annotation")
 
-    _source_note: Optional[Note] = PrivateAttr(default=None)
+    _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
-    def source_note(self) -> Note:
+    def source_annotation(self) -> Annotation:
         """
         Returns the note associated with the action.
         """
-        if self._source_note is None:
-            self._source_note = Note.get_by_id(self.source_note_id)
-            if self._source_note is None:
-                logger.error(f"Note with ID {self.source_note_id} not found in the database.")
-                raise ValueError(f"Note with ID {self.source_note_id} not found in the database.")
-        return self._source_note
-    @source_note.setter
-    def source_note(self, note: Note):
-        if not note.id == self.source_note_id:
-            raise ValueError("note ID does not match source_note_id")
-        self._source_note = note
+        if self._source_annotation is None:
+            self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
+            if self._source_annotation is None:
+                logger.error(f"Annotation with ID {self.source_annotation_id} not found in the database.")
+                raise ValueError(f"Annotation with ID {self.source_annotation_id} not found in the database.")
+        return self._source_annotation
+    @source_annotation.setter
+    def source_annotation(self, note: Annotation):
+        if not note.id == self.source_annotation_id:
+            raise ValueError("note ID does not match source_annotation_id")
+        self._source_annotation = note
 
     @classmethod
     def ensure_table(cls):
@@ -58,7 +57,7 @@ class Action(BaseModel):
                 start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                 end_time DATETIME DEFAULT NULL,
                 action_text TEXT NOT NULL,
-                source_note_id INTEGER NOT NULL
+                source_annotation_id INTEGER NOT NULL
             )
         '''
         with get_connection() as conn:
@@ -76,7 +75,7 @@ class Action(BaseModel):
             start_time=row[1],
             end_time=row[2],
             action_text=row[3],
-            source_note_id=row[4],
+            source_annotation_id=row[4],
         )
 
     @classmethod
@@ -118,17 +117,17 @@ class Action(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, action_text: str, start_time: str, source_note_id: int, end_time: Optional[str] = None):
+    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None):
         """
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, end_time, action_text, source_note_id)
+            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id)
             VALUES (?, ?, ?, ?)
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (start_time, end_time, action_text, source_note_id))
+            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id))
             conn.commit()
             action_id = cursor.lastrowid
         if action_id is None:

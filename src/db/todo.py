@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
 from src.config import NOTES_DATABASE_FILEPATH
-from .note import Note
+from .annotation import Annotation
 
 
 logger = logging.getLogger(__name__)
@@ -26,25 +26,25 @@ class Todo(BaseModel):
     target_start_time: Optional[str] = Field(None, description="Target start time of the todo")
     target_end_time: Optional[str] = Field(None, description="Target end time of the todo")
     todo_text: str = Field(..., description="Text of the todo")
-    source_note_id: int = Field(..., description="ID of the source note")
+    source_annotation_id: int = Field(..., description="ID of the source annotation")
 
-    _source_note: Optional[Note] = PrivateAttr(default=None)
+    _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
-    def source_note(self) -> Note:
+    def source_annotation(self) -> Annotation:
         """
         Returns the note associated with the todo.
         """
-        if self._source_note is None:
-            self._source_note = Note.get_by_id(self.source_note_id)
-            if self._source_note is None:
-                logger.error(f"Note with ID {self.source_note_id} not found in the database.")
-                raise ValueError(f"Note with ID {self.source_note_id} not found in the database.")
-        return self._source_note
-    @source_note.setter
-    def source_note(self, note: Note):
-        if not note.id == self.source_note_id:
-            raise ValueError("note ID does not match source_note_id")
-        self._source_note = note
+        if self._source_annotation is None:
+            self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
+            if self._source_annotation is None:
+                logger.error(f"Annotation with ID {self.source_annotation_id} not found in the database.")
+                raise ValueError(f"Annotation with ID {self.source_annotation_id} not found in the database.")
+        return self._source_annotation
+    @source_annotation.setter
+    def source_annotation(self, annotation: Annotation):
+        if not annotation.id == self.source_annotation_id:
+            raise ValueError("annotation ID does not match source_note_id")
+        self._source_annotation = annotation
 
     @classmethod
     def ensure_table(cls):
@@ -75,7 +75,7 @@ class Todo(BaseModel):
             target_start_time=row[1],
             target_end_time=row[2],
             todo_text=row[3],
-            source_note_id=row[4]
+            source_annotation_id=row[4]
         )
 
     @classmethod
@@ -118,7 +118,7 @@ class Todo(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, todo_text, source_note_id, target_start_time: Optional[str]=None, target_end_time: Optional[str]=None) -> "Todo":
+    def create(cls, todo_text, source_annotation_id, target_start_time: Optional[str]=None, target_end_time: Optional[str]=None) -> "Todo":
         """
         Creates a new Todo instance and saves it to the database.
         """
@@ -128,14 +128,14 @@ class Todo(BaseModel):
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (target_start_time, target_end_time, todo_text, source_note_id))
+            cursor.execute(query, (target_start_time, target_end_time, todo_text, source_annotation_id))
             conn.commit()
             return cls(
                 id=0, # ID will be auto-incremented
                 target_start_time=target_start_time,
                 target_end_time=target_end_time,
                 todo_text=todo_text,
-                source_note_id=source_note_id
+                source_annotation_id=source_annotation_id
             )
 
 
