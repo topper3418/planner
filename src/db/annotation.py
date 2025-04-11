@@ -127,7 +127,7 @@ class Annotation(BaseModel):
                 raise ValueError(f"Annotation with ID {annotation_id} not found")
 
     @classmethod
-    def get_annotations_for_note(cls, note_id: int):
+    def get_by_note_id(cls, note_id: int):
         """
         Retrieves all annotations for a given note.
         """
@@ -137,5 +137,5 @@ class Annotation(BaseModel):
         with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
             cursor = conn.cursor()
             cursor.execute(query, (note_id,))
-            rows = cursor.fetchall()
-            return [cls(id=row[0], note_id=row[1], category_id=row[2], annotation_text=row[3]) for row in rows]
+            cursor.fetchone()
+            return cls.from_sqlite_row(row) if row else None

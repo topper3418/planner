@@ -491,14 +491,46 @@ def test_create_full_todo(setup_database):
     assert end.day == now.day + 1
 
 
-def test_create_commands(setup_database):
+def bulk_upload_notes(note_list):
+    for timestamp, note_text, category_name in note_list:
+        note = db.Note.create(
+            note_text,
+            timestamp=timestamp,
+        )
+        category = db.Category.find_by_name(category_name)
+        db.Annotation.create(
+            note_id=note.id,
+            category_id=category.id,
+            annotation_text=note_text,
+        )
+
+
+@pytest.fixture(scope="session")
+def create_notes_for_morning(setup_database):
+    """
+    creates a bunch of categorized notes for the morning
+    """
+    notes = [
+        ("2025-04-05 08:00:00", "I woke up", "observation"),
+        ("2025-04-05 08:30:00", "I am going to the gym real quick", "action"),
+        ("2025-04-05 09:00:00", "I need to clean the pool filter later today", "todo"),
+        ("2025-04-05 09:30:00", "I need to call my mom", "todo"),
+        ("2025-04-05 10:00:00", "I wonder how many people are in the world", "curiosity"),
+        ("2025-04-05 10:30:00", "The tomatoes are ripe", "observation"),
+        ("2025-04-05 11:00:00", "taking a break to eat lunch", "action"),
+    ]
+    bulk_upload_notes(notes)
+    
+
+
+def test_create_commands(create_notes_for_morning):
     # create a list of tuples with the note text and expected command text
     test_samples = [
-        ("Change the note about waking up to an action", "update_note_category"),
-        ("That note about going to the gym, I actually meant to say garage", "update_note_text"),
-        ("I need you to do my homework for me", "no_match_found")
+        ("Change the note about waking up to an action", "update_note_category", "I woke up"),
+        ("That note about going to the gym, I actually meant to say garage", "update_note_text", "gym real quick"),
+        ("I need you to do my homework for me", "no_match_found", "N/A")
     ]
-    for note_text, expected_command in test_samples:
+    for note_text, expected_command, note_search in test_samples:
         # create a test note to work with
         initial_note = db.Note.create(note_text)
         category = db.Category.find_by_name("command")
@@ -519,6 +551,10 @@ def test_create_commands(setup_database):
         assert command.command_text == expected_command
         assert command.value_before is not None
         assert command.desired_value is not None
+        # find the note to make sure that the command points to the right note
+        note = db.Note.read(search=note_search)[-1]
+        assert note is not None  # this isn't the point of the test but good to know
+        assert note.id == command.target_id
 
 
 

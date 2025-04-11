@@ -27,6 +27,7 @@ class Command(BaseModel):
     value_before: str = Field(..., description="Value before the command")
     desired_value: str = Field(..., description="Desired value after the command")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
+    target_id: int = Field(..., description="ID of the target")
 
     _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
@@ -57,7 +58,8 @@ class Command(BaseModel):
                 command_text TEXT NOT NULL,
                 value_before TEXT NOT NULL,
                 desired_value TEXT NOT NULL,
-                source_annotation_id INTEGER NOT NULL
+                source_annotation_id INTEGER NOT NULL,
+                target_id INTEGER NOT NULL
             );
         '''
         with get_connection() as conn:
@@ -75,7 +77,8 @@ class Command(BaseModel):
             command_text=row[1],
             value_before=row[2],
             desired_value=row[3],
-            source_annotation_id=row[4]
+            source_annotation_id=row[4],
+            target_id=row[5],
         )
 
     @classmethod
@@ -115,25 +118,32 @@ class Command(BaseModel):
         """
         query = '''
             UPDATE commands
-            SET command_text = ?, value_before = ?, desired_value = ?, source_annotation_id = ?
+            SET command_text = ?, value_before = ?, desired_value = ?, source_annotation_id = ?, target_id = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.command_text, self.value_before, self.desired_value, self.source_annotation_id, self.id))
+            cursor.execute(query, (
+                self.command_text,
+                self.value_before,
+                self.desired_value,
+                self.source_annotation_id,
+                self.target_id,
+                self.id
+            ))
             conn.commit()
 
     @classmethod
-    def create(cls, command_text: str, value_before: str, desired_value: str, source_annotation_id: int):
+    def create(cls, command_text: str, value_before: str, desired_value: str, source_annotation_id: int, target_id: int) -> "Command":
         """
         Creates a new command in the database.
         """
         query = '''
-            INSERT INTO commands (command_text, value_before, desired_value, source_annotation_id) VALUES (?, ?, ?, ?)
+            INSERT INTO commands (command_text, value_before, desired_value, source_annotation_id, target_id) VALUES (?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (command_text, value_before, desired_value, source_annotation_id))
+            cursor.execute(query, (command_text, value_before, desired_value, source_annotation_id, target_id))
             conn.commit()
         if cursor.lastrowid is None:
             raise ValueError("Failed to create command")

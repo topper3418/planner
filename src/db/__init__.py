@@ -25,13 +25,14 @@ def insert_default_categories():
     logger.debug("inserting default categories...")
     for category in default_categories:
         # Check if the category already exists
-        existing_category = Category.find_by_name(category.name)
-        if existing_category:
+        try:
+            Category.find_by_name(category.name)
             logger.debug(f"Category '{category.name}' already exists. Skipping insertion.")
             continue
-        Category.create(
-            category.name,
-            description=category.description,
-            color=category.color,
-        )
+        except ValueError:
+            Category.create(
+                category.name,
+                description=category.description,
+                color=category.color,
+            )
     logger.info("default categories inserted.")

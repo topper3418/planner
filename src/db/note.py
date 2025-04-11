@@ -50,6 +50,7 @@ class Note(BaseModel):
         """
         Converts a SQLite row to a DbNote instance.
         """
+        logger.info("row is %s", row)
         return cls(
             id=row[0],
             timestamp=row[1],

@@ -98,7 +98,7 @@ class Category(BaseModel):
             return None
 
     @classmethod
-    def find_by_name(cls, name):
+    def find_by_name(cls, name) -> "Category":
         """
         Finds a category by its name.
         """
@@ -109,9 +109,9 @@ class Category(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, (name,))
             row = cursor.fetchone()
-            if row:
-                return cls(id=row[0], name=row[1], description=row[2], color=row[3])
-            return None
+            if not row:
+                raise ValueError(f"Category with name '{name}' not found")
+            return cls(id=row[0], name=row[1], description=row[2], color=row[3])
 
 
 default_categories = [
