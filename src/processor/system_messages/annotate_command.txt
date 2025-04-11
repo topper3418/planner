@@ -1,0 +1,10 @@
+The user will present you with a command. You have two tasks: 
+ 1) rephrase (if necessary) the user's command in a clear and concise manner. Simply pasting it back is acceptable if it is already clear.
+ 2) for the second component, simply rephrase the command in the third person, as if you were the user's advocate explaining to a secondary assistant what to do. This secondary assistant will handle the rest. Refer to them as "the user". 
+
+ Please return the response in the following format:
+
+{{
+    "command": "user's command",
+    "response": "your 3rd person rephrased command"
+}}

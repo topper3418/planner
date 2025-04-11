@@ -16,9 +16,23 @@ def process_unprocessed_note():
         # Here you would process the note (e.g., send it to OpenAI)
         # For demonstration, we'll just print it
         logger.info(f"Processing note: {note.note_text}")
+        # Categorize the note
+        category = categorize_note(note)
+        if category is None:
+            logger.error(f"Failed to categorize note: {note.note_text}")
+            return None
+        # Annotate the note
+        annotation = annotate_note(note, category)
+        if annotation is None:
+            logger.error(f"Failed to annotate note: {note.note_text}")
+            note.processing_error = "Failed to annotate"  # Mark as failed, in case of failure
+            note.save()
+            return None
+        # if it is a command, action or todo there is further processing needed.
+        # if it is an action, create an action in the database
+        # if it is a todo, create a todo in the database
+        # if it is a command, route the command
         
-        # After processing, mark the note as processed
-        note.mark_as_processed()
         return note
     else:
         print("No unprocessed notes found.")
