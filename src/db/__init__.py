@@ -3,6 +3,7 @@ import logging
 from .note import Note
 from .category import Category, default_categories
 from .annotation import Annotation
+from .action import Action
 
 logger = logging.getLogger(__name__)
 
@@ -12,12 +13,18 @@ def ensure_tables():
     Note.ensure_table()
     Category.ensure_table()
     Annotation.ensure_table()
-    logger.info("tablse ensured.")
+    Action.ensure_table()
+    logger.info("tables ensured.")
 
 
 def insert_default_categories():
     logger.debug("inserting default categories...")
     for category in default_categories:
+        # Check if the category already exists
+        existing_category = Category.find_by_name(category.name)
+        if existing_category:
+            logger.debug(f"Category '{category.name}' already exists. Skipping insertion.")
+            continue
         Category.create(
             category.name,
             description=category.description,
