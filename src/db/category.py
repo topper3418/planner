@@ -122,5 +122,11 @@ default_categories = [
         name="Observation",
         description="Documents something the user has learned. This does not include things that the user has done, a user cannot observe their own action",
         color="green"
+    ),
+    Category(
+        id=0,
+        name="Command",
+        description="This is a command from the user to the system. For example, an instruction to change the category of a note directly, or to update an existing todo",
+        color="grey"
     )
 ]

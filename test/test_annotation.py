@@ -107,6 +107,9 @@ notes_categories = {
         "Today is a sunny day",
         "10 clients crashed the server on a raspberry pi zero W",
         "The truck had its SRS light on today"
+    ],
+    "Command": [
+        ""
     ]
 }
 
