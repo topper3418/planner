@@ -10,6 +10,10 @@ def create_action(annotation: db.Annotation):
     """
     Create an action from an annotation.
     """
+    if not annotation:
+        raise ValueError("annotation is None")
+    if annotation.category.name != "action":
+        raise ValueError(f"annotation category is not action: {annotation.category.name}")
     client = GrokChatClient()
     client.load_system_message("create_action")
     logger.debug(f"system message is:\n{client.system_message}")

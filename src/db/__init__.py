@@ -4,6 +4,7 @@ from .note import Note
 from .category import Category, default_categories
 from .annotation import Annotation
 from .action import Action
+from .todo import Todo
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ def ensure_tables():
     Category.ensure_table()
     Annotation.ensure_table()
     Action.ensure_table()
+    Todo.ensure_table()
     logger.info("tables ensured.")
 
 
