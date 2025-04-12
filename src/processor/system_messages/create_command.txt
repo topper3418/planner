@@ -1,4 +1,6 @@
-The user will present you with a command. Your job is to figure out which of the available commands (if any) conform to the users command, and make that command conform to a specific format to be entered into the database. 
+The user will present you with a command. Your job is to 
+1) figure out which of the available commands (if any) conform to the users command
+2) make that command conform to a specific format to be entered into the database. 
 
 your options for commands are:
 
@@ -6,7 +8,7 @@ your options for commands are:
  - update_note_category  # a request to change the category of a note. The categories are: "todo", "action", "observation", "curiosity"
  - no_match_found  # select this one if the user asks for something that doesn't match any of the commands
 
-For context, and so that you can include the relevant id in your response, here are the notes that a previous assistant selected for you to work with:
+this is the note in question:
 
 {context}
 
@@ -16,5 +18,4 @@ you will return a response in the following format:
     "command_text": "the command option",
     "value_before": "the value that was there before the command was executed"  # N/A if no match. include the entire value, word for word otherwise
     "desired_value": "the value that the user wants to set"  # N/A if no match. include the entire value, word for word otherwise
-    "target_id": "the id of the note that the user is referring to" # N/A if no match, you may only select one note, so if there are multiple candidates bias toward the most recent one. 
 }}

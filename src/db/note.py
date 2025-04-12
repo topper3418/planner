@@ -50,7 +50,6 @@ class Note(BaseModel):
         """
         Converts a SQLite row to a DbNote instance.
         """
-        logger.info("row is %s", row)
         return cls(
             id=row[0],
             timestamp=row[1],
@@ -140,13 +139,12 @@ class Note(BaseModel):
             cursor.execute(query, (self.timestamp, self.note_text, self.processed_note_text, self.id))
             conn.commit()
 
-
     @classmethod
-    def read(cls, before=None, after=None, search=None, limit=15):
+    def read(cls, before=None, after=None, search=None, offset=0, limit=15):
         """
         Fetches notes from the database with optional filters.
         """
-        query = """SELECT id, timestamp, note_text, processed_note_text FROM notes WHERE 1=1"""
+        query = """SELECT id, timestamp, note_text, processed_note_text, processing_error FROM notes WHERE 1=1"""
         params = []
 
         if before:
@@ -159,8 +157,9 @@ class Note(BaseModel):
             query += ' AND note_text LIKE ?'
             params.append(f'%{search}%')
         
-        query += ' ORDER BY timestamp LIMIT ?'
+        query += ' ORDER BY id desc LIMIT ? OFFSET ?'
         params.append(limit)
+        params.append(offset)
 
         with get_connection() as conn:
             cursor = conn.cursor()

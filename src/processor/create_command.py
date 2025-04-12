@@ -6,32 +6,38 @@ from .client import GrokChatClient
 logger = logging.getLogger(__name__)
 
 
-def get_command_context(command_text) -> str:
+def note_to_str(note: db.Note) -> str:
+    annotation = db.Annotation.get_by_note_id(note.id)
+    return f"ID:{note.id} - {'uncategorized' if not annotation else annotation.category.name} - {note.timestamp}: {note.note_text}"
+
+
+def get_target_id(annotation_id) -> int:
     client = GrokChatClient()
-    client.load_system_message("get_command_note_search")
+    annotation = db.Annotation.get_by_id(annotation_id)
+    annotation.note  # load the note
+    client.load_system_message("confirm_context", command=annotation.model_dump())
     logger.debug(f"system message is:\n{client.system_message}")
-    response = client.chat(command_text)
-    notes = db.Note.read(
-        before=response.get('start_time'), 
-        after=response.get('end_time'), 
-        search=response.get('search_text')
-    )
-    if not notes:
-        # try again without the search just in case
-        logger.warning("No notes found with the given search criteria. Trying again without search.")
-        notes = db.Note.read(
-            before=response.get('start_time'), 
-            after=response.get('end_time')
-        )
-    if not notes:
-        # hopefully this is because the user was so vague that it was a new note. 
-        logger.warning("No notes found with the given time criteria. Trying again without time.")
-        notes = db.Note.read()
-    def note_to_str(note: db.Note) -> str:
-        annotation = db.Annotation.get_by_note_id(note.id)
-        return f"ID:{note.id} - {'uncategorized' if not annotation else annotation.category.name} - {note.timestamp}: {note.note_text}"
-    notes_str = "\n".join([note_to_str(note) for note in notes])
-    return notes_str
+    target_note_id = 0
+    ii = 0
+    inc = 5
+    while int(target_note_id) == 0:
+        # only allow searching backwards 150 notes
+        if ii * inc > 150:
+            return 0
+        notes = db.Note.read(offset=ii*inc, limit=inc)
+        if not notes:
+            break
+        notes_str = "\n".join([note_to_str(note) for note in notes])
+        logger.info('notes found:\n' + notes_str)
+        response = client.chat(notes_str)
+        logger.info(f"get command context response is:\n{response}")
+        target_note_id = response.get('target_note_id')
+        if target_note_id is None:
+            raise ValueError(f"Target note ID not found in response: {response}")
+        if not int(target_note_id):
+            ii += 1
+            logger.info(f"no target note found, trying again with offset {ii}")
+    return int(target_note_id)
 
 
 def create_command(annotation: db.Annotation) -> db.Command | None:
@@ -40,9 +46,15 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
     """
     if annotation.category.name != "command":
         raise ValueError(f"annotation category is not command: {annotation.category.name}")
-    command_context = get_command_context(annotation.annotation_text)
+    target_id = get_target_id(annotation.id)
+    if target_id == 0:
+        annotation.note.processing_error = "no target note found"
+        return None
+    target_note = db.Note.get_by_id(target_id)
+    if not target_note:
+        raise ValueError(f"Target note with ID {target_id} not found")
     client = GrokChatClient()
-    client.load_system_message("create_command", context=command_context)
+    client.load_system_message("create_command", context=note_to_str(target_note))
     logger.debug(f"system message is:\n{client.system_message}")
 
     response = client.chat(annotation.annotation_text)
@@ -58,9 +70,10 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
     desired_value = response.get('desired_value')
     if not desired_value:
         raise ValueError(f"Desired value not found in response: {response}")
-    target_id = response.get('target_id')
-    if not target_id:
-        raise ValueError(f"Target ID not found in response: {response}")
+
+    if command_text == "no_match_found":
+        annotation.note.processing_error = "no_match_found"
+        return None
 
     try:
         command = db.Command.create(

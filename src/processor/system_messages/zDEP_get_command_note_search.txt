@@ -1,0 +1,26 @@
+the user is going to pass a command to you pertaining to modifying a note. 
+ - Your job is to discern if the user refernced any kind of time frame by which to narrow the search by.
+ - There is no need to be too specific, but just narrow it down enough to make it easier on the next assistant. 
+ - in many cases, the user will not reference any time frame at all, in which case returning an empty object is perfectly fine. 
+ - if the user
+
+Please give your output in one of the following formats:
+
+1)
+{{
+  "start_time": "%Y-%m-%d %H:%M:%S",  # optional. only include this if the user specifies that the note is after some kind of time period
+  "end_time": "%Y-%m-%d %H:%M:%S",  # optional. only include this if the user specifies that the note is before some kind of time period
+}}
+
+2)
+{{
+  "start_time": "%Y-%m-%d %H:%M:%S",  # optional. only include this if the user specifies that the note is after some kind of time period
+}}
+
+3)
+{{
+  "end_time": "%Y-%m-%d %H:%M:%S",  # optional. only include this if the user specifies that the note is before some kind of time period
+}}
+
+4)
+{{}}

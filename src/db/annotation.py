@@ -137,5 +137,5 @@ class Annotation(BaseModel):
         with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
             cursor = conn.cursor()
             cursor.execute(query, (note_id,))
-            cursor.fetchone()
+            row = cursor.fetchone()
             return cls.from_sqlite_row(row) if row else None
