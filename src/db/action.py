@@ -28,6 +28,7 @@ class Action(BaseModel):
     action_text: str = Field(..., description="Text of the action")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
     todo_id: Optional[int] = Field(None, description="ID of the todo associated with the action")
+    mark_complete: bool = Field(False, description="True if the action marks the todo as complete")
 
     _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
@@ -59,7 +60,10 @@ class Action(BaseModel):
                 end_time DATETIME DEFAULT NULL,
                 action_text TEXT NOT NULL,
                 source_annotation_id INTEGER NOT NULL,
-                todo_id INTEGER DEFAULT NULL
+                todo_id INTEGER DEFAULT NULL,
+                mark_complete INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (source_annotation_id) REFERENCES annotations(id),
+                FOREIGN KEY (todo_id) REFERENCES todos(id)
             )
         '''
         with get_connection() as conn:
@@ -79,6 +83,7 @@ class Action(BaseModel):
             action_text=row[3],
             source_annotation_id=row[4],
             todo_id=row[5],
+            mark_complete=bool(row[6]),
         )
 
     @classmethod
@@ -103,6 +108,7 @@ class Action(BaseModel):
             self.end_time = copy.end_time
             self.action_text = copy.action_text
             self.todo_id = copy.todo_id
+            self.mark_complete = copy.mark_complete
         else:
             logger.error(f"Action with ID {self.id} not found in the database.")
 
@@ -112,29 +118,57 @@ class Action(BaseModel):
         """
         query = '''
             UPDATE actions
-            SET start_time = ?, end_time = ?, action_text = ?, todo_id = ?
+            SET start_time = ?, end_time = ?, action_text = ?, todo_id = ?, mark_complete = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.start_time, self.end_time, self.action_text, self.todo_id, self.id))
+            cursor.execute(query, (
+                self.start_time,
+                self.end_time,
+                self.action_text,
+                self.todo_id,
+                int(self.mark_complete),
+                self.id,
+            ))
             conn.commit()
 
     @classmethod
-    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None, todo_id: Optional[int] = None):
+    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None, todo_id: Optional[int] = None, mark_complete: bool = False):
         """
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id, todo_id)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id, todo_id, mark_complete)
+            VALUES (?, ?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id, todo_id))
+            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id, todo_id, mark_complete))
             conn.commit()
             action_id = cursor.lastrowid
         if action_id is None:
             raise ValueError("Failed to create action in the database.")
         action = cls.get_by_id(action_id)
         return action
+
+    def delete(self):
+        """
+        Deletes the action from the database.
+        """
+        # first, mark the todo as incomplete if applicable
+        if self.todo_id and self.mark_complete:
+            todo_query = '''
+                UPDATE todos SET complete = 0 WHERE id = ?
+            '''
+            with get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(todo_query, (self.todo_id,))
+                conn.commit()
+        query = '''
+            DELETE FROM actions WHERE id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            conn.commit()

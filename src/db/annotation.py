@@ -18,6 +18,7 @@ class Annotation(BaseModel):
     note_id: int = Field(..., description="Unique identifier for the note")
     category_id: int = Field(..., description="Unique identifier for the category")
     annotation_text: str = Field(..., description="The note reframed around the category") 
+    reprocess: bool = Field(False, description="True if the annotation needs to be reprocessed")
     
     _note: Optional[Note] = PrivateAttr(default=None)
     @property
@@ -72,6 +73,7 @@ class Annotation(BaseModel):
                 note_id INTEGER NOT NULL,
                 category_id INTEGER NOT NULL,
                 annotation_text TEXT NOT NULL,
+                reprocess INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (note_id) REFERENCES notes(id),
                 FOREIGN KEY (category_id) REFERENCES categories(id)
             )
@@ -97,6 +99,18 @@ class Annotation(BaseModel):
                 raise ValueError("Failed to create annotation")
             return cls.get_by_id(cursor.lastrowid)
 
+    def save(self):
+        """
+        Updates the annotation in the database.
+        """
+        query = '''
+            UPDATE annotations SET category_id = ?, annotation_text = ?, reprocess = ? WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.category_id, self.annotation_text, self.reprocess, self.id))
+            conn.commit()
+
     @classmethod
     def from_sqlite_row(cls, row):
         """
@@ -106,7 +120,8 @@ class Annotation(BaseModel):
             id=row[0],
             note_id=row[1],
             category_id=row[2],
-            annotation_text=row[3]
+            annotation_text=row[3],
+            reprocess=bool(row[4]),
         )
 
     @ classmethod
@@ -139,3 +154,18 @@ class Annotation(BaseModel):
             cursor.execute(query, (note_id,))
             row = cursor.fetchone()
             return cls.from_sqlite_row(row) if row else None
+    
+    def delete(self):
+        """
+        Deletes the annotation from the database.
+        """
+        query = '''
+            DELETE FROM annotations WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            conn.commit()
+
+
+

@@ -159,6 +159,18 @@ class Todo(BaseModel):
                 complete=False,
             )
 
+    def delete(self):
+        """
+        Deletes the Todo instance from the database.
+        """
+        query = '''
+            DELETE FROM todos WHERE id = ?;
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            conn.commit()
+
 
 
 

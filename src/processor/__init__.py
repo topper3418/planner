@@ -6,22 +6,16 @@ from .annotator import annotate_note
 from .create_action import create_action
 from .create_todo import create_todo
 from .create_command import create_command
+from .controller import NoteProcessBuffer
 
 logger = logging.getLogger(__name__) 
 
 
-class NoteProcessor:
+class NoteProcessor(NoteProcessBuffer):
     """
     Object that is initialized with a note, and processes said note according to a sequence. 
     Supports injection of objects for the sake of skipping initial steps in the case of a re-process. 
     """
-    def __init__(self, note: db.Note):
-        self.note = note
-        self.category: db.Category | None = None
-        self.annotation: db.Annotation | None = None
-        self.action: db.Action | None = None
-        self.todo: db.Todo | None = None
-        self.command: db.Command | None = None
 
     def process(self):
         # Here you would process the note (e.g., send it to OpenAI)
@@ -42,6 +36,15 @@ class NoteProcessor:
                 self.note.processing_error = "Failed to annotate"  # Mark as failed, in case of failure
                 self.note.save()
                 return None
+            annotation.note = self.note
+            annotation.category = self.category
+            self.annotation = annotation
+        if self.annotation is not None and self.annotation.reprocess:
+            # this means that the annotation had the category changed by a command. 
+            # therefore we need to remove it and recreate it.
+            self.annotation.delete()
+            self.annotation = None
+            annotation = annotate_note(self.note, self.category)
             annotation.note = self.note
             annotation.category = self.category
             self.annotation = annotation
