@@ -6,7 +6,7 @@ from .annotator import annotate_note
 from .create_action import create_action
 from .create_todo import create_todo
 from .create_command import create_command
-from .controller import NoteProcessBuffer
+from .controller import NoteProcessBuffer, route_command
 
 logger = logging.getLogger(__name__) 
 
@@ -71,6 +71,20 @@ class NoteProcessor(NoteProcessBuffer):
                 logger.error(f"Failed to create command: {self.annotation.annotation_text}")
                 self.note.processing_error = "Failed to create command"
             self.command = command
-            # build the routing out here. will probably need a "controller module"
+            if command:
+                route_command(command)
+
+    def to_json(self):
+        """
+        Converts the NoteProcessBuffer to a JSON serializable format.
+        """
+        return {
+            "note": self.note.model_dump(),
+            "category": self.category.model_dump() if self.category else None,
+            "annotation": self.annotation.model_dump() if self.annotation else None,
+            "action": self.action.model_dump() if self.action else None,
+            "todo": self.todo.model_dump() if self.todo else None,
+            "command": self.command.model_dump() if self.command else None,
+        }
 
 

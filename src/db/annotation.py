@@ -167,5 +167,21 @@ class Annotation(BaseModel):
             cursor.execute(query, (self.id,))
             conn.commit()
 
+    @classmethod
+    def get_next_reprocess_candidate(cls):
+        """
+        Returns the SQL query to fetch the next unprocessed annotation.
+        """
+        query = '''
+            SELECT * FROM annotations WHERE reprocess = 1
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            unprocessed_annotation = cursor.fetchone()
+            if unprocessed_annotation:
+                return cls.from_sqlite_row(unprocessed_annotation)
+            else:
+                return None
 
 

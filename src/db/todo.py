@@ -150,14 +150,11 @@ class Todo(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, (target_start_time, target_end_time, todo_text, source_annotation_id))
             conn.commit()
-            return cls(
-                id=0, # ID will be auto-incremented
-                target_start_time=target_start_time,
-                target_end_time=target_end_time,
-                todo_text=todo_text,
-                source_annotation_id=source_annotation_id,
-                complete=False,
-            )
+            last_row_id = cursor.lastrowid
+            if last_row_id is None:
+                logger.error("Failed to create todo in the database.")
+                raise ValueError("Failed to create todo in the database.")
+        return cls.get_by_id(last_row_id)
 
     def delete(self):
         """
@@ -170,6 +167,25 @@ class Todo(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, (self.id,))
             conn.commit()
+
+    @classmethod
+    def read(cls, complete: Optional[bool]=None) -> list["Todo"]:
+        """
+        Reads todos from the database.
+        """
+        query = '''
+            SELECT * FROM todos
+        '''
+        if complete is not None:
+            query += ' WHERE complete = ?'
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            if complete is not None:
+                cursor.execute(query, (int(complete),))
+            else:
+                cursor.execute(query)
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows]
 
 
 

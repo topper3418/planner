@@ -35,6 +35,7 @@ def create_todo(annotation: db.Annotation):
     logger.info("todo created:\n" + str(todo))
     if todo:
         todo.source_annotation = annotation
+    todo.save()
     return todo
 
 

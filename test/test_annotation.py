@@ -28,7 +28,7 @@ def setup_database(mock_sqlite3_connect):
     db.ensure_tables()
 
     # SETUP: insert the default category
-    db.insert_default_categories()
+    db.ensure_default_categories()
 
 
 def test_category_insertion(setup_database):

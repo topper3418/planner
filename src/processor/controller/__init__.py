@@ -30,16 +30,27 @@ def route_command(command: db.Command) -> NoteProcessBuffer:
             raise ValueError(f"Category with name {command.desired_value} not found")
         buffer.category = category
         # get the annotation
-        annotation = db.Annotation.get_by_id(command.source_annotation_id)
+        annotation = db.Annotation.get_by_note_id(command.target_id)
         if not annotation:
             raise ValueError(f"Annotation with ID {command.source_annotation_id} not found")
         # remove objects that might have been created, depending on the category
         if annotation.category.name == "command":
             # commands cannot be undone
             raise ValueError("Commands cannot be undone")
+        if annotation.category.name == "todo":
+            # delete the todo
+            todo = db.Todo.get_by_id(note.id)
+            if todo:
+                todo.delete()
+        if annotation.category.name == "action":
+            # delete the action
+            action = db.Action.get_by_id(note.id)
+            if action:
+                action.delete()
         # update the category
         annotation.category = category
         annotation.reprocess = True
         annotation.save()
         buffer.annotation = annotation
         return buffer
+    raise ValueError(f"Unknown command: {command.command_text}")

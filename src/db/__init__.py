@@ -1,4 +1,7 @@
 import logging
+import sqlite3
+
+from ..config import NOTES_DATABASE_FILEPATH
 
 from .note import Note
 from .category import Category, default_categories
@@ -21,7 +24,19 @@ def ensure_tables():
     logger.info("tables ensured.")
 
 
-def insert_default_categories():
+def teardown():
+    with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        cursor = conn.cursor()
+        # Drop all tables
+        cursor.execute("DROP TABLE IF EXISTS actions")
+        cursor.execute("DROP TABLE IF EXISTS todos")
+        cursor.execute("DROP TABLE IF EXISTS commands")
+        cursor.execute("DROP TABLE IF EXISTS annotations")
+        cursor.execute("DROP TABLE IF EXISTS categories")
+        cursor.execute("DROP TABLE IF EXISTS notes")
+        conn.commit()
+
+def ensure_default_categories():
     logger.debug("inserting default categories...")
     for category in default_categories:
         # Check if the category already exists

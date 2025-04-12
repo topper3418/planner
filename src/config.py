@@ -1,1 +1,4 @@
-NOTES_DATABASE_FILEPATH = "notes.db"
+import os
+
+
+NOTES_DATABASE_FILEPATH = os.path.join("data", "notes.db")

@@ -24,7 +24,10 @@ def get_target_id(annotation_id) -> int:
         # only allow searching backwards 150 notes
         if ii * inc > 150:
             return 0
-        notes = db.Note.read(offset=ii*inc, limit=inc)
+        # in case this is going back and being processed, need to make sure a
+        # command doesn't target a note in the future, that the user wasn't 
+        # meaning to target
+        notes = db.Note.read(offset=ii*inc, limit=inc, before=annotation.note.timestamp)
         if not notes:
             break
         notes_str = "\n".join([note_to_str(note) for note in notes])
@@ -88,5 +91,6 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
     logger.info("command created:\n" + str(command))
     if command:
         command.source_annotation = annotation
+    command.save()
     return command
 

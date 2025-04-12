@@ -27,6 +27,7 @@ def annotate_note(note: db.Note, category: db.Category) -> db.Annotation:
         raise ValueError(f"Annotation text not found in response: {response}")
     logger.info(f"note {note.note_text} processed to: {processed_note_text}")
     note.processed_note_text = processed_note_text
+    note.save()
     annotation_text = response.get('response')
     if not annotation_text:
         raise ValueError(f"Annotation text not found in response: {response}")
