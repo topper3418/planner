@@ -1,4 +1,8 @@
 import pytest
+import sqlite3
+from unittest.mock import patch
+
+from src import db
 
 @pytest.fixture(scope="session")
 def mock_sqlite3_connect():
