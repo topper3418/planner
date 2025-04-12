@@ -27,6 +27,7 @@ class Todo(BaseModel):
     target_end_time: Optional[str] = Field(None, description="Target end time of the todo")
     todo_text: str = Field(..., description="Text of the todo")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
+    complete: bool = Field(False, description="True if the task has been completed")
 
     _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
@@ -57,7 +58,8 @@ class Todo(BaseModel):
                 target_start_time DATETIME DEFAULT NULL,
                 target_end_time DATETIME DEFAULT NULL,
                 todo_text TEXT NOT NULL,
-                source_note_id INTEGER NOT NULL
+                source_note_id INTEGER NOT NULL,
+                complete INTEGER NOT NULL DEFAULT 0
             );
         '''
         with get_connection() as conn:
@@ -75,7 +77,8 @@ class Todo(BaseModel):
             target_start_time=row[1],
             target_end_time=row[2],
             todo_text=row[3],
-            source_annotation_id=row[4]
+            source_annotation_id=row[4],
+            complete=bool(row[5]),
         )
 
     @classmethod
@@ -101,6 +104,7 @@ class Todo(BaseModel):
         self.target_start_time = copy.target_start_time
         self.target_end_time = copy.target_end_time
         self.todo_text = copy.todo_text
+        self.complete = copy.complete
         return self
 
     def save(self):
@@ -109,13 +113,29 @@ class Todo(BaseModel):
         """
         query = '''
             UPDATE todos
-            SET target_start_time = ?, target_end_time = ?, todo_text = ?
+            SET target_start_time = ?, target_end_time = ?, todo_text = ?, complete = ?
             WHERE id = ?;
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.target_start_time, self.target_end_time, self.todo_text, self.id))
+            cursor.execute(query, (self.target_start_time, self.target_end_time, self.todo_text, self.complete, self.id))
             conn.commit()
+
+    @classmethod
+    def get_incomplete(cls, offset=0, limit=15) -> list["Todo"]:
+        """
+        Retrieves a list of incomplete Todo instances from the database.
+        """
+        query = '''
+            SELECT * FROM todos
+            WHERE complete = 0
+            LIMIT ?, ?;
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (offset, limit))
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows]
 
     @classmethod
     def create(cls, todo_text, source_annotation_id, target_start_time: Optional[str]=None, target_end_time: Optional[str]=None) -> "Todo":
@@ -135,7 +155,8 @@ class Todo(BaseModel):
                 target_start_time=target_start_time,
                 target_end_time=target_end_time,
                 todo_text=todo_text,
-                source_annotation_id=source_annotation_id
+                source_annotation_id=source_annotation_id,
+                complete=False,
             )
 
 

@@ -27,6 +27,7 @@ class Action(BaseModel):
     end_time: Optional[str] = Field(None, description="End time of the action")
     action_text: str = Field(..., description="Text of the action")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
+    todo_id: Optional[int] = Field(None, description="ID of the todo associated with the action")
 
     _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
@@ -57,7 +58,8 @@ class Action(BaseModel):
                 start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                 end_time DATETIME DEFAULT NULL,
                 action_text TEXT NOT NULL,
-                source_annotation_id INTEGER NOT NULL
+                source_annotation_id INTEGER NOT NULL,
+                todo_id INTEGER DEFAULT NULL
             )
         '''
         with get_connection() as conn:
@@ -76,6 +78,7 @@ class Action(BaseModel):
             end_time=row[2],
             action_text=row[3],
             source_annotation_id=row[4],
+            todo_id=row[5],
         )
 
     @classmethod
@@ -99,6 +102,7 @@ class Action(BaseModel):
             self.start_time = copy.start_time
             self.end_time = copy.end_time
             self.action_text = copy.action_text
+            self.todo_id = copy.todo_id
         else:
             logger.error(f"Action with ID {self.id} not found in the database.")
 
@@ -108,26 +112,26 @@ class Action(BaseModel):
         """
         query = '''
             UPDATE actions
-            SET start_time = ?, end_time = ?, action_text = ?
+            SET start_time = ?, end_time = ?, action_text = ?, todo_id = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.start_time, self.end_time, self.action_text, self.id))
+            cursor.execute(query, (self.start_time, self.end_time, self.action_text, self.todo_id, self.id))
             conn.commit()
 
     @classmethod
-    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None):
+    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None, todo_id: Optional[int] = None):
         """
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id, todo_id)
+            VALUES (?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id))
+            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id, todo_id))
             conn.commit()
             action_id = cursor.lastrowid
         if action_id is None:

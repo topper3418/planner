@@ -112,7 +112,7 @@ notes_categories = {
 }
 
 
-def test_process_notes():
+def test_process_notes(setup_database):
     # create a test note to work with
     for category_name, notes in notes_categories.items():
         success_obj = {

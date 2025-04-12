@@ -15,7 +15,7 @@ def get_target_id(annotation_id) -> int:
     client = GrokChatClient()
     annotation = db.Annotation.get_by_id(annotation_id)
     annotation.note  # load the note
-    client.load_system_message("confirm_context", command=annotation.model_dump())
+    client.load_system_message("get_target_id", command=annotation.model_dump())
     logger.debug(f"system message is:\n{client.system_message}")
     target_note_id = 0
     ii = 0
