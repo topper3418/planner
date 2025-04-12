@@ -18,6 +18,7 @@ class Annotation(BaseModel):
     note_id: int = Field(..., description="Unique identifier for the note")
     category_id: int = Field(..., description="Unique identifier for the category")
     annotation_text: str = Field(..., description="The note reframed around the category") 
+    reprocess: bool = Field(False, description="True if the annotation needs to be reprocessed")
     
     _note: Optional[Note] = PrivateAttr(default=None)
     @property
@@ -72,6 +73,7 @@ class Annotation(BaseModel):
                 note_id INTEGER NOT NULL,
                 category_id INTEGER NOT NULL,
                 annotation_text TEXT NOT NULL,
+                reprocess INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (note_id) REFERENCES notes(id),
                 FOREIGN KEY (category_id) REFERENCES categories(id)
             )
@@ -95,10 +97,52 @@ class Annotation(BaseModel):
             conn.commit()
             if cursor.lastrowid is None:
                 raise ValueError("Failed to create annotation")
-            return cls(id=cursor.lastrowid, note_id=note_id, category_id=category_id, annotation_text=annotation_text)
+            return cls.get_by_id(cursor.lastrowid)
+
+    def save(self):
+        """
+        Updates the annotation in the database.
+        """
+        query = '''
+            UPDATE annotations SET category_id = ?, annotation_text = ?, reprocess = ? WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.category_id, self.annotation_text, self.reprocess, self.id))
+            conn.commit()
 
     @classmethod
-    def get_annotations_for_note(cls, note_id: int):
+    def from_sqlite_row(cls, row):
+        """
+        Converts a SQLite row to an Annotation instance.
+        """
+        return cls(
+            id=row[0],
+            note_id=row[1],
+            category_id=row[2],
+            annotation_text=row[3],
+            reprocess=bool(row[4]),
+        )
+
+    @ classmethod
+    def get_by_id(cls, annotation_id: int):
+        """
+        Retrieves an annotation by its ID.
+        """
+        query = '''
+            SELECT * FROM annotations WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (annotation_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls.from_sqlite_row(row)
+            else:
+                raise ValueError(f"Annotation with ID {annotation_id} not found")
+
+    @classmethod
+    def get_by_note_id(cls, note_id: int):
         """
         Retrieves all annotations for a given note.
         """
@@ -108,5 +152,36 @@ class Annotation(BaseModel):
         with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
             cursor = conn.cursor()
             cursor.execute(query, (note_id,))
-            rows = cursor.fetchall()
-            return [cls(id=row[0], note_id=row[1], category_id=row[2], annotation_text=row[3]) for row in rows]
+            row = cursor.fetchone()
+            return cls.from_sqlite_row(row) if row else None
+    
+    def delete(self):
+        """
+        Deletes the annotation from the database.
+        """
+        query = '''
+            DELETE FROM annotations WHERE id = ?
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            conn.commit()
+
+    @classmethod
+    def get_next_reprocess_candidate(cls):
+        """
+        Returns the SQL query to fetch the next unprocessed annotation.
+        """
+        query = '''
+            SELECT * FROM annotations WHERE reprocess = 1
+        '''
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            unprocessed_annotation = cursor.fetchone()
+            if unprocessed_annotation:
+                return cls.from_sqlite_row(unprocessed_annotation)
+            else:
+                return None
+
+

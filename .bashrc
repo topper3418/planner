@@ -6,6 +6,4 @@ function notes() {
     python main.py read "$@"
 }
 
-function test() {
-    pytest --log-cli-level=INFO 
-}
+alias test="pytest --log-cli-level=INFO"

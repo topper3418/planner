@@ -1,9 +1,14 @@
 import logging
+import sqlite3
+
+from ..config import NOTES_DATABASE_FILEPATH
 
 from .note import Note
 from .category import Category, default_categories
 from .annotation import Annotation
 from .action import Action
+from .todo import Todo
+from .command import Command
 
 logger = logging.getLogger(__name__)
 
@@ -14,20 +19,35 @@ def ensure_tables():
     Category.ensure_table()
     Annotation.ensure_table()
     Action.ensure_table()
+    Todo.ensure_table()
+    Command.ensure_table()
     logger.info("tables ensured.")
 
 
-def insert_default_categories():
+def teardown():
+    with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        cursor = conn.cursor()
+        # Drop all tables
+        cursor.execute("DROP TABLE IF EXISTS actions")
+        cursor.execute("DROP TABLE IF EXISTS todos")
+        cursor.execute("DROP TABLE IF EXISTS commands")
+        cursor.execute("DROP TABLE IF EXISTS annotations")
+        cursor.execute("DROP TABLE IF EXISTS categories")
+        cursor.execute("DROP TABLE IF EXISTS notes")
+        conn.commit()
+
+def ensure_default_categories():
     logger.debug("inserting default categories...")
     for category in default_categories:
         # Check if the category already exists
-        existing_category = Category.find_by_name(category.name)
-        if existing_category:
+        try:
+            Category.find_by_name(category.name)
             logger.debug(f"Category '{category.name}' already exists. Skipping insertion.")
             continue
-        Category.create(
-            category.name,
-            description=category.description,
-            color=category.color,
-        )
+        except ValueError:
+            Category.create(
+                category.name,
+                description=category.description,
+                color=category.color,
+            )
     logger.info("default categories inserted.")

@@ -1,11 +1,10 @@
-from datetime import datetime
 import sqlite3
 import logging
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
 from src.config import NOTES_DATABASE_FILEPATH
-from .note import Note
+from .annotation import Annotation
 
 
 logger = logging.getLogger(__name__)
@@ -27,25 +26,27 @@ class Action(BaseModel):
     start_time: str = Field(..., description="Start time of the action")
     end_time: Optional[str] = Field(None, description="End time of the action")
     action_text: str = Field(..., description="Text of the action")
-    source_note_id: int = Field(..., description="ID of the source note")
+    source_annotation_id: int = Field(..., description="ID of the source annotation")
+    todo_id: Optional[int] = Field(None, description="ID of the todo associated with the action")
+    mark_complete: bool = Field(False, description="True if the action marks the todo as complete")
 
-    _source_note: Optional[Note] = PrivateAttr(default=None)
+    _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
-    def source_note(self) -> Note:
+    def source_annotation(self) -> Annotation:
         """
         Returns the note associated with the action.
         """
-        if self._source_note is None:
-            self._source_note = Note.get_by_id(self.source_note_id)
-            if self._source_note is None:
-                logger.error(f"Note with ID {self.source_note_id} not found in the database.")
-                raise ValueError(f"Note with ID {self.source_note_id} not found in the database.")
-        return self._source_note
-    @source_note.setter
-    def source_note(self, note: Note):
-        if not note.id == self.source_note_id:
-            raise ValueError("note ID does not match source_note_id")
-        self._source_note = note
+        if self._source_annotation is None:
+            self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
+            if self._source_annotation is None:
+                logger.error(f"Annotation with ID {self.source_annotation_id} not found in the database.")
+                raise ValueError(f"Annotation with ID {self.source_annotation_id} not found in the database.")
+        return self._source_annotation
+    @source_annotation.setter
+    def source_annotation(self, note: Annotation):
+        if not note.id == self.source_annotation_id:
+            raise ValueError("note ID does not match source_annotation_id")
+        self._source_annotation = note
 
     @classmethod
     def ensure_table(cls):
@@ -58,7 +59,11 @@ class Action(BaseModel):
                 start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                 end_time DATETIME DEFAULT NULL,
                 action_text TEXT NOT NULL,
-                source_note_id INTEGER NOT NULL
+                source_annotation_id INTEGER NOT NULL,
+                todo_id INTEGER DEFAULT NULL,
+                mark_complete INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (source_annotation_id) REFERENCES annotations(id),
+                FOREIGN KEY (todo_id) REFERENCES todos(id)
             )
         '''
         with get_connection() as conn:
@@ -76,7 +81,9 @@ class Action(BaseModel):
             start_time=row[1],
             end_time=row[2],
             action_text=row[3],
-            source_note_id=row[4],
+            source_annotation_id=row[4],
+            todo_id=row[5],
+            mark_complete=bool(row[6]),
         )
 
     @classmethod
@@ -100,6 +107,8 @@ class Action(BaseModel):
             self.start_time = copy.start_time
             self.end_time = copy.end_time
             self.action_text = copy.action_text
+            self.todo_id = copy.todo_id
+            self.mark_complete = copy.mark_complete
         else:
             logger.error(f"Action with ID {self.id} not found in the database.")
 
@@ -109,29 +118,57 @@ class Action(BaseModel):
         """
         query = '''
             UPDATE actions
-            SET start_time = ?, end_time = ?, action_text = ?
+            SET start_time = ?, end_time = ?, action_text = ?, todo_id = ?, mark_complete = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.start_time, self.end_time, self.action_text, self.id))
+            cursor.execute(query, (
+                self.start_time,
+                self.end_time,
+                self.action_text,
+                self.todo_id,
+                int(self.mark_complete),
+                self.id,
+            ))
             conn.commit()
 
     @classmethod
-    def create(cls, action_text: str, start_time: str, source_note_id: int, end_time: Optional[str] = None):
+    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None, todo_id: Optional[int] = None, mark_complete: bool = False):
         """
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, end_time, action_text, source_note_id)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id, todo_id, mark_complete)
+            VALUES (?, ?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (start_time, end_time, action_text, source_note_id))
+            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id, todo_id, mark_complete))
             conn.commit()
             action_id = cursor.lastrowid
         if action_id is None:
             raise ValueError("Failed to create action in the database.")
         action = cls.get_by_id(action_id)
         return action
+
+    def delete(self):
+        """
+        Deletes the action from the database.
+        """
+        # first, mark the todo as incomplete if applicable
+        if self.todo_id and self.mark_complete:
+            todo_query = '''
+                UPDATE todos SET complete = 0 WHERE id = ?
+            '''
+            with get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(todo_query, (self.todo_id,))
+                conn.commit()
+        query = '''
+            DELETE FROM actions WHERE id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            conn.commit()
