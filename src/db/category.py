@@ -125,7 +125,7 @@ default_categories = [
         id=0, 
         name="todo", 
         description="Indicates a user's intention to complete a task", 
-        color="lightblue"
+        color="cyan"
     ),
     Category(
         id=0, 

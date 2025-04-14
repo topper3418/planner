@@ -1,27 +1,26 @@
-from src import db
+import sqlite3
+from src import db, pretty_printing
 
 import time
 
-def todo_to_str(todo: db.Todo) -> str:
-   """
-    Convert a todo to a string.
-    """
-   return f"[{"X" if todo.complete else " "}]{todo.id}: {todo.todo_text} - {todo.target_start_time} - {todo.target_end_time}"
 
 def main():
    # Get all todos
    todos = db.Todo.read()
-   todos_strings = [todo_to_str(todo) for todo in todos]
+   title = pretty_printing.banner("Todos")
+   todos_strings = pretty_printing.strf_todos(todos)
    # clear the console
    print("\033[H\033[J")
-   print("===================================")
-   print("Todos:                            ||")
-   print("===================================")
-   # Print the todos
-   for todo in todos_strings:
-      print(todo)
+   # print the title
+   print(title)
+   print(todos_strings)
+
 
 if __name__ == "__main__":
    while True:
-      main()
-      time.sleep(.5)  
+      try:
+         main()
+         time.sleep(.5)  
+      except sqlite3.OperationalError as e:
+         print("Database is locked. Retrying in 1 second...")
+         time.sleep(1)

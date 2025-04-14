@@ -213,6 +213,8 @@ def test_processor(notes):
     # reprocess the note
     note_processor.process()
     assert reprocess_note.processed_note_text is not None
+    # make sure it marked the annotation as reprocessed so we don't loop indefinitely
+    assert note_processor.annotation.reprocess == False
     # The reprocessed note is an action, about checking the weather
     assert note_processor.category is not None
     assert note_processor.category.name == "action"

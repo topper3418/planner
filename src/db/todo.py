@@ -169,21 +169,38 @@ class Todo(BaseModel):
             conn.commit()
 
     @classmethod
-    def read(cls, complete: Optional[bool]=None) -> list["Todo"]:
+    def read(
+            cls, 
+            before: Optional[str] = None, 
+            after: Optional[str] = None, 
+            complete: Optional[bool] = None,
+            limit: Optional[int] = None,
+    ) -> list["Todo"]:
         """
         Reads todos from the database.
         """
         query = '''
             SELECT * FROM todos
         '''
+        args = []
         if complete is not None:
             query += ' WHERE complete = ?'
+            args.append(int(complete))
+        if before is not None:
+            query += ' AND target_end_time < ?'
+            args.append(before)
+        if after is not None:
+            query += ' AND target_end_time > ?'
+            args.append(after)
+        if limit is not None:
+            query += ' LIMIT ?'
+            args.append(limit)
         with get_connection() as conn:
             cursor = conn.cursor()
             if complete is not None:
-                cursor.execute(query, (int(complete),))
+                cursor.execute(query, args)
             else:
-                cursor.execute(query)
+                cursor.execute(query, args)
             rows = cursor.fetchall()
             return [cls.from_sqlite_row(row) for row in rows]
 
