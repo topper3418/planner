@@ -1,4 +1,5 @@
 import argparse
+import time
 from typing import List
 
 from src import db, pretty_printing, engine
@@ -19,12 +20,12 @@ def main():
 
     # Write subparser
     write_parser = subparsers.add_parser('write', help='Write a new note')
-    write_group = write_parser.add_mutually_exclusive_group(required=True)
-    write_group.add_argument('note_words', nargs='*',
+    write_parser.add_argument('note_words', nargs='*',
                             help='Note as consecutive words')
 
     # Cycle subparser
     cycle_parser = subparsers.add_parser('cycle', help='cycles the engine once')
+    cycle_parser.add_argument('-c', '--continuous', help='cycles in a loop')
 
     # Read subparser with type-specific subcommands
     read_parser = subparsers.add_parser('read', help='Read notes with filters')
@@ -84,8 +85,16 @@ def main():
 
     if args.command == 'cycle':
         # Call the cycle function from the engine module
-        engine.cycle()
-        print("Cycle completed")
+        if args.continuous:
+            try:
+                while True:
+                    engine.cycle()
+                    time.sleep(5)
+            except KeyboardInterrupt:
+                print("Stopping the engine.")
+        else:
+            engine.cycle()
+            print("Cycle completed")
 
     elif args.command == 'read':
         # Default to note if no type is specified
