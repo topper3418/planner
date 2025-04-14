@@ -73,7 +73,7 @@ def strf_todos(todos: List[db.Todo]) -> str:
     pretty_todos = ""
     for todo in todos:
         annotation = todo.source_annotation
-        pretty_text = f"[{"X" if todo.complete else " "}]{todo.id}: {todo.todo_text} - {todo.target_start_time} - {todo.target_end_time}"        
+        pretty_text = f"[{'X' if todo.complete else " "}]{todo.id}: {todo.todo_text} - {todo.target_start_time} - {todo.target_end_time}"        
         now = datetime.now()
         if todo.complete:
             pretty_text = colored(pretty_text, "green")
