@@ -1,5 +1,5 @@
 import sqlite3
-from typing import ClassVar, Optional
+from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -154,6 +154,44 @@ class Annotation(BaseModel):
             cursor.execute(query, (note_id,))
             row = cursor.fetchone()
             return cls.from_sqlite_row(row) if row else None
+
+    @classmethod
+    def get_by_category_name(
+            cls, 
+            category_name: str,
+            before: Optional[str] = None,
+            after: Optional[str] = None,
+            limit: Optional[int] = None,
+            search: Optional[str] = None,
+    ) -> List["Annotation"]:
+        """
+        Retrieves all annotations for a given category.
+        """
+        # make sure the category is authentic
+        category = Category.find_by_name(category_name)
+        if category is None:
+            raise ValueError(f"Category with name '{category_name}' not found")
+        query = 'SELECT annotations.id, annotations.note_id, annotations.category_id, annotations.annotation_text, annotations.reprocess FROM annotations'
+        args: list = []
+        if before or after:
+            query += ' JOIN notes ON annotations.note_id = notes.id'
+        if before:
+            query += ' AND notes.timestamp < ?'
+            args.append(before)
+        if after:
+            query += ' AND notes.timestamp > ?'
+            args.append(after)
+        if search:
+            query += ' AND annotations.annotation_text LIKE ?'
+            args.append(f'%{search}%')
+        if limit:
+            query += ' LIMIT ?'
+            args.append(limit)
+        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (category.id,))
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows] if rows else []
     
     def delete(self):
         """

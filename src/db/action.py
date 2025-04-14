@@ -172,3 +172,43 @@ class Action(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, (self.id,))
             conn.commit()
+
+    @classmethod
+    def read(
+            cls,
+            before: Optional[str] = None,
+            after: Optional[str] = None,
+            search: Optional[str] = None,
+            limit: Optional[int] = None,
+    ):
+        """
+        Reads actions from the database.
+        """
+        query = '''
+            SELECT * FROM actions
+            WHERE 1=1
+        '''
+        params = []
+        if before:
+            query += ' AND start_time < ?'
+            params.append(before)
+        if after:
+            query += ' AND start_time > ?'
+            params.append(after)
+        if search:
+            query += ' AND action_text LIKE ?'
+            params.append(f'%{search}%')
+        query += ' ORDER BY id DESC'
+        if limit:
+            query += ' LIMIT ?'
+            params.append(limit)
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows]
+
+
+
+
+

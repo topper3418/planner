@@ -7,10 +7,12 @@ from . import (
         util as utils, 
         db, 
         processor, 
-        config
+        config,
+        pretty_printing,
 )
 from .bulk_upload import bulk_upload_notes_list
 from .rest import rest_server
+
 
 # both the data and log directories are created if they do not exist
 log_dir = Path("data/log")
