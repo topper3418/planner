@@ -69,7 +69,6 @@ class NoteProcessor(NoteProcessBuffer):
             command = create_command(self.annotation)
             if command is None:
                 logger.error(f"Failed to create command: {self.annotation.annotation_text}")
-                self.note.processing_error = "Failed to create command"
             self.command = command
             if command:
                 route_command(command)
