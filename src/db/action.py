@@ -179,7 +179,8 @@ class Action(BaseModel):
             before: Optional[str] = None,
             after: Optional[str] = None,
             search: Optional[str] = None,
-            limit: Optional[int] = None,
+            offset: Optional[int] = 0,
+            limit: Optional[int] = 25,
     ):
         """
         Reads actions from the database.
@@ -189,6 +190,7 @@ class Action(BaseModel):
             WHERE 1=1
         '''
         params = []
+        # build the query dynamically
         if before:
             query += ' AND start_time < ?'
             params.append(before)
@@ -198,10 +200,11 @@ class Action(BaseModel):
         if search:
             query += ' AND action_text LIKE ?'
             params.append(f'%{search}%')
-        query += ' ORDER BY id DESC'
-        if limit:
-            query += ' LIMIT ?'
-            params.append(limit)
+        # apply offset,  limit an order
+        query += ' ORDER BY start_time DESC LIMIT ? OFFSET ?'
+        params.append(limit)
+        params.append(offset)
+        # run query and return results
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, params)
