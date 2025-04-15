@@ -26,6 +26,7 @@ def cycle_note_processor():
 
     processing_payload = pformat(note_processor.to_json())
     text_file_logger.info(f"Note processing payload:\n{processing_payload}")
+    return note
 
 
 def cycle_annotation_reprocessor():
@@ -43,11 +44,18 @@ def cycle_annotation_reprocessor():
 
     processing_payload = pformat(annotation_processor.to_json())
     text_file_logger.info(f"Note processing payload:\n{processing_payload}")
+    return annotation
 
 
 def cycle():
     """
     Main function to run the note processor and annotation reprocessor.
     """
-    cycle_note_processor()
-    cycle_annotation_reprocessor()
+    note = cycle_note_processor()
+    annotation = cycle_annotation_reprocessor()
+    if not note and not annotation:
+        return
+    return {
+        "note": note,
+        "annotation": annotation,
+    }
