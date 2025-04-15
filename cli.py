@@ -25,7 +25,9 @@ def main():
 
     # Cycle subparser
     cycle_parser = subparsers.add_parser('cycle', help='cycles the engine once')
-    cycle_parser.add_argument('-c', '--continuous', help='cycles in a loop')
+    cycle_parser.add_argument('-c', '--continuous', help='cycles in a loop until interrupted')
+    cycle_parser.add_argument('-a', '--all', action='store_true', help='cycles all notes and reprocess annotations until all are processed')
+    cycle_parser.add_argument('-i', '--iterations', type=int)
 
     # Read subparser with type-specific subcommands
     read_parser = subparsers.add_parser('read', help='Read notes with filters')
@@ -92,6 +94,14 @@ def main():
                     time.sleep(5)
             except KeyboardInterrupt:
                 print("Stopping the engine.")
+        if args.all:
+            return_value = True
+            while return_value:
+                return_value = engine.cycle()
+        if args.iterations:
+            for i in range(args.iterations):
+                engine.cycle()
+                print(f"Cycle {i + 1}/{args.iterations} completed")
         else:
             engine.cycle()
             print("Cycle completed")
