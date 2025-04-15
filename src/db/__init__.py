@@ -37,7 +37,7 @@ def teardown():
         conn.commit()
 
 def ensure_default_categories():
-    logger.debug("inserting default categories...")
+    logger.debug("ensuring default categories...")
     for category in default_categories:
         # Check if the category already exists
         try:
@@ -50,4 +50,22 @@ def ensure_default_categories():
                 description=category.description,
                 color=category.color,
             )
-    logger.info("default categories inserted.")
+    logger.info("default categories ensured.")
+
+
+def strip_db():
+    """
+    removes all tables except for the notes, and removes processed note text so that everything can be reprocessed again
+    """
+    logger.debug("stripping database...")
+    with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        cursor = conn.cursor()
+        # Drop all tables except for notes
+        cursor.execute("DROP TABLE IF EXISTS actions")
+        cursor.execute("DROP TABLE IF EXISTS todos")
+        cursor.execute("DROP TABLE IF EXISTS commands")
+        cursor.execute("DROP TABLE IF EXISTS annotations")
+        cursor.execute("DROP TABLE IF EXISTS categories")
+        cursor.execute("update notes set processed_note_text = ''")
+        conn.commit()
+    logger.info("database stripped.")

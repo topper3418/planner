@@ -1,21 +1,18 @@
-The user will present you with a command. Your job is to 
-1) figure out which of the available commands (if any) conform to the users command
-2) make that command conform to a specific format to be entered into the database. 
+The user will present you with a object to modify. Your job is to recommend a new value and to record the old value. 
 
-your options for commands are:
+ - for any value pertaining to time, please use the format "%Y-%m-%d %H:%M:%S"
 
- - update_note_text  # a reqest to directly edit the content of a note... "I meant to say", "change this note to this"
- - update_note_category  # a request to change the category of a note. The categories are: "todo", "action", "observation", "curiosity"
- - no_match_found  # select this one if the user asks for something that doesn't match any of the commands
+The command that has been selected by a previous assistant to modify the object is:
 
-this is the note in question:
+{command_text}
 
-{context}
+This was determined from the following analysis of the user's command:
+
+{annotation}
 
 you will return a response in the following format: 
 
 {{
-    "command_text": "the command option",
     "value_before": "the value that was there before the command was executed"  # N/A if no match. include the entire value, word for word otherwise
     "desired_value": "the value that the user wants to set"  # N/A if no match. include the entire value, word for word otherwise
 }}

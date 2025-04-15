@@ -28,6 +28,7 @@ class Todo(BaseModel):
     todo_text: str = Field(..., description="Text of the todo")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
     complete: bool = Field(False, description="True if the task has been completed")
+    cancelled: bool = Field(False, description="True if the task has been cancelled")
 
     _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
     @property
@@ -59,7 +60,8 @@ class Todo(BaseModel):
                 target_end_time DATETIME DEFAULT NULL,
                 todo_text TEXT NOT NULL,
                 source_note_id INTEGER NOT NULL,
-                complete INTEGER NOT NULL DEFAULT 0
+                complete INTEGER NOT NULL DEFAULT 0,
+                cancelled INTEGER NOT NULL DEFAULT 0
             );
         '''
         with get_connection() as conn:
@@ -79,6 +81,7 @@ class Todo(BaseModel):
             todo_text=row[3],
             source_annotation_id=row[4],
             complete=bool(row[5]),
+            cancelled=bool(row[6]),
         )
 
     @classmethod
@@ -96,6 +99,21 @@ class Todo(BaseModel):
                 logger.error(f"Todo with ID {todo_id} not found in the database.")
                 raise ValueError(f"Todo with ID {todo_id} not found in the database.")
 
+    @classmethod
+    def get_by_source_annotation_id(cls, source_annotation_id: int) -> "Todo":
+        """
+        Retrieves a Todo instance by its source annotation ID.
+        """
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM todos WHERE source_note_id = ?", (source_annotation_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls.from_sqlite_row(row)
+            else:
+                logger.error(f"Todo with source annotation ID {source_annotation_id} not found in the database.")
+                raise ValueError(f"Todo with source annotation ID {source_annotation_id} not found in the database.")
+
     def refresh(self) -> "Todo":
         """
         Refreshes the Todo instance by reloading it from the database.
@@ -105,6 +123,7 @@ class Todo(BaseModel):
         self.target_end_time = copy.target_end_time
         self.todo_text = copy.todo_text
         self.complete = copy.complete
+        self.cancelled = copy.cancelled
         return self
 
     def save(self):
@@ -113,12 +132,12 @@ class Todo(BaseModel):
         """
         query = '''
             UPDATE todos
-            SET target_start_time = ?, target_end_time = ?, todo_text = ?, complete = ?
+            SET target_start_time = ?, target_end_time = ?, todo_text = ?, complete = ?, cancelled = ?
             WHERE id = ?;
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.target_start_time, self.target_end_time, self.todo_text, self.complete, self.id))
+            cursor.execute(query, (self.target_start_time, self.target_end_time, self.todo_text, self.complete, self.cancelled, self.id))
             conn.commit()
 
     @classmethod
@@ -136,6 +155,21 @@ class Todo(BaseModel):
             cursor.execute(query, (offset, limit))
             rows = cursor.fetchall()
             return [cls.from_sqlite_row(row) for row in rows]
+
+    @classmethod
+    def get_cancelled(self) -> list["Todo"]:
+        """
+        Retrieves a list of cancelled Todo instances from the database.
+        """
+        query = '''
+            SELECT * FROM todos
+            WHERE cancelled = 1;
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            return [self.from_sqlite_row(row) for row in rows]
 
     @classmethod
     def create(cls, todo_text, source_annotation_id, target_start_time: Optional[str]=None, target_end_time: Optional[str]=None) -> "Todo":
@@ -174,7 +208,9 @@ class Todo(BaseModel):
             before: Optional[str] = None, 
             after: Optional[str] = None, 
             complete: Optional[bool] = None,
-            limit: Optional[int] = None,
+            cancelled: Optional[bool] = None,
+            offset: Optional[int] = 0,
+            limit: Optional[int] = 25,
     ) -> list["Todo"]:
         """
         Reads todos from the database.
@@ -183,18 +219,30 @@ class Todo(BaseModel):
             SELECT * FROM todos
         '''
         args = []
-        if complete is not None:
-            query += ' WHERE complete = ?'
-            args.append(int(complete))
-        if before is not None:
-            query += ' AND target_end_time < ?'
+        if before:
+            query += ' WHERE target_start_time < ?'
             args.append(before)
-        if after is not None:
-            query += ' AND target_end_time > ?'
+        if after:
+            if 'WHERE' in query:
+                query += ' AND target_start_time > ?'
+            else:
+                query += ' WHERE target_start_time > ?'
             args.append(after)
-        if limit is not None:
-            query += ' LIMIT ?'
-            args.append(limit)
+        if complete is not None:
+            if 'WHERE' in query:
+                query += ' AND complete = ?'
+            else:
+                query += ' WHERE complete = ?'
+            args.append(int(complete))
+        if cancelled is not None:
+            if 'WHERE' in query:
+                query += ' AND cancelled = ?'
+            else:
+                query += ' WHERE cancelled = ?'
+            args.append(int(cancelled))
+        query += ' LIMIT ?, ?'
+        args.append(offset)
+        args.append(limit)
         with get_connection() as conn:
             cursor = conn.cursor()
             if complete is not None:

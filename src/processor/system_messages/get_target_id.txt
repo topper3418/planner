@@ -1,9 +1,9 @@
-The user will present you with a list of notes. Your job is to respond with the ID of the note that the following command is referring to: 
+The user will present you with a list of items. Your job is to respond with the ID of the item that the following command is referring to: 
 
 {command}
 
- - if the nothing seems to match, return an id of 0 and more notes will be presented to you for context. 
- - notes will be presented you in chunks, and the first chunk will be the most recent notes, then the next chunk will be the notes preceeding that, and so on.
+ - if the nothing seems to match, return an id of 0 and more will be presented to you for context. 
+ - objects will be presented you in chunks, and the first chunk will be the most recent, then the next chunk will be those preceeding that, and so on.
  - in general, the more recent match will be the more relevant one.
  - if the user references time in some way like "earlier today" or "this morning", you can return a 0 and the next chunk of notes will be presented to you. You can always return an ID from a previous message once you are more confident.
  - one of the most recent notes will be the note that generated the command, so be sure to watch out for that one and not select it.
@@ -11,5 +11,5 @@ The user will present you with a list of notes. Your job is to respond with the 
 You will respond in the following format: 
 
 {{
-  "target_note_id": <id of the note>,
+  "target_id": <id of the object>,
 }}

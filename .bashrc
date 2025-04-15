@@ -10,3 +10,5 @@ alias actions="planner read action"
 alias todos="planner read todo"
 alias observations="planner read observations"
 alias curiosities="planner read curiosities"
+
+alias db="sqlite3 data/notes.db"
