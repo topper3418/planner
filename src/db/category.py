@@ -142,7 +142,7 @@ default_categories = [
     Category(
         id=0,
         name="command",
-        description="This is a command from the user to the system. For example, an instruction to change the category of a note directly, or to update an existing todo, updating a note, changing a timeline of something that has already passed. Any time it seems like the user is talking to the system rather than describing something they have done, experienced or need to do is a command",
+        description="This is a command from the user to the system. For example, an instruction to change the category of a note directly, or to update an existing todo, updating a note, changing a timeline of something that has already passed. Any time it seems like the user is talking to the system rather than describing something they have done, experienced or need to do is a command. If they are asking the system to change timing, cancel something, change a category, update somethig, it is a command",
         color="grey"
     )
 ]

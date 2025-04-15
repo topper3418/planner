@@ -6,6 +6,10 @@ The command that has been selected by a previous assistant to modify the object 
 
 {command_text}
 
+This was determined from the following analysis of the user's command:
+
+{annotation}
+
 you will return a response in the following format: 
 
 {{

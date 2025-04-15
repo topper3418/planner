@@ -78,12 +78,12 @@ def strf_todo(todo: db.Todo) -> str:
     now = datetime.now()
     if todo.complete:
         pretty_text = colored(pretty_text, "green")
+    elif todo.cancelled:
+        pretty_text = colored(pretty_text, "grey")
     elif todo.target_start_time and datetime.strptime(todo.target_start_time, "%Y-%m-%d %H:%M:%S") < now:
         pretty_text = colored(pretty_text, "yellow")
     elif todo.target_end_time and datetime.strptime(todo.target_end_time, "%Y-%m-%d %H:%M:%S") < now:
         pretty_text = colored(pretty_text, "red")
-    elif todo.cancelled:
-        pretty_text = colored(pretty_text, "grey")
     else:
         pretty_text = colored(pretty_text, "white")
     return pretty_text

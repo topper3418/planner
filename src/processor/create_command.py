@@ -1,11 +1,10 @@
 import logging
-
+from pprint import pformat
 
 from .. import db
 from .client import GrokChatClient
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def get_command_text(annotation: db.Annotation) -> str:
@@ -42,7 +41,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
         if not notes:
             break
         notes_str = "\n".join([note.model_dump_json() for note in notes])
-        logger.info('notes found:\n' + notes_str)
+        logger.debug('notes found:\n' + notes_str)
         response = client.chat(notes_str)
         logger.info(f"get command context response is:\n{response}")
         target_note_id = response.get('target_id')
@@ -129,6 +128,17 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
             annotation.note.processing_error = "no target note found"
             annotation.note.save()
             return None
+        # get the note as a string
+        target_dict = target.model_dump()
+        if "category" in command_text:
+            note_annotation = db.Annotation.get_by_note_id(target_id)
+            if not note_annotation:
+                annotation.note.processing_error = "no target note found"
+                annotation.note.save()
+                return None
+            target_dict["category"] = note_annotation.category.name
+            target_dict["available_categories"] = [category.name for category in db.Category.get_all()]
+        target_str = pformat(target_dict)
     elif "todo" in command_text:
         target_id = get_target_todo_id(annotation)
         target = db.Todo.get_by_id(target_id) if target_id else None
@@ -136,12 +146,14 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
             annotation.note.processing_error = "no target todo found"
             annotation.note.save()
             return None
+        target_str = target.model_dump_json()
     elif "action" in command_text:
         target_id = get_target_action_id(annotation)
         target = db.Action.get_by_id(target_id) if target_id else None
         if not target:
             annotation.note.processing_error = "no target action found"
             return None
+        target_str = target.model_dump_json()
     else:  # handle failure case for "get_command"
         note = annotation.note
         note.processing_error = "no command found matching user input"
@@ -153,10 +165,10 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
         annotation.note.save()
         return None
     client = GrokChatClient()
-    client.load_system_message("create_command", command_text=command_text)
+    client.load_system_message("create_command", command_text=command_text, annotation=annotation.model_dump())
     logger.debug(f"system message is:\n{client.system_message}")
 
-    response = client.chat(target.model_dump_json())
+    response = client.chat(target_str)
     logger.info(f"response is:\n{response}")
 
     # parse the response
