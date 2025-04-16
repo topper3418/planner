@@ -1,13 +1,15 @@
 import pytest
+from datetime import datetime
 
-from src import db, processor, utils
+from src import db, processor, config
 
 
 def test_create_action(setup_database):
     # create a test note to work with
+    timestamp = datetime.strptime("2025-04-05 10:00:00", config.TIMESTAMP_FORMAT)
     initial_note = db.Note.create(
         "I am going to the gym",
-        timestamp="2025-04-05 10:00:00",
+        timestamp=timestamp,
     )
     category = db.Category.find_by_name("action")
     assert category is not None
@@ -33,9 +35,10 @@ def test_create_recent_action(setup_database):
     Tests the processor's ability to create an action the user just did
     """
     # create a test note to work with
+    timestamp = datetime.strptime("2025-04-05 10:00:00", config.TIMESTAMP_FORMAT)
     initial_note = db.Note.create(
         "I just spent 15 minutes cleaning the kitchen",
-        timestamp="2025-04-05 10:00:00",
+        timestamp=timestamp,
     )
     category = db.Category.find_by_name("action")
     assert category is not None
@@ -53,14 +56,8 @@ def test_create_recent_action(setup_database):
     assert action is not None
     assert action.source_annotation == annotation
     assert "kitchen" in action.action_text
-    start_time = utils.parse_time(action.start_time)
-    assert action.end_time is not None
-    end_time = utils.parse_time(action.end_time)
-    now = utils.parse_time(initial_note.timestamp)
-    assert start_time < now
-    assert end_time > start_time
-    diff = end_time - start_time
-    assert diff.total_seconds() == 900  # 15 minutes
+    assert action.start_time == initial_note.timestamp
+    assert "15 minutes" in action.action_text
 
 
 def test_create_immediate_action(setup_database):
@@ -89,14 +86,7 @@ def test_create_immediate_action(setup_database):
     assert action.source_annotation == annotation
     assert "garden" in action.action_text
     assert action.start_time == initial_note.timestamp
-    start_time = utils.parse_time(action.start_time)
-    assert action.end_time is not None
-    end_time = utils.parse_time(action.end_time)
-    now = utils.parse_time(initial_note.timestamp)
-    assert end_time > start_time
-    assert end_time > now
-    diff = end_time - start_time
-    assert diff.total_seconds() == 3600  # 1 hour
+    assert "1 hour" in action.action_text
 
 
 def test_create_retroactive_action(setup_database):
@@ -124,14 +114,8 @@ def test_create_retroactive_action(setup_database):
     assert action is not None
     assert action.source_annotation == annotation
     assert "kitchen" in action.action_text
-    start_time = utils.parse_time(action.start_time)
-    assert action.end_time is not None
-    end_time = utils.parse_time(action.end_time)
-    now = utils.parse_time(initial_note.timestamp)
-    assert start_time < now
-    assert end_time < now
-    diff = end_time - start_time
-    assert diff.total_seconds() == 1800  # 30 minutes
+    assert "30 minutes" in action.action_text
+    assert action.start_time.hour < 12
 
 
 def test_create_retroactive_action_2(setup_database):
@@ -160,12 +144,7 @@ def test_create_retroactive_action_2(setup_database):
     assert action.source_annotation == annotation
     assert "work" in action.action_text.lower()
     assert "out" in action.action_text.lower()
-    start_time = utils.parse_time(action.start_time)
-    assert action.end_time is not None
-    end_time = utils.parse_time(action.end_time)
-    now = utils.parse_time(initial_note.timestamp)
-    assert start_time < now
-    assert end_time < now
-    diff = end_time - start_time
-    assert diff.total_seconds() == 3600  # 1 hour
+    start_time = action.start_time
+    assert start_time.day == initial_note.timestamp.day - 1
+    assert "1 hour" in action.action_text
     assert start_time.hour == 20  # 8 PM

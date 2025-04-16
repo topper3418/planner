@@ -1,4 +1,5 @@
-from src import db
+from datetime import datetime
+from src import db, config
 
 from .note_buffer import NoteProcessBuffer
 from .unprocess_note import unprocess_note
@@ -61,11 +62,11 @@ def route_command(command: db.Command):
             todo.save()
         if command.command_text == "update_todo_start_time":
             # update the todo start time
-            todo.target_start_time= command.desired_value
+            todo.target_start_time= datetime.strptime(command.desired_value, config.TIMESTAMP_FORMAT)
             todo.save()
         if command.command_text == "update_todo_end_time":
             # update the todo end time
-            todo.target_end_time = command.desired_value
+            todo.target_end_time = datetime.strptime(command.desired_value, config.TIMESTAMP_FORMAT)
             todo.save()
         if command.command_text == "cancel_todo":
             # cancel the todo
@@ -81,11 +82,7 @@ def route_command(command: db.Command):
             action.save()
         if command.command_text == "update_action_start_time":
             # update the action start time
-            action.start_time = command.desired_value
-            action.save()
-        if command.command_text == "update_action_end_time":
-            # update the action end time
-            action.end_time = command.desired_value
+            action.start_time = datetime.strptime(command.desired_value, config.TIMESTAMP_FORMAT)
             action.save()
     else:
         raise ValueError(f"Unknown command: {command.command_text}")

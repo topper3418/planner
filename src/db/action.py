@@ -1,9 +1,10 @@
 import sqlite3
 import logging
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from src.config import NOTES_DATABASE_FILEPATH
+from src.config import NOTES_DATABASE_FILEPATH, TIMESTAMP_FORMAT
 from .annotation import Annotation
 
 
@@ -23,8 +24,7 @@ class Action(BaseModel):
     Represents an action that the user took
     """
     id: int = Field(..., description="Unique identifier for the action")
-    start_time: str = Field(..., description="Start time of the action")
-    end_time: Optional[str] = Field(None, description="End time of the action")
+    start_time: datetime = Field(..., description="Start time of the action")
     action_text: str = Field(..., description="Text of the action")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
     todo_id: Optional[int] = Field(None, description="ID of the todo associated with the action")
@@ -34,8 +34,7 @@ class Action(BaseModel):
     @property
     def source_annotation(self) -> Annotation:
         """
-        Returns the note associated with the action.
-        """
+        Returns the note associated with the action. """
         if self._source_annotation is None:
             self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
             if self._source_annotation is None:
@@ -57,7 +56,6 @@ class Action(BaseModel):
             CREATE TABLE IF NOT EXISTS actions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                end_time DATETIME DEFAULT NULL,
                 action_text TEXT NOT NULL,
                 source_annotation_id INTEGER NOT NULL,
                 todo_id INTEGER DEFAULT NULL,
@@ -78,12 +76,11 @@ class Action(BaseModel):
         """
         return cls(
             id=row[0],
-            start_time=row[1],
-            end_time=row[2],
-            action_text=row[3],
-            source_annotation_id=row[4],
-            todo_id=row[5],
-            mark_complete=bool(row[6]),
+            start_time=datetime.strptime(row[1], TIMESTAMP_FORMAT),
+            action_text=row[2],
+            source_annotation_id=row[3],
+            todo_id=row[4],
+            mark_complete=bool(row[5]),
         )
 
     @classmethod
@@ -105,7 +102,6 @@ class Action(BaseModel):
         copy = self.get_by_id(self.id)
         if copy:
             self.start_time = copy.start_time
-            self.end_time = copy.end_time
             self.action_text = copy.action_text
             self.todo_id = copy.todo_id
             self.mark_complete = copy.mark_complete
@@ -118,14 +114,13 @@ class Action(BaseModel):
         """
         query = '''
             UPDATE actions
-            SET start_time = ?, end_time = ?, action_text = ?, todo_id = ?, mark_complete = ?
+            SET start_time = ?, action_text = ?, todo_id = ?, mark_complete = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (
-                self.start_time,
-                self.end_time,
+                datetime.strftime(self.start_time, TIMESTAMP_FORMAT),
                 self.action_text,
                 self.todo_id,
                 int(self.mark_complete),
@@ -134,17 +129,23 @@ class Action(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, action_text: str, start_time: str, source_annotation_id: int, end_time: Optional[str] = None, todo_id: Optional[int] = None, mark_complete: bool = False):
+    def create(cls, action_text: str, start_time: str | datetime, source_annotation_id: int, todo_id: Optional[int] = None, mark_complete: bool = False):
         """
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, end_time, action_text, source_annotation_id, todo_id, mark_complete)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO actions (start_time, action_text, source_annotation_id, todo_id, mark_complete)
+            VALUES (?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (start_time, end_time, action_text, source_annotation_id, todo_id, mark_complete))
+            cursor.execute(query, (
+                start_time if isinstance(start_time, str) else datetime.strftime(start_time, TIMESTAMP_FORMAT),
+                action_text, 
+                source_annotation_id, 
+                todo_id, 
+                mark_complete
+            ))
             conn.commit()
             action_id = cursor.lastrowid
         if action_id is None:
@@ -176,8 +177,8 @@ class Action(BaseModel):
     @classmethod
     def read(
             cls,
-            before: Optional[str] = None,
-            after: Optional[str] = None,
+            before: Optional[str | datetime] = None,
+            after: Optional[str | datetime] = None,
             search: Optional[str] = None,
             offset: Optional[int] = 0,
             limit: Optional[int] = 25,
@@ -193,9 +194,13 @@ class Action(BaseModel):
         # build the query dynamically
         if before:
             query += ' AND start_time < ?'
+            if isinstance(before, datetime):
+                before = datetime.strftime(before, TIMESTAMP_FORMAT)
             params.append(before)
         if after:
             query += ' AND start_time > ?'
+            if isinstance(after, datetime):
+                after = datetime.strftime(after, TIMESTAMP_FORMAT)
             params.append(after)
         if search:
             query += ' AND action_text LIKE ?'

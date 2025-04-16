@@ -76,7 +76,7 @@ class GrokChatClient(ChatClient):
                 )
                 message = response.choices[0].message
                 self.history.append(message)
-                logger.info('chatting with history:\n' + str(self.history))
+                logger.debug('chatting with history:\n' + str(self.history))
                 # Parse the response to ensure it’s valid JSON
                 try:
                     response_obj = json.loads(message.content.strip())

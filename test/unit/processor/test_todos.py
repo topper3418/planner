@@ -1,13 +1,15 @@
 import pytest
+import datetime
 
-from src import db, processor, utils
+from src import db, processor, config 
 
 
 def test_create_basic_todo(setup_database):
     # create a test note to work with
+    timestamp = datetime.datetime.strptime("2025-04-05 10:00:00", config.TIMESTAMP_FORMAT)
     initial_note = db.Note.create(
         "I need to clean the pool filter",
-        timestamp="2025-04-05 10:00:00",
+        timestamp=timestamp,
     )
     category = db.Category.find_by_name("todo")
     assert category is not None
@@ -50,8 +52,8 @@ def test_create_open_todo(setup_database):
     assert todo.target_start_time is not None
     assert todo.target_end_time is None
     assert todo.todo_text is not None
-    start = utils.parse_time(todo.target_start_time)
-    now = utils.parse_time(initial_note.timestamp)
+    start = todo.target_start_time
+    now = initial_note.timestamp
     assert start.hour <= 12
     assert start.day == now.day + 1
 
@@ -80,9 +82,9 @@ def test_create_full_todo(setup_database):
     assert todo.target_start_time is not None
     assert todo.target_end_time is not None
     assert todo.todo_text is not None
-    start = utils.parse_time(todo.target_start_time)
-    end = utils.parse_time(todo.target_end_time)
-    now = utils.parse_time(initial_note.timestamp)
+    start = todo.target_start_time
+    end = todo.target_end_time
+    now = initial_note.timestamp
     assert start.hour == 8
     assert start.day == now.day + 1
     assert end.hour == 10

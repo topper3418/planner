@@ -5,8 +5,10 @@ from .client import GrokChatClient
 
 logger = logging.getLogger(__name__)
 
+
 def todo_to_str(todo: db.Todo) -> str:
     return f"ID:{todo.id} created: {todo.source_annotation.note.timestamp} - target_start: {todo.target_start_time} - target_end: {todo.target_end_time}: {todo.todo_text}"
+
 
 def apply_action_to_todo(action: db.Action):
     client = GrokChatClient()
@@ -57,7 +59,6 @@ def create_action(annotation: db.Annotation):
         action = db.Action.create(
             action_text=action_text,
             start_time=start_time,
-            end_time=response.get('end_time'),
             source_annotation_id=annotation.id,
         )
     except TypeError as e:

@@ -131,18 +131,18 @@ default_categories = [
         id=0, 
         name="curiosity", 
         description="Something the user is curious about, or wants to learn more about. This can be a wondering, or a direct question to the system. I wonder, I am curious about", 
-        color="yellow"
+        color="purple"
     ),
     Category(
         id=0,
         name="observation",
         description="Documents something the user has learned or observed. Put another way, it is anything the user puts in that is simply storing a thought. This does not include things that the user has done, a user cannot observe their own action. To clarify a grey area, if it seems like the user is observing the result of something they did, it is an observation.",
-        color="green"
+        color="magenta"
     ),
     Category(
         id=0,
         name="command",
         description="This is a command from the user to the system. For example, an instruction to change the category of a note directly, or to update an existing todo, updating a note, changing a timeline of something that has already passed. Any time it seems like the user is talking to the system rather than describing something they have done, experienced or need to do is a command. If they are asking the system to change timing, cancel something, change a category, update somethig, it is a command",
-        color="grey"
+        color="red"
     )
 ]

@@ -6,7 +6,7 @@ from datetime import datetime
 
 from termcolor import colored
 
-from . import db
+from . import db, config
 
 
 def banner(text: str, width: int = 75) -> str:
@@ -80,9 +80,9 @@ def strf_todo(todo: db.Todo) -> str:
         pretty_text = colored(pretty_text, "green")
     elif todo.cancelled:
         pretty_text = colored(pretty_text, "grey")
-    elif todo.target_start_time and datetime.strptime(todo.target_start_time, "%Y-%m-%d %H:%M:%S") < now:
+    elif todo.target_start_time and todo.target_start_time < now:
         pretty_text = colored(pretty_text, "yellow")
-    elif todo.target_end_time and datetime.strptime(todo.target_end_time, "%Y-%m-%d %H:%M:%S") < now:
+    elif todo.target_end_time and todo.target_end_time < now:
         pretty_text = colored(pretty_text, "red")
     else:
         pretty_text = colored(pretty_text, "white")
@@ -114,7 +114,7 @@ def strf_action(action: db.Action) -> str:
             action_text = colored(action_text, "green")
     else:
         action_text = action.action_text
-    pretty_text = f"{action.start_time} - {action.end_time}\n\t{action_text}"
+    pretty_text = f"{datetime.strftime(action.start_time, config.TIMESTAMP_FORMAT)}\n\t{action_text}"
     return pretty_text
 
 

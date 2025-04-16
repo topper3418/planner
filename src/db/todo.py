@@ -1,9 +1,10 @@
 import sqlite3
 import logging
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from src.config import NOTES_DATABASE_FILEPATH
+from src.config import NOTES_DATABASE_FILEPATH, TIMESTAMP_FORMAT
 from .annotation import Annotation
 
 
@@ -23,8 +24,8 @@ class Todo(BaseModel):
     represents something the user wants to do
     """
     id: int = Field(..., description="Unique identifier for the todo")
-    target_start_time: Optional[str] = Field(None, description="Target start time of the todo")
-    target_end_time: Optional[str] = Field(None, description="Target end time of the todo")
+    target_start_time: Optional[datetime] = Field(None, description="Target start time of the todo")
+    target_end_time: Optional[datetime] = Field(None, description="Target end time of the todo")
     todo_text: str = Field(..., description="Text of the todo")
     source_annotation_id: int = Field(..., description="ID of the source annotation")
     complete: bool = Field(False, description="True if the task has been completed")
@@ -76,8 +77,8 @@ class Todo(BaseModel):
         """
         return cls(
             id=row[0],
-            target_start_time=row[1],
-            target_end_time=row[2],
+            target_start_time=datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") if row[1] else None,
+            target_end_time=datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S") if row[2] else None,
             todo_text=row[3],
             source_annotation_id=row[4],
             complete=bool(row[5]),
@@ -137,7 +138,14 @@ class Todo(BaseModel):
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (self.target_start_time, self.target_end_time, self.todo_text, self.complete, self.cancelled, self.id))
+            cursor.execute(query, (
+                datetime.strftime(self.target_start_time, TIMESTAMP_FORMAT) if self.target_start_time else None, 
+                datetime.strftime(self.target_end_time, TIMESTAMP_FORMAT) if self.target_end_time else None, 
+                self.todo_text, 
+                self.complete, 
+                self.cancelled, 
+                self.id
+            ))
             conn.commit()
 
     @classmethod
