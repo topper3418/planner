@@ -141,6 +141,20 @@ class Annotation(BaseModel):
             else:
                 raise ValueError(f"Annotation with ID {annotation_id} not found")
 
+    def refresh(self):
+        """
+        Refreshes the Annotation instance by reloading it from the database.
+        """
+        copy = self.get_by_id(self.id)
+        if copy:
+            self.category_id = copy.category_id
+            self.annotation_text = copy.annotation_text
+            self.reprocess = copy.reprocess
+            self._note = None
+            self._category = None
+        else:
+            raise ValueError(f"Annotation with ID {self.id} not found in the database.")
+
     @classmethod
     def get_by_note_id(cls, note_id: int):
         """

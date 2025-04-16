@@ -1,4 +1,5 @@
 The user will present you with a list of items. Your job is to respond with the ID of the item that the following command is referring to: 
+ - if the user gives an id in their command, you may use that id, but make sure it exists in the list first.
 
 {command}
 
