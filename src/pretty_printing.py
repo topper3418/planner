@@ -38,8 +38,8 @@ def strf_note(note: db.Note, show_processed_text: bool = False) -> str:
         note_text = note.processed_note_text
     else:
         note_text = note.note_text
-    cololred_category = colored(category_name, color)
-    pretty_text = f"{note.timestamp} - {cololred_category}\n"
+    colored_category = colored(category_name, color)
+    pretty_text = f"{note.local_timestamp} - {colored_category}\n"
     # we have to account for the tab character in the text
     space = 75 - 8
     if len(note_text) > space:
