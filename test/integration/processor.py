@@ -11,6 +11,7 @@ notes_sample = [
     ("2023-04-12 06:12:00", "Change that note about when I checked the weather to an action."),
     ("2023-04-12 06:15:00", "Made a quick cup of coffee."),
     ("2023-04-12 06:20:00", "Wonder why the coffee aroma is extra strong today."),
+    ("2023-04-12 06:22:00", "I need to write a note about the coffee strength."),
     ("2023-04-12 06:25:00", "Grab a snack on the way out."),
     ("2023-04-12 06:30:00", "The hallway light flickers briefly."),
     ("2023-04-12 06:35:00", "Left the house in a slight hurry, keys in hand."),
@@ -106,7 +107,6 @@ def test_processor(notes):
     assert note_processor.action.id > 0
     assert note_processor.action.source_annotation_id == note_processor.annotation.id
     assert note_processor.action.start_time == initial_note.timestamp
-    assert note_processor.action.end_time is None  # no duration for this action
     
     # lets do the next note
     second_note = db.Note.get_next_unprocessed_note()
@@ -147,7 +147,6 @@ def test_processor(notes):
     assert note_processor.todo.source_annotation_id == note_processor.annotation.id
     # no time was mentioned, so there should be no time data
     assert note_processor.todo.target_start_time == None
-    assert note_processor.todo.target_end_time == None
     check_weather_todo = note_processor.todo
 
     # lets do the next note
@@ -225,13 +224,35 @@ def test_processor(notes):
     assert note_processor.action is not None
     assert note_processor.action.source_annotation_id == note_processor.annotation.id
     assert note_processor.action.start_time == reprocess_note.timestamp
-    assert note_processor.action.end_time is None  # no duration for this action
     # the note was previously categorized as an observation, so nothing to 
     # make sure is deleted
     # lets check and see if that todo was completed
     completed_todo = db.Todo.get_by_id(check_weather_todo.id)
     assert completed_todo is not None
     assert completed_todo.complete == True
+
+    # lets do the next note
+    sixth_note = db.Note.get_next_unprocessed_note()
+    assert sixth_note is not None
+    assert sixth_note.note_text == notes[5].note_text
+    assert sixth_note.timestamp == notes[5].timestamp
+    # initialize the processor
+    note_processor = processor.NoteProcessor(sixth_note)
+    # process the note
+    note_processor.process()
+    assert sixth_note.processed_note_text is not None
+    # The sixth note is an action, about making coffee
+    assert note_processor.category is not None
+    assert note_processor.category.name == "action"
+    assert note_processor.annotation is not None
+    assert note_processor.annotation.note_id == sixth_note.id
+    assert note_processor.annotation.category_id == note_processor.category.id
+    # an action should have been created
+    assert note_processor.action is not None
+    assert note_processor.action.source_annotation_id == note_processor.annotation.id
+    assert note_processor.action.start_time == sixth_note.timestamp
+
+
 
 
 

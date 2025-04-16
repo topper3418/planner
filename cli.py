@@ -25,7 +25,7 @@ def main():
 
     # Cycle subparser
     cycle_parser = subparsers.add_parser('cycle', help='cycles the engine once')
-    cycle_parser.add_argument('-c', '--continuous', help='cycles in a loop until interrupted')
+    cycle_parser.add_argument('-c', '--continuous', action='store_true', help='cycles in a loop until interrupted')
     cycle_parser.add_argument('-a', '--all', action='store_true', help='cycles all notes and reprocess annotations until all are processed')
     cycle_parser.add_argument('-i', '--iterations', type=int)
 
@@ -38,7 +38,7 @@ def main():
     add_date_filters(note_parser)
     note_parser.add_argument('-s', '--search',
                             help='Search for notes containing this text')
-    note_parser.add_argument('-l', '--limit', type=int, default=15,
+    note_parser.add_argument('-l', '--limit', type=int, default=25,
                             help='Limit number of notes returned (default: 15)')
 
     # Todo subparser
@@ -46,37 +46,38 @@ def main():
     add_date_filters(todo_parser)
     todo_parser.add_argument('-s', '--search',
                             help='Search for todos containing this text')
-    todo_parser.add_argument('-l', '--limit', type=int, default=15,
+    todo_parser.add_argument('-l', '--limit', type=int, default=25,
                             help='Limit number of todos returned (default: 15)')
     todo_status_group = todo_parser.add_mutually_exclusive_group()
     todo_status_group.add_argument('-i', '--incomplete-only', action='store_true',
                                   help='Show only incomplete todos')
     todo_status_group.add_argument('-c', '--complete-only', action='store_true',
                                   help='Show only complete todos')
+    todo_parser.add_argument('-x', '--cancelled-only', action='store_true',)
 
     # Action subparser
     action_parser = read_subparsers.add_parser('action', help='Read actions')
     add_date_filters(action_parser)
     action_parser.add_argument('-s', '--search',
                               help='Search for actions containing this text')
-    action_parser.add_argument('-l', '--limit', type=int, default=15,
-                              help='Limit number of actions returned (default: 15)')
+    action_parser.add_argument('-l', '--limit', type=int, default=25,
+                              help='Limit number of actions returned (default: 25)')
 
     # Observation subparser
     observation_parser = read_subparsers.add_parser('observation', help='Read observations')
     add_date_filters(observation_parser)
     observation_parser.add_argument('-s', '--search',
                                    help='Search for observations containing this text')
-    observation_parser.add_argument('-l', '--limit', type=int, default=15,
-                                   help='Limit number of observations returned (default: 15)')
+    observation_parser.add_argument('-l', '--limit', type=int, default=25,
+                                   help='Limit number of observations returned (default: 25)')
 
     # Curiosity subparser
     curiosity_parser = read_subparsers.add_parser('curiosity', help='Read curiosities')
     add_date_filters(curiosity_parser)
     curiosity_parser.add_argument('-s', '--search',
                                  help='Search for curiosities containing this text')
-    curiosity_parser.add_argument('-l', '--limit', type=int, default=15,
-                                 help='Limit number of curiosities returned (default: 15)')
+    curiosity_parser.add_argument('-l', '--limit', type=int, default=25,
+                                 help='Limit number of curiosities returned (default: 25)')
 
     args = parser.parse_args()
 
@@ -117,11 +118,17 @@ def main():
                 complete = True
             else:
                 complete = None
+            if args.cancelled_only:
+                complete = None
+                cancelled = True
+            else:
+                cancelled = False
             notes = db.Todo.read(
                 before=args.before,
                 after=args.after,
                 limit=args.limit,
                 complete=complete,
+                cancelled=cancelled,
             )
             pretty_todos = pretty_printing.strf_todos(notes)
             print(pretty_todos)

@@ -1,4 +1,5 @@
 The user will present you with a command. Your job is to determine which of the available functions (if any) conform to the users command.
+ - any time they say something like 
 
 
 Your options are: 
@@ -18,8 +19,6 @@ Your options are:
  - update_action_text: the user is referencing an action they took in the past, they want you to change the text of that action.
 
  - update_action_start_time: the user is referencing an action they took in the past, they want you to change the start time of that action.
-
- - update_action_end_time: the user is referencing an action they took in the past, they want you to change the end time of that action.
 
  - no_match: the user is asking for something that doesn't match any of the commands.
 

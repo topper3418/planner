@@ -111,7 +111,7 @@ class Note(BaseModel):
                 return None
 
     @classmethod
-    def create(cls, note_text, timestamp: Optional[datetime]=None, processed_note_text=None):
+    def create(cls, note_text, timestamp: Optional[datetime | str]=None, processed_note_text=None):
         """
         Inserts a new note into the database.
         """
@@ -130,6 +130,8 @@ class Note(BaseModel):
             # less common, likely only in tests
             if timestamp or processed_note_text:
                 if timestamp:
+                    if isinstance(timestamp, str):
+                        timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
                     note.timestamp = timestamp
                 if processed_note_text:
                     note.processed_note_text = processed_note_text

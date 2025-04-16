@@ -161,7 +161,7 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
         note.save()
         return None
     if target_id == 0:  # handle failure case for "get_target_id"
-        annotation.note.processing_error = "no target note found"
+        annotation.note.processing_error = "no target found"
         annotation.note.save()
         return None
     client = GrokChatClient()
