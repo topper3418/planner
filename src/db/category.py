@@ -131,7 +131,7 @@ default_categories = [
         id=0, 
         name="curiosity", 
         description="Something the user is curious about, or wants to learn more about. This can be a wondering, or a direct question to the system. I wonder, I am curious about", 
-        color="purple"
+        color="yellow"
     ),
     Category(
         id=0,

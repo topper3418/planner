@@ -216,6 +216,22 @@ class Action(BaseModel):
             rows = cursor.fetchall()
             return [cls.from_sqlite_row(row) for row in rows]
 
+    @classmethod
+    def find_by_annotation_id(cls, annotation_id: int) -> Optional["Action"]:
+        """
+        Finds actions by annotation ID.
+        """
+        query = '''
+            SELECT * FROM actions WHERE source_annotation_id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (annotation_id,))
+            rows = cursor.fetchone()
+            if rows:
+                return cls.from_sqlite_row(rows)
+            else:
+                return None
 
 
 
