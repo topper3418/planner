@@ -207,6 +207,7 @@ class Annotation(BaseModel):
         # make sure the category is authentic
         category = Category.find_by_name(category_name)
         if category is None:
+            logger.error(f'Category {category_name} not found')
             raise ValueError(f"Category with name '{category_name}' not found")
         query = 'SELECT annotations.id, annotations.note_id, annotations.category_id, annotations.annotation_text, annotations.reprocess FROM annotations'
         args: list = []
@@ -230,12 +231,12 @@ class Annotation(BaseModel):
         query += ' ORDER BY annotations.id DESC LIMIT ? OFFSET ?' 
         args.append(limit)
         args.append(offset)
-        logger.info(f"Query: {query}")
-        logger.info(f"Args: {args}")
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, args)
             rows = cursor.fetchall()
+            logger.info(f'Found {len(rows)} annotations for category {category_name}')
+            logger.info(f'annotations: {rows}')
             return [cls.from_sqlite_row(row) for row in rows] if rows else []
     
     def delete(self):

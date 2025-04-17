@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, ValidationError
 
 from ..config import TIMESTAMP_FORMAT
+from ..util import parse_time
 from .annotation import Annotation
 from .connection import get_connection
 
@@ -68,7 +69,7 @@ class Action(BaseModel):
         """
         return cls(
             id=row[0],
-            start_time=datetime.strptime(row[1], TIMESTAMP_FORMAT),
+            start_time=parse_time(row[1]),
             action_text=row[2],
             source_annotation_id=row[3],
             todo_id=row[4],
@@ -121,7 +122,14 @@ class Action(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, action_text: str, start_time: str | datetime, source_annotation_id: int, todo_id: Optional[int] = None, mark_complete: bool = False):
+    def create(
+            cls, 
+            action_text: str, 
+            start_time: str | datetime, 
+            source_annotation_id: int, 
+            todo_id: Optional[int] = None, 
+            mark_complete: bool = False
+    ):
         """
         Creates a new action in the database.
         """
@@ -142,7 +150,11 @@ class Action(BaseModel):
             action_id = cursor.lastrowid
         if action_id is None:
             raise ValueError("Failed to create action in the database.")
-        action = cls.get_by_id(action_id)
+        try:
+            action = cls.get_by_id(action_id)
+        except ValidationError as e:
+            logger.error(f"Failed to create action: {e}")
+            raise
         return action
 
     def delete(self):

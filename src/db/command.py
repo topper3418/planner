@@ -50,7 +50,8 @@ class Command(BaseModel):
                 value_before TEXT NOT NULL,
                 desired_value TEXT NOT NULL,
                 source_annotation_id INTEGER NOT NULL,
-                target_id INTEGER NOT NULL
+                target_id INTEGER NOT NULL,
+                FOREIGN KEY (source_annotation_id) REFERENCES annotations(id)
             );
         '''
         with get_connection() as conn:
@@ -125,7 +126,14 @@ class Command(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, command_text: str, value_before: str, desired_value: str, source_annotation_id: int, target_id: int) -> "Command":
+    def create(
+            cls, 
+            command_text: str, 
+            value_before: str, 
+            desired_value: str, 
+            source_annotation_id: int, 
+            target_id: int
+    ) -> "Command":
         """
         Creates a new command in the database.
         """

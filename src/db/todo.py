@@ -86,7 +86,7 @@ class Todo(BaseModel):
         )
 
     @classmethod
-    def get_by_id(cls, todo_id: int) -> "Todo":
+    def get_by_id(cls, todo_id: int) -> Optional["Todo"]:
         """
         Retrieves a Todo instance by its ID.
         """
@@ -97,8 +97,7 @@ class Todo(BaseModel):
             if row:
                 return cls.from_sqlite_row(row)
             else:
-                logger.error(f"Todo with ID {todo_id} not found in the database.")
-                raise ValueError(f"Todo with ID {todo_id} not found in the database.")
+                return None
 
     @classmethod
     def get_by_source_annotation_id(cls, source_annotation_id: int) -> "Todo":
@@ -120,6 +119,9 @@ class Todo(BaseModel):
         Refreshes the Todo instance by reloading it from the database.
         """
         copy = self.get_by_id(self.id)
+        if copy is None:
+            logger.error(f"Todo with ID {self.id} not found in the database.")
+            raise ValueError(f"Todo with ID {self.id} not found in the database.")
         self.target_start_time = copy.target_start_time
         self.target_end_time = copy.target_end_time
         self.todo_text = copy.todo_text

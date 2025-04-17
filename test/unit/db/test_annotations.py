@@ -98,11 +98,31 @@ def test_get_by_note_id(sample_annotations):
 
 
 def test_get_by_category_name(setup_database):
+    # reset the database
+    db.teardown()
+    db.ensure_tables()
+    db.ensure_default_categories()
     # test get by category name
     action_category = db.Category.find_by_name("action")
+    assert action_category is not None
+    assert action_category.name == "action"
     curiosity_category = db.Category.find_by_name("curiosity")
+    assert curiosity_category is not None
+    assert curiosity_category.name == "curiosity"
     observation_category = db.Category.find_by_name("observation")
+    assert observation_category is not None
+    assert observation_category.name == "observation"
     todo_category = db.Category.find_by_name("todo")
+    assert todo_category is not None
+    assert todo_category.name == "todo"
+    categories = [category.model_dump() for category in [
+        action_category,
+        curiosity_category,
+        observation_category,
+        todo_category,
+    ]]
+    from pprint import pformat
+    print(f"Categories:\n{pformat(categories)}")
     first_action_annotation = db.Annotation.create(
         note_id=1,
         category_id=action_category.id,
@@ -136,12 +156,12 @@ def test_get_by_category_name(setup_database):
     # test get by category name
     action_annotations = db.Annotation.get_by_category_name("action")
     assert len(action_annotations) == 2
-    assert action_annotations[0].annotation_text == "First action annotation"
-    assert action_annotations[1].annotation_text == "Second action annotation"
+    assert action_annotations[1].annotation_text == "First action annotation"
+    assert action_annotations[0].annotation_text == "Second action annotation"
     curiosity_annotations = db.Annotation.get_by_category_name("curiosity")
     assert len(curiosity_annotations) == 2
-    assert curiosity_annotations[0].annotation_text == "First curiosity annotation"
-    assert curiosity_annotations[1].annotation_text == "Second curiosity annotation"
+    assert curiosity_annotations[1].annotation_text == "First curiosity annotation"
+    assert curiosity_annotations[0].annotation_text == "Second curiosity annotation"
     observation_annotations = db.Annotation.get_by_category_name("observation")
     assert len(observation_annotations) == 1
     assert observation_annotations[0].annotation_text == "First observation annotation"
