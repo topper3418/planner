@@ -2,6 +2,7 @@ import logging
 import json
 from enum import Enum
 import os
+from pprint import pformat
 
 from openai import OpenAI
 
@@ -19,6 +20,7 @@ class ChatClient:
         self._client = self._get_client()
         self.history = []
         self.system_message = None
+        self.title = None
 
     def load_system_message(self, system_message_filename: str, **kwargs):
         """
@@ -35,6 +37,7 @@ class ChatClient:
             self.system_message = system_message.format(**kwargs)
         except KeyError as e:
             raise ValueError(f"Missing key in system message: {e}")
+        self.title = system_message_filename
         self.history.append({
             "content": self.system_message,
             "role": Role.SYSTEM.value,
@@ -76,11 +79,11 @@ class GrokChatClient(ChatClient):
                 )
                 message = response.choices[0].message
                 self.history.append(message)
-                logger.debug('chatting with history:\n' + str(self.history))
+                logger.debug(f'client "{self.title}" chatting with history:\n' + str(self.history))
                 # Parse the response to ensure it’s valid JSON
                 try:
                     response_obj = json.loads(message.content.strip())
-                    logger.debug(f"Chat response: {message.content}")
+                    logger.debug(f'Chat response for "{self.title}":\n{pformat(response_obj)}')
                     return response_obj
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse response: {message.content}")

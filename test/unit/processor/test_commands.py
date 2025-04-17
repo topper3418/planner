@@ -22,6 +22,10 @@ def create_notes_for_morning(setup_database):
     """
     creates a bunch of categorized notes for the morning
     """
+    # reset the database
+    db.teardown()
+    db.ensure_tables()
+    db.ensure_default_categories()
     notes = [
         ("2025-04-05 08:00:00", "I woke up", "observation"),
         ("2025-04-05 08:30:00", "I am going to the gym real quick", "action"),
@@ -34,43 +38,48 @@ def create_notes_for_morning(setup_database):
     bulk_upload_notes(notes)
     
 
-
-def test_create_commands(create_notes_for_morning):
-    # create a list of tuples with the note text and expected command text
-    test_samples = [
+@pytest.mark.parametrize(
+    "note_text, expected_command, note_search",
+    [
         ("Change the note about waking up to an action", "update_note_category", "I woke up"),
         ("That note about going to the gym, I actually meant to say garage", "update_note_text", "gym real quick"),
         ("I need you to do my homework for me", "no_match_found", "N/A")
+    ],
+    ids=[
+        "update_note_category",
+        "update_note_text",
+        "no_match_found"
     ]
-    for note_text, expected_command, note_search in test_samples:
-        # create a test note to work with
-        initial_note = db.Note.create(note_text)
-        category = db.Category.find_by_name("command")
-        assert category is not None
-        assert category.name == "command"
-        # try to annotate the note
-        annotation = processor.annotate_note(initial_note, category)
-        assert annotation is not None
-        assert annotation.note_id == initial_note.id
-        assert annotation.category_id == category.id
-        assert annotation.annotation_text is not None
-        initial_note.refresh()
-        assert initial_note.processed_note_text is not None
-        # try to create the command
-        command = processor.create_command(annotation)
-        if note_search != "N/A":
-            assert command is not None
-            assert command.source_annotation == annotation
-            assert command.command_text == expected_command
-            assert command.value_before is not None
-            assert command.desired_value is not None
-            # find the note to make sure that the command points to the right note
-            notes = db.Note.get_all(search=note_search)
-            note = notes[-1] if notes else None
-            assert note is not None  # this isn't the point of the test but good to know
-            assert note.id == command.target_id
-        else: 
-            assert command is None
+)
+def test_create_commands(create_notes_for_morning, note_text, expected_command, note_search):
+    # create a test note to work with
+    initial_note = db.Note.create(note_text)
+    category = db.Category.find_by_name("command")
+    assert category is not None
+    assert category.name == "command"
+    # try to annotate the note
+    annotation = processor.annotate_note(initial_note, category)
+    assert annotation is not None
+    assert annotation.note_id == initial_note.id
+    assert annotation.category_id == category.id
+    assert annotation.annotation_text is not None
+    initial_note.refresh()
+    assert initial_note.processed_note_text is not None
+    # try to create the command
+    command = processor.create_command(annotation)
+    if note_search != "N/A":
+        assert command is not None
+        assert command.source_annotation == annotation
+        assert command.command_text == expected_command
+        assert command.value_before is not None
+        assert command.desired_value is not None
+        # find the note to make sure that the command points to the right note
+        notes = db.Note.get_all(search=note_search)
+        note = notes[-1] if notes else None
+        assert note is not None  # this isn't the point of the test but good to know
+        assert note.id == command.target_id
+    else: 
+        assert command is None
 
 
 @pytest.fixture(scope="session")
@@ -95,41 +104,48 @@ def create_notes_for_afternoon(create_notes_for_morning):
     bulk_upload_notes(notes)
 
 
-def test_create_commands_2(create_notes_for_afternoon):
-    # create a list of tuples with the note text and expected command text
-    test_samples = [
+@pytest.mark.parametrize(
+    "note_text, expected_command, note_search",
+    [
         ("Change the note about going to the store to an action", "update_note_category", "I am going to the store"),
         ("That note about finishing my project, I actually meant to say I need to start my project", "update_note_text", "finish my project"),
         ("I need you to backfill everything I did today", "no_match_found", "N/A"),
         ("earlier today, when I said I was going to the gym, I actually meant I was going to the garage", "update_note_text", "I am going to spend an hour at the gym")
+    ],
+    ids=[
+        "update_note_category2",
+        "update_note_text2",
+        "no_match_found2",
+        "update_note_text3"
     ]
-    for note_text, expected_command, note_search in test_samples:
-        # create a test note to work with
-        initial_note = db.Note.create(note_text)
-        category = db.Category.find_by_name("command")
-        assert category is not None
-        assert category.name == "command"
-        # try to annotate the note
-        annotation = processor.annotate_note(initial_note, category)
-        assert annotation is not None
-        assert annotation.note_id == initial_note.id
-        assert annotation.category_id == category.id
-        assert annotation.annotation_text is not None
-        initial_note.refresh()
-        assert initial_note.processed_note_text is not None
-        # try to create the command
-        command = processor.create_command(annotation)
-        if note_search != "N/A":
-            assert command is not None
-            assert command.source_annotation == annotation
-            assert command.command_text == expected_command
-            assert command.value_before is not None
-            assert command.desired_value is not None
-            # find the note to make sure that the command points to the right note
-            notes = db.Note.get_all(search=note_search)
-            note = notes[-1] if notes else None
-            assert note is not None  # this isn't the point of the test but good to know
-            assert note.id == command.target_id
-        else: 
-            assert command is None
+)
+def test_create_commands_2(create_notes_for_afternoon, note_text, expected_command, note_search):
+    # create a test note to work with
+    initial_note = db.Note.create(note_text)
+    category = db.Category.find_by_name("command")
+    assert category is not None
+    assert category.name == "command"
+    # try to annotate the note
+    annotation = processor.annotate_note(initial_note, category)
+    assert annotation is not None
+    assert annotation.note_id == initial_note.id
+    assert annotation.category_id == category.id
+    assert annotation.annotation_text is not None
+    initial_note.refresh()
+    assert initial_note.processed_note_text is not None
+    # try to create the command
+    command = processor.create_command(annotation)
+    if note_search != "N/A":
+        assert command is not None
+        assert command.source_annotation == annotation
+        assert command.command_text == expected_command
+        assert command.value_before is not None
+        assert command.desired_value is not None
+        # find the note to make sure that the command points to the right note
+        notes = db.Note.get_all(search=note_search)
+        note = notes[-1] if notes else None
+        assert note is not None  # this isn't the point of the test but good to know
+        assert note.id == command.target_id
+    else: 
+        assert command is None
 

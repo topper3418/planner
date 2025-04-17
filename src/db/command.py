@@ -146,5 +146,8 @@ class Command(BaseModel):
             conn.commit()
         if cursor.lastrowid is None:
             raise ValueError("Failed to create command")
-        return cls.get_by_id(cursor.lastrowid)
+        command = cls.get_by_id(cursor.lastrowid)
+        if command is None:
+            raise ValueError("Failed to create command")
+        return command
 

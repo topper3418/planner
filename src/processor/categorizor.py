@@ -20,7 +20,6 @@ def categorize_note(note: db.Note) -> db.Category:
         "give_topic",
         categories=str([category.model_dump_json() for category in categories]),
     )
-    logger.debug(f"system message is:\n{client.system_message}")
     
     # Send the note text to the chat client for categorization
     response = client.chat(note.model_dump_json(), role="user")

@@ -5,6 +5,10 @@ from src import db
 
 @pytest.fixture
 def sample_annotations(setup_database):
+    # reset the database
+    db.teardown()
+    db.ensure_tables()
+    db.ensure_default_categories()
     note = db.Note.create(
         "I just woke up",
         timestamp="2023-04-12 12:00:00",

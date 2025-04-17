@@ -14,7 +14,6 @@ def create_todo(annotation: db.Annotation):
         raise ValueError(f"annotation category is not todo: {annotation.category.name}")
     client = GrokChatClient()
     client.load_system_message("create_todo")
-    logger.debug(f"system message is:\n{client.system_message}")
 
     response = client.chat(annotation.annotation_text)
     logger.info(f"response is:\n{response}")

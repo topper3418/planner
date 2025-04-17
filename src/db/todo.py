@@ -4,19 +4,13 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from src.config import NOTES_DATABASE_FILEPATH, TIMESTAMP_FORMAT
+from ..config import TIMESTAMP_FORMAT
+from ..util import format_time, parse_time
 from .annotation import Annotation
+from .connection import get_connection
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_connection(connection_path: str = NOTES_DATABASE_FILEPATH):
-    """
-    Establishes a connection to the SQLite database.
-    """
-    connection = sqlite3.connect(connection_path)
-    return connection
 
 
 class Todo(BaseModel):
@@ -77,8 +71,8 @@ class Todo(BaseModel):
         """
         return cls(
             id=row[0],
-            target_start_time=datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S") if row[1] else None,
-            target_end_time=datetime.strptime(row[2], "%Y-%m-%d %H:%M:%S") if row[2] else None,
+            target_start_time=parse_time(row[1]) if row[1] else None,
+            target_end_time=parse_time(row[2]) if row[2] else None,
             todo_text=row[3],
             source_annotation_id=row[4],
             complete=bool(row[5]),
@@ -141,8 +135,8 @@ class Todo(BaseModel):
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (
-                datetime.strftime(self.target_start_time, TIMESTAMP_FORMAT) if self.target_start_time else None, 
-                datetime.strftime(self.target_end_time, TIMESTAMP_FORMAT) if self.target_end_time else None, 
+                format_time(self.target_start_time) if self.target_start_time else None, 
+                format_time(self.target_end_time) if self.target_end_time else None, 
                 self.todo_text, 
                 self.complete, 
                 self.cancelled, 
@@ -182,7 +176,7 @@ class Todo(BaseModel):
             return [self.from_sqlite_row(row) for row in rows]
 
     @classmethod
-    def create(cls, todo_text, source_annotation_id, target_start_time: Optional[str]=None, target_end_time: Optional[str]=None) -> "Todo":
+    def create(cls, todo_text, source_annotation_id, target_start_time: Optional[str | datetime]=None, target_end_time: Optional[str | datetime]=None) -> "Todo":
         """
         Creates a new Todo instance and saves it to the database.
         """
@@ -190,9 +184,18 @@ class Todo(BaseModel):
             INSERT INTO todos (target_start_time, target_end_time, todo_text, source_note_id)
             VALUES (?, ?, ?, ?);
         '''
+        if isinstance(target_start_time, datetime):
+            target_start_time = format_time(target_start_time)
+        if isinstance(target_end_time, datetime):
+            target_end_time = format_time(target_end_time)
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (target_start_time, target_end_time, todo_text, source_annotation_id))
+            cursor.execute(query, (
+                target_start_time, 
+                target_end_time, 
+                todo_text, 
+                source_annotation_id
+            ))
             conn.commit()
             last_row_id = cursor.lastrowid
             if last_row_id is None:
