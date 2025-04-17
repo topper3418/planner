@@ -6,7 +6,7 @@ import time
 
 def main():
    # Get all notes
-   notes = db.Note.read(limit=75)
+   notes = db.Note.get_all(limit=75)
    notes.reverse()
    pretty_notes = pretty_printing.strf_notes(notes, show_processed_text=True)
    # clear the console

@@ -26,7 +26,6 @@ def get_command_text(annotation: db.Annotation) -> str:
 def get_target_note_id(annotation: db.Annotation) -> int:
     client = GrokChatClient()
     client.load_system_message("get_target_id", command=annotation.model_dump())
-    logger.debug(f"system message is:\n{client.system_message}")
     target_note_id = 0
     ii = 0
     inc = 5
@@ -37,7 +36,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
         # in case this is going back and being processed, need to make sure a
         # command doesn't target a note in the future, that the user wasn't 
         # meaning to target
-        notes = db.Note.read(offset=ii*inc, limit=inc, before=annotation.note.timestamp)
+        notes = db.Note.get_all(offset=ii*inc, limit=inc, before=annotation.note.timestamp)
         if not notes:
             break
         notes_str = "\n".join([note.model_dump_json() for note in notes])
@@ -56,7 +55,6 @@ def get_target_note_id(annotation: db.Annotation) -> int:
 def get_target_todo_id(annotation: db.Annotation) -> int:
     client = GrokChatClient()
     client.load_system_message("get_target_id", command=annotation.model_dump())
-    logger.debug(f"system message is:\n{client.system_message}")
     target_todo_id = 0
     ii = 0
     inc = 5
@@ -87,7 +85,6 @@ def get_target_action_id(annotation: db.Annotation) -> int:
     client = GrokChatClient()
     annotation.note  # ensure the note is loaded
     client.load_system_message("get_target_id", command=annotation.model_dump())
-    logger.debug(f"system message is:\n{client.system_message}")
     target_action_id = 0
     ii = 0
     inc = 5
@@ -166,7 +163,6 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
         return None
     client = GrokChatClient()
     client.load_system_message("create_command", command_text=command_text, annotation=annotation.model_dump())
-    logger.debug(f"system message is:\n{client.system_message}")
 
     response = client.chat(target_str)
     logger.info(f"response is:\n{response}")

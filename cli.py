@@ -164,7 +164,7 @@ def main():
             pretty_curiosities = pretty_printing.strf_curiosities(annotations)
             print(pretty_curiosities)
         else:
-            notes = db.Note.read(
+            notes = db.Note.get_all(
                 before=getattr(args, 'before', None),
                 after=getattr(args, 'after', None),
                 search=getattr(args, 'search', None),

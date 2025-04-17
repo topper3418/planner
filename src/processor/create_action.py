@@ -14,7 +14,6 @@ def apply_action_to_todo(action: db.Action):
     client = GrokChatClient()
     action.source_annotation.note  # load the note and annotation
     client.load_system_message("apply_action_to_todo", action=action.model_dump())
-    logger.debug(f"system message is:\n{client.system_message}") 
     target_todo_id = 0
     ii = 0
     inc = 5
@@ -43,7 +42,6 @@ def create_action(annotation: db.Annotation):
         raise ValueError(f"annotation category is not action: {annotation.category.name}")
     client = GrokChatClient()
     client.load_system_message("create_action")
-    logger.debug(f"system message is:\n{client.system_message}")
     
     response = client.chat(annotation.annotation_text)
     logger.info(f"response is:\n{response}")

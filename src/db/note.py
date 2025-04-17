@@ -4,18 +4,11 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from src.config import NOTES_DATABASE_FILEPATH, TIMESTAMP_FORMAT
+from ..config import TIMESTAMP_FORMAT
+from .connection import get_connection
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_connection(connection_path: str = NOTES_DATABASE_FILEPATH):
-    """
-    Establishes a connection to the SQLite database.
-    """
-    connection = sqlite3.connect(connection_path)
-    return connection
 
 
 class Note(BaseModel):
@@ -27,13 +20,6 @@ class Note(BaseModel):
     note_text: str = Field(..., description="Text of the note")
     processed_note_text: str = Field("", description="The text of the note, as processed by the LLM")
     processing_error: str = Field("", description="Error message if processing failed")
-
-    @property
-    def local_timestamp(self):
-        """
-        Returns the timestamp in local time.
-        """
-        return self.timestamp.astimezone().strftime(TIMESTAMP_FORMAT)
 
     @classmethod
     def ensure_table(cls):
@@ -66,6 +52,18 @@ class Note(BaseModel):
             processed_note_text=row[3],
             processing_error=row[4],
         )
+
+    def reload(self):
+        """
+        Reloads the note from the database.
+        """
+        copy = self.get_by_id(self.id)
+        if copy is None:
+            raise Exception("Failed to reload note.")
+        self.timestamp = copy.timestamp
+        self.note_text = copy.note_text
+        self.processed_note_text = copy.processed_note_text
+        return self
 
     @classmethod    
     def get_next_unprocessed_note(cls):
@@ -151,7 +149,7 @@ class Note(BaseModel):
             conn.commit()
 
     @classmethod
-    def read(cls, before=None, after=None, search=None, offset=0, limit=15):
+    def get_all(cls, before=None, after=None, search=None, offset=0, limit=15):
         """
         Fetches notes from the database with optional filters.
         """

@@ -6,7 +6,9 @@ from datetime import datetime
 
 from termcolor import colored
 
-from . import db, config
+from src.db import Note, Action, Todo, Annotation
+from src.config import TIMESTAMP_FORMAT
+from src.util import format_time
 
 
 def banner(text: str, width: int = 75) -> str:
@@ -26,8 +28,8 @@ def clear_terminal():
     print("\033[H\033[J")
 
 
-def strf_note(note: db.Note, show_processed_text: bool = False) -> str:
-    annotation = db.Annotation.get_by_note_id(note.id)
+def strf_note(note: Note, show_processed_text: bool = False) -> str:
+    annotation = Annotation.get_by_note_id(note.id)
     if annotation is None:
         category_name = "Uncategorized"
         color = "white"
@@ -39,7 +41,7 @@ def strf_note(note: db.Note, show_processed_text: bool = False) -> str:
     else:
         note_text = note.note_text
     colored_category = colored(category_name, color)
-    pretty_text = f"[{str(note.id).rjust(4, '0')}] {note.local_timestamp} - {colored_category}\n"
+    pretty_text = f"[{str(note.id).rjust(4, '0')}] {format_time(note.timestamp)} - {colored_category}\n"
     # we have to account for the tab character in the text
     space = 75 - 8
     if len(note_text) > space:
@@ -57,7 +59,7 @@ def strf_note(note: db.Note, show_processed_text: bool = False) -> str:
     return pretty_text
 
 
-def strf_notes(notes: List[db.Note], show_processed_text: bool = False) -> str:
+def strf_notes(notes: List[Note], show_processed_text: bool = False) -> str:
     """
     Pretty prints a note like: 
 
@@ -72,7 +74,7 @@ def strf_notes(notes: List[db.Note], show_processed_text: bool = False) -> str:
     return pretty_notes
 
 
-def strf_todo(todo: db.Todo) -> str:
+def strf_todo(todo: Todo) -> str:
     checkbox_inner = "X" if todo.complete else "O" if todo.cancelled else " "
     pretty_text = f"[{checkbox_inner}]{todo.id}: {todo.todo_text} - {todo.target_start_time} - {todo.target_end_time}"        
     now = datetime.now()
@@ -90,7 +92,7 @@ def strf_todo(todo: db.Todo) -> str:
 
 
 
-def strf_todos(todos: List[db.Todo]) -> str:
+def strf_todos(todos: List[Todo]) -> str:
     """
     Pretty prints a todo like: 
 
@@ -103,9 +105,9 @@ def strf_todos(todos: List[db.Todo]) -> str:
     return pretty_todos
 
 
-def strf_action(action: db.Action) -> str:
+def strf_action(action: Action) -> str:
     if action.todo_id:
-        todo = db.Todo.get_by_id(action.todo_id)
+        todo = Todo.get_by_id(action.todo_id)
         if todo:
             action_text = f"{action.action_text} -> {todo.todo_text}"
         else:
@@ -114,12 +116,12 @@ def strf_action(action: db.Action) -> str:
             action_text = colored(action_text, "green")
     else:
         action_text = action.action_text
-    pretty_text = f"{datetime.strftime(action.start_time, config.TIMESTAMP_FORMAT)}\n\t{action_text}"
+    pretty_text = f"{datetime.strftime(action.start_time, TIMESTAMP_FORMAT)}\n\t{action_text}"
     return pretty_text
 
 
 
-def strf_actions(actions: List[db.Action]) -> str:
+def strf_actions(actions: List[Action]) -> str:
     """
     Pretty prints an action like: 
 
@@ -133,12 +135,12 @@ def strf_actions(actions: List[db.Action]) -> str:
     return pretty_actions
 
 
-def strf_curiosity(curiosity: db.Annotation) -> str:
+def strf_curiosity(curiosity: Annotation) -> str:
     pretty_text = f"{curiosity.note.timestamp}\n{curiosity.note.note_text}\n\t{curiosity.annotation_text}"
     return pretty_text
 
 
-def strf_curiosities(curiosities: List[db.Annotation]) -> str:
+def strf_curiosities(curiosities: List[Annotation]) -> str:
     """
     Pretty prints an observation like: 
 

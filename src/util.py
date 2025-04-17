@@ -9,7 +9,6 @@ def parse_time(time_str: str) -> datetime:
     """
     return datetime.strptime(time_str, TIMESTAMP_FORMAT)
 
-
 def format_time(time: datetime) -> str:
     """
     Format a time into a standard string format.

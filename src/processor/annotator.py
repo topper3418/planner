@@ -16,7 +16,6 @@ def annotate_note(note: db.Note, category: db.Category) -> db.Annotation:
 
     # Load the system message
     client.load_system_message("annotate_" + category.name)
-    logger.debug(f"system message is:\n{client.system_message}")
     
     # Send the note text to the chat client for annotation
     response = client.chat(note.model_dump_json(), role="user")

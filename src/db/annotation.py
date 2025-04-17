@@ -1,11 +1,15 @@
-import sqlite3
-from typing import ClassVar, List, Optional
+from datetime import datetime
+from typing import List, Optional
+import logging
 
 from pydantic import BaseModel, Field, PrivateAttr
 
-from src.config import NOTES_DATABASE_FILEPATH
 from .category import Category
 from .note import Note
+from .connection import get_connection
+from ..util import format_time
+
+logger = logging.getLogger(__name__)
 
 
 class Annotation(BaseModel):
@@ -78,7 +82,7 @@ class Annotation(BaseModel):
                 FOREIGN KEY (category_id) REFERENCES categories(id)
             )
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query)
             conn.commit()
@@ -91,7 +95,7 @@ class Annotation(BaseModel):
         query = '''
             INSERT INTO annotations (note_id, category_id, annotation_text) VALUES (?, ?, ?)
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (note_id, category_id, annotation_text))
             conn.commit()
@@ -106,10 +110,28 @@ class Annotation(BaseModel):
         query = '''
             UPDATE annotations SET category_id = ?, annotation_text = ?, reprocess = ? WHERE id = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (self.category_id, self.annotation_text, self.reprocess, self.id))
             conn.commit()
+
+    def reload(self):
+        """
+        Reloads the annotation from the database.
+        """
+        query = '''
+            SELECT * FROM annotations WHERE id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            row = cursor.fetchone()
+            if row:
+                self.id, self.note_id, self.category_id, self.annotation_text, self.reprocess = row
+                self._note = None
+                self._category = None
+            else:
+                raise ValueError(f"Annotation with ID {self.id} not found")
 
     @classmethod
     def from_sqlite_row(cls, row):
@@ -132,7 +154,7 @@ class Annotation(BaseModel):
         query = '''
             SELECT * FROM annotations WHERE id = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (annotation_id,))
             row = cursor.fetchone()
@@ -163,7 +185,7 @@ class Annotation(BaseModel):
         query = '''
             SELECT * FROM annotations WHERE note_id = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (note_id,))
             row = cursor.fetchone()
@@ -173,9 +195,10 @@ class Annotation(BaseModel):
     def get_by_category_name(
             cls, 
             category_name: str,
-            before: Optional[str] = None,
-            after: Optional[str] = None,
-            limit: Optional[int] = None,
+            before: Optional[str | datetime] = None,
+            after: Optional[str | datetime] = None,
+            offset: int = 0,
+            limit: int = 25,
             search: Optional[str] = None,
     ) -> List["Annotation"]:
         """
@@ -184,6 +207,7 @@ class Annotation(BaseModel):
         # make sure the category is authentic
         category = Category.find_by_name(category_name)
         if category is None:
+            logger.error(f'Category {category_name} not found')
             raise ValueError(f"Category with name '{category_name}' not found")
         query = 'SELECT annotations.id, annotations.note_id, annotations.category_id, annotations.annotation_text, annotations.reprocess FROM annotations'
         args: list = []
@@ -191,20 +215,28 @@ class Annotation(BaseModel):
             query += ' JOIN notes ON annotations.note_id = notes.id'
         if before:
             query += ' AND notes.timestamp < ?'
+            if isinstance(before, datetime):
+                before = format_time(before)
             args.append(before)
         if after:
             query += ' AND notes.timestamp > ?'
+            if isinstance(after, datetime):
+                after = format_time(after)
             args.append(after)
         if search:
             query += ' AND annotations.annotation_text LIKE ?'
             args.append(f'%{search}%')
-        if limit:
-            query += ' LIMIT ?'
-            args.append(limit)
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        query += ' WHERE annotations.category_id = ?'
+        args.append(category.id)
+        query += ' ORDER BY annotations.id DESC LIMIT ? OFFSET ?' 
+        args.append(limit)
+        args.append(offset)
+        with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (category.id,))
+            cursor.execute(query, args)
             rows = cursor.fetchall()
+            logger.info(f'Found {len(rows)} annotations for category {category_name}')
+            logger.info(f'annotations: {rows}')
             return [cls.from_sqlite_row(row) for row in rows] if rows else []
     
     def delete(self):
@@ -214,7 +246,7 @@ class Annotation(BaseModel):
         query = '''
             DELETE FROM annotations WHERE id = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (self.id,))
             conn.commit()
@@ -227,7 +259,7 @@ class Annotation(BaseModel):
         query = '''
             SELECT * FROM annotations WHERE reprocess = 1
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query)
             unprocessed_annotation = cursor.fetchone()

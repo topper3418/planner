@@ -1,7 +1,6 @@
-import sqlite3
 from pydantic import BaseModel, Field
 
-from src.config import NOTES_DATABASE_FILEPATH
+from .connection import get_connection
 
 
 class Category(BaseModel):
@@ -26,7 +25,7 @@ class Category(BaseModel):
                 color TEXT
             )
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query)
             conn.commit()
@@ -38,10 +37,38 @@ class Category(BaseModel):
         query = '''
             UPDATE categories SET name = ?, description = ?, color = ? WHERE id = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (self.name, self.description, self.color, self.id))
             conn.commit()
+
+    @classmethod
+    def from_sqlite_row(cls, row):
+        """
+        Converts a SQLite row to a Category instance.
+        """
+        return cls(
+            id=row[0],
+            name=row[1],
+            description=row[2],
+            color=row[3]
+        )
+
+    def reload(self):
+        """
+        Reloads the category from the database.
+        """
+        query = '''
+            SELECT * FROM categories WHERE id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (self.id,))
+            row = cursor.fetchone()
+            if row:
+                self.id, self.name, self.description, self.color = row
+            else:
+                raise ValueError(f"Category with ID {self.id} not found")
 
     @classmethod
     def create(cls, name, description=None, color=None):
@@ -51,13 +78,15 @@ class Category(BaseModel):
         query = '''
             INSERT INTO categories (name, description, color) VALUES (?, ?, ?)
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (name, '', ''))
             conn.commit()
             if cursor.lastrowid is None:
                 raise ValueError("Failed to create category")
-            category = cls(id=cursor.lastrowid, name=name, description='', color='')
+            category = cls.get_by_id(cursor.lastrowid)
+            if category is None:
+                raise ValueError("Failed to fetch created category")
             # less common, likely just for the default inserts
             if description or color:
                 if description:
@@ -75,11 +104,11 @@ class Category(BaseModel):
         query = '''
             SELECT * FROM categories
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query)
             rows = cursor.fetchall()
-            return [cls(id=row[0], name=row[1], description=row[2], color=row[3]) for row in rows]
+            return [cls.from_sqlite_row(row) for row in rows]
 
     @classmethod
     def get_by_id(cls, category_id):
@@ -89,13 +118,13 @@ class Category(BaseModel):
         query = '''
             SELECT * FROM categories WHERE id = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (category_id,))
             row = cursor.fetchone()
-            if row:
-                return cls(id=row[0], name=row[1], description=row[2], color=row[3])
-            return None
+            if not row:
+                raise ValueError(f"Category with ID {category_id} not found")
+            return cls.from_sqlite_row(row)
 
     @classmethod
     def find_by_name(cls, name) -> "Category":
@@ -105,13 +134,13 @@ class Category(BaseModel):
         query = '''
             SELECT * FROM categories WHERE name = ?
         '''
-        with sqlite3.connect(NOTES_DATABASE_FILEPATH) as conn:
+        with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (name,))
             row = cursor.fetchone()
             if not row:
                 raise ValueError(f"Category with name '{name}' not found")
-            return cls(id=row[0], name=row[1], description=row[2], color=row[3])
+            return cls.from_sqlite_row(row)
 
 
 default_categories = [

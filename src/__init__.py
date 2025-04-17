@@ -4,11 +4,11 @@ from pathlib import Path
 
 
 from . import (
-        util as utils, 
         db, 
         processor, 
         config,
         pretty_printing,
+        util as utils, 
 )
 from .bulk_upload import bulk_upload_notes_list
 from .rest import rest_server

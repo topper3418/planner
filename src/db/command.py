@@ -1,21 +1,12 @@
-import sqlite3
 import logging
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from src.config import NOTES_DATABASE_FILEPATH
 from .annotation import Annotation
+from .connection import get_connection
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_connection(connection_path: str = NOTES_DATABASE_FILEPATH):
-    """
-    Establishes a connection to the SQLite database.
-    """
-    connection = sqlite3.connect(connection_path)
-    return connection
 
 
 class Command(BaseModel):
@@ -59,7 +50,8 @@ class Command(BaseModel):
                 value_before TEXT NOT NULL,
                 desired_value TEXT NOT NULL,
                 source_annotation_id INTEGER NOT NULL,
-                target_id INTEGER NOT NULL
+                target_id INTEGER NOT NULL,
+                FOREIGN KEY (source_annotation_id) REFERENCES annotations(id)
             );
         '''
         with get_connection() as conn:
@@ -134,7 +126,14 @@ class Command(BaseModel):
             conn.commit()
 
     @classmethod
-    def create(cls, command_text: str, value_before: str, desired_value: str, source_annotation_id: int, target_id: int) -> "Command":
+    def create(
+            cls, 
+            command_text: str, 
+            value_before: str, 
+            desired_value: str, 
+            source_annotation_id: int, 
+            target_id: int
+    ) -> "Command":
         """
         Creates a new command in the database.
         """
@@ -147,5 +146,8 @@ class Command(BaseModel):
             conn.commit()
         if cursor.lastrowid is None:
             raise ValueError("Failed to create command")
-        return cls.get_by_id(cursor.lastrowid)
+        command = cls.get_by_id(cursor.lastrowid)
+        if command is None:
+            raise ValueError("Failed to create command")
+        return command
 
