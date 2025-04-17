@@ -37,7 +37,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
         # in case this is going back and being processed, need to make sure a
         # command doesn't target a note in the future, that the user wasn't 
         # meaning to target
-        notes = db.Note.read(offset=ii*inc, limit=inc, before=annotation.note.timestamp)
+        notes = db.Note.get_all(offset=ii*inc, limit=inc, before=annotation.note.timestamp)
         if not notes:
             break
         notes_str = "\n".join([note.model_dump_json() for note in notes])

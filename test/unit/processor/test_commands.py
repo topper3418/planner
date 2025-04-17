@@ -65,7 +65,7 @@ def test_create_commands(create_notes_for_morning):
             assert command.value_before is not None
             assert command.desired_value is not None
             # find the note to make sure that the command points to the right note
-            notes = db.Note.read(search=note_search)
+            notes = db.Note.get_all(search=note_search)
             note = notes[-1] if notes else None
             assert note is not None  # this isn't the point of the test but good to know
             assert note.id == command.target_id
@@ -126,7 +126,7 @@ def test_create_commands_2(create_notes_for_afternoon):
             assert command.value_before is not None
             assert command.desired_value is not None
             # find the note to make sure that the command points to the right note
-            notes = db.Note.read(search=note_search)
+            notes = db.Note.get_all(search=note_search)
             note = notes[-1] if notes else None
             assert note is not None  # this isn't the point of the test but good to know
             assert note.id == command.target_id

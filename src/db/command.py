@@ -1,21 +1,12 @@
-import sqlite3
 import logging
 from typing import Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from src.config import NOTES_DATABASE_FILEPATH
 from .annotation import Annotation
+from .connection import get_connection
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_connection(connection_path: str = NOTES_DATABASE_FILEPATH):
-    """
-    Establishes a connection to the SQLite database.
-    """
-    connection = sqlite3.connect(connection_path)
-    return connection
 
 
 class Command(BaseModel):
