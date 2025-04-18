@@ -10,7 +10,7 @@ into todos, actions, curiosities and observations.
 If you are an experienced programmer, you may skip this step.
 
 1) Open CLI (command line interface). My preferred way is by pressing Command 
-+ spacebar and typing "terminal" and pressing enter. This will open the terminal.
+\+ spacebar and typing "terminal" and pressing enter. This will open the terminal.
 
 2) install the latest version of Homebrew. This is a package manager, you can
 think of it as the app store for your CLI. Install by pasting the following command
