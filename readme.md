@@ -68,8 +68,8 @@ python3 -m venv venv
 ```
 
 4) Load the .bashrc file. This will load the virtual environment and load helpful aliases
-   for building and setting up the project. Paste the following command into the terminal
-   and press enter:
+   for running the project. You'll use this command each time you start a new session with
+   the planner. Paste the following command into the terminal and press enter:
 
 ```bash
 source .bashrc
