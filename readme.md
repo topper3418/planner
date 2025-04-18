@@ -193,17 +193,17 @@ versions of this software, such as iOS apps on the Apple App Store."
 
 ### Initially Useful
 
-- [ ] records notes
+- [X] records notes
 
-- [ ] categorizes and annotates those notes using an LLM
+- [X] categorizes and annotates those notes using an LLM
 
-- [ ] uses those annotations to create todos, actions, and commands
+- [X] uses those annotations to create todos, actions, and commands
 
-- [ ] uses the commands to modify notes, actions and todos
+- [X] uses the commands to modify notes, actions and todos
 
-- [ ] Rest API for creating notes and retrieving todos and actions
+- [X] Rest API for creating notes and retrieving todos and actions
 
-- [ ] CLI for creating notes and retrieving todos and actions
+- [X] CLI for creating notes and retrieving todos and actions
 
 - [ ] use the LLM to create summaries of your day/week
 
