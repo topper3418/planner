@@ -42,6 +42,16 @@ def test_save_note(sample_notes):
     wake_up_note_doublecheck = db.Note.get_by_id(wake_up_note.id)
     assert wake_up_note_doublecheck is not None
     assert wake_up_note_doublecheck.note_text == "I just woke up"
+    # make sure processing errors can be saved
+    wake_up_note.processing_error = "Test error"
+    wake_up_note.save()
+    wake_up_note.reload()
+    assert wake_up_note.processing_error == "Test error"
+    # last check
+    note_fetched = db.Note.get_by_id(wake_up_note.id)
+    assert note_fetched is not None
+    assert note_fetched.note_text == "I just woke up"
+    assert note_fetched.processing_error == "Test error"
 
 
 def test_fetch_bounds(sample_notes):

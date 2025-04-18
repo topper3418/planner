@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from ..config import TIMESTAMP_FORMAT
+from ..util import format_time
 from .connection import get_connection
 
 
@@ -141,11 +142,17 @@ class Note(BaseModel):
         Updates the note in the database.
         """
         query = '''
-            UPDATE notes SET timestamp = ?, note_text = ?, processed_note_text = ? WHERE id = ?
+            UPDATE notes SET timestamp = ?, note_text = ?, processed_note_text = ?, processing_error = ? WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (datetime.strftime(self.timestamp, TIMESTAMP_FORMAT), self.note_text, self.processed_note_text, self.id,))
+            cursor.execute(query, (
+                format_time(self.timestamp), 
+                self.note_text, 
+                self.processed_note_text, 
+                self.processing_error,
+                self.id,
+            ))
             conn.commit()
 
     @classmethod

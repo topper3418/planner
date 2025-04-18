@@ -152,14 +152,19 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
             return None
         target_str = target.model_dump_json()
     else:  # handle failure case for "get_command"
+        logger.error(f"no command found matching user input: {command_text}")
         note = annotation.note
         note.processing_error = "no command found matching user input"
-        annotation.note.save()
         note.save()
+        logger.warning('note:' + str(note))
+        note_fetched = db.Note.get_by_id(note.id)
+        logger.warning('note fetched:' + str(note_fetched))
         return None
     if target_id == 0:  # handle failure case for "get_target_id"
-        annotation.note.processing_error = "no target found"
-        annotation.note.save()
+        logger.error(f"no target found for command: {command_text}")
+        note = annotation.note
+        note.processing_error = "no target found"
+        note.save()
         return None
     client = GrokChatClient()
     client.load_system_message("create_command", command_text=command_text, annotation=annotation.model_dump())
