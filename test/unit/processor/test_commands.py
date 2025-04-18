@@ -149,3 +149,27 @@ def test_create_commands_2(create_notes_for_afternoon, note_text, expected_comma
     else: 
         assert command is None
 
+
+def test_invalid_command(create_notes_for_afternoon):
+    # create a test note to work with
+    initial_note = db.Note.create("I need you to do my homework for me")
+    category = db.Category.find_by_name("command")
+    assert category is not None
+    assert category.name == "command"
+    # try to annotate the note
+    annotation = processor.annotate_note(initial_note, category)
+    assert annotation is not None
+    assert annotation.note_id == initial_note.id
+    assert annotation.category_id == category.id
+    assert annotation.annotation_text is not None
+    # try to create the command
+    command = processor.create_command(annotation)
+    assert command is None
+    # see what happens to the note
+    initial_note.refresh()
+    assert initial_note.processed_note_text is not None
+    assert initial_note.processing_error is not None
+    # double check the note
+    fetched_note = db.Note.get_by_id(initial_note.id)
+    assert fetched_note is not None
+    assert len(fetched_note.processing_error) > 0

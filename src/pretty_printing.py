@@ -6,9 +6,9 @@ from datetime import datetime
 
 from termcolor import colored
 
-from src.db import Note, Action, Todo, Annotation
-from src.config import TIMESTAMP_FORMAT
-from src.util import format_time
+from .db import Note, Action, Todo, Annotation
+from .config import TIMESTAMP_FORMAT
+from .util import format_time
 
 
 def banner(text: str, width: int = 75) -> str:
@@ -28,7 +28,34 @@ def clear_terminal():
     print("\033[H\033[J")
 
 
+def format_paragraph(text: str, width: int = 75, indents=1) -> str:
+    """
+    Formats a paragraph to fit within a given width.
+    """
+    space = width - 8 * indents
+    pretty_text = ""
+    if len(text) > space:
+        pretty_text += "\t" * indents + text[:space] + "\n"
+        remainder = text[space:]
+        while remainder:
+            if len(remainder) > space:
+                pretty_text += "\t" * indents + remainder[:space] + "\n"
+                remainder = remainder[space:]
+            else:
+                pretty_text += "\t" * indents + remainder + "\n"
+                remainder = ""
+    else:
+        pretty_text += "\t" * indents + text + "\n"
+    return pretty_text
+
+
 def strf_note(note: Note, show_processed_text: bool = False) -> str:
+    """
+    Pretty prints a note like:
+    2023-04-12 06:00:00 - action
+        Woke up and rolled out of bed. if the note is too long, it will be wrapped t
+        o fit within the width.
+    """
     annotation = Annotation.get_by_note_id(note.id)
     if annotation is None:
         category_name = "Uncategorized"
@@ -41,21 +68,11 @@ def strf_note(note: Note, show_processed_text: bool = False) -> str:
     else:
         note_text = note.note_text
     colored_category = colored(category_name, color)
-    pretty_text = f"[{str(note.id).rjust(4, '0')}] {format_time(note.timestamp)} - {colored_category}\n"
+    pretty_text = f"[{str(note.id).rjust(4, '0')}] {format_time(note.timestamp)} - {colored_category}"
+    if note.processing_error:
+        pretty_text += colored(f"\nError: {note.processing_error}", "red")
+    pretty_text += f"\n{format_paragraph(note_text, 75)}"
     # we have to account for the tab character in the text
-    space = 75 - 8
-    if len(note_text) > space:
-        pretty_text += "\t" + note_text[:space] + "\n"
-        remainder = note.note_text[space:]
-        while remainder:
-            if len(remainder) > space:
-                pretty_text += "\t" + remainder[:space] + "\n"
-                remainder = remainder[space:]
-            else:
-                pretty_text += "\t" + remainder + "\n"
-                remainder = ""
-    else:
-        pretty_text += "\t" + note_text + "\n"
     return pretty_text
 
 
@@ -136,7 +153,7 @@ def strf_actions(actions: List[Action]) -> str:
 
 
 def strf_curiosity(curiosity: Annotation) -> str:
-    pretty_text = f"{curiosity.note.timestamp}\n{curiosity.note.note_text}\n\t{curiosity.annotation_text}"
+    pretty_text = f"{curiosity.note.timestamp}\n{curiosity.note.note_text}\n{format_paragraph(curiosity.annotation_text)}"
     return pretty_text
 
 
@@ -148,6 +165,7 @@ def strf_curiosities(curiosities: List[Annotation]) -> str:
     original-note
         observation-text
     """
+    curiosities.reverse()
     pretty_curiosities = ""
     for curiosity in curiosities:
         pretty_text = strf_curiosity(curiosity)
