@@ -77,7 +77,7 @@ class Action(BaseModel):
         )
 
     @classmethod
-    def get_by_id(cls, action_id: int):
+    def get_by_id(cls, action_id: int) -> Optional["Action"]:
         """
         Retrieves an action by its ID.
         """
@@ -85,6 +85,23 @@ class Action(BaseModel):
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (action_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls.from_sqlite_row(row)
+            else:
+                return None
+
+    @classmethod
+    def get_by_source_annotation_id(cls, annotation_id: int) -> Optional["Action"]:
+        """
+        Retrieves actions by source annotation ID.
+        """
+        query = '''
+            SELECT * FROM actions WHERE source_annotation_id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (annotation_id,))
             row = cursor.fetchone()
             if row:
                 return cls.from_sqlite_row(row)

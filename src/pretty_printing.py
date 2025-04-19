@@ -111,22 +111,35 @@ def strf_todo(todo: Todo) -> str:
         # TODO: add cancelled time if applicable
     now = datetime.now()
     # color the text based on status
-    if (todo.target_start_time):
-        print(f'start time exists for todo {todo.todo_text}: {todo.target_start_time}')
-        print(f'now is {now}')
-        print('type of start time is', type(todo.target_start_time))
-    if todo.complete:
+    # lets just do this in english, simpler that way
+    start_time = todo.target_start_time
+    started = start_time < now if start_time else False
+    end_time = todo.target_end_time
+    late = end_time < now if end_time else False
+    # yellow if it's started and not yet late
+    yellow = started and not late
+    # red if it's late
+    red = late
+    # green if it's complete
+    green = todo.complete
+    # grey if it's cancelled
+    grey = todo.cancelled
+    # white if no time given
+    white = not started and not end_time
+    # now in order of priority...
+    if green:
         pretty_text = colored(pretty_text, "green")
-    elif todo.cancelled:
+    elif grey:
         pretty_text = colored(pretty_text, "light_grey")
-    elif (todo.target_start_time and todo.target_start_time < now
-          and not todo.target_end_time > now if todo.target_end_time else True):
-        pretty_text = colored(pretty_text, "yellow")
-    elif todo.target_end_time and todo.target_end_time < now:
+    elif red:
         pretty_text = colored(pretty_text, "red")
+    elif yellow:
+        pretty_text = colored(pretty_text, "yellow")
+    elif white:
+        pretty_text = colored(pretty_text, "white")
     else:
         print('todo is not anything')
-        pretty_text = colored(pretty_text, "white")
+        pretty_text = colored(pretty_text, "magenta")
     return pretty_text
 
 

@@ -29,7 +29,15 @@ class AllPackagesFilter(logging.Filter):
 class NoThirdPartyFilter(logging.Filter):
     def filter(self, record):
         # Exclude logs from known 3rd-party modules
-        third_party_prefixes = ["requests", "urllib3", "botocore", "asyncio", "httpx"]
+        third_party_prefixes = [
+            "requests", 
+            "urllib3", 
+            "botocore", 
+            "asyncio", 
+            "httpx",
+            "httpcore",
+            "openai",
+        ]
         return not any(record.name.startswith(prefix) for prefix in third_party_prefixes)
 
 def setup_normal_logging():

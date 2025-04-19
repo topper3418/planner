@@ -268,4 +268,41 @@ class Annotation(BaseModel):
             else:
                 return None
 
+    @classmethod
+    def get_all(cls, before: Optional[str | datetime] = None, after: Optional[str | datetime] = None, search: Optional[str] = None, offset: int = 0, limit: int = 25):
+        """
+        Retrieves all annotations from the database.
+        """
+        query = '''
+            SELECT annotations.id, annotations.note_id, annotations.category_id, annotations.annotation_text, annotations.reprocess FROM annotations
+        '''
+        params = []
+        # build the query dynamically
+        if before or after:
+            query += ' JOIN notes ON annotations.note_id = notes.id'
+        query += ' WHERE 1=1'
+        if before:
+            query += ' AND notes.timestamp < ?'
+            if isinstance(before, datetime):
+                before = format_time(before)
+            params.append(before)
+        if after:
+            query += ' AND notes.timestamp > ?'
+            if isinstance(after, datetime):
+                after = format_time(after)
+            params.append(after)
+        if search:
+            query += ' AND annotations.annotation_text LIKE ?'
+            params.append(f'%{search}%')
+        # apply offset, limit and order
+        query += ' ORDER BY annotations.id DESC LIMIT ? OFFSET ?'
+        params.append(limit)
+        params.append(offset)
+        # run query and return results
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows] if rows else []
+
 
