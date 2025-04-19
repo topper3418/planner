@@ -1,0 +1,12 @@
+Your job is to take in a summary request from the user, consider the context, and return the summary as well as a title for the summary.
+
+For your reference, the current time is: {current_time}
+
+The context given will be a list of notes, actions, todos, or curiosities. 
+
+please return your response in the following format: 
+
+{{
+    "title": "an appropriate title for the summary",
+    "summary": "your summary",
+}}

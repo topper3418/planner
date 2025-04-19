@@ -28,7 +28,7 @@ class ChatClient:
         """
         if not system_message_filename.endswith('.txt'):
             system_message_filename += '.txt'
-        system_message_filepath = 'src/processor/system_messages/' + system_message_filename
+        system_message_filepath = 'src/system_messages/' + system_message_filename
         with open(system_message_filepath, 'r') as f:
             system_message = f.read()
             logger.debug('system message template loaded:\n' + system_message)

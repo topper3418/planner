@@ -1,7 +1,7 @@
 import logging
 import src.db as db
 
-from .client import GrokChatClient
+from ..grok import GrokChatClient
 
 logger = logging.getLogger(__name__)
 

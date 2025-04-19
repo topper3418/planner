@@ -92,18 +92,40 @@ def strf_notes(notes: List[Note], show_processed_text: bool = False) -> str:
 
 
 def strf_todo(todo: Todo) -> str:
+    # create the text
     checkbox_inner = "X" if todo.complete else "O" if todo.cancelled else " "
-    pretty_text = f"[{checkbox_inner}]{todo.id}: {todo.todo_text} - {todo.target_start_time} - {todo.target_end_time}"        
+    pretty_text = f"[{checkbox_inner}]{todo.id}: {todo.todo_text}"
+    if todo.target_start_time and todo.target_end_time:
+        pretty_text += f"\n{todo.target_start_time} -> {todo.target_end_time}"
+    elif todo.target_start_time:
+        pretty_text += f"\n{todo.target_start_time} -> *"
+    elif todo.target_end_time:
+        pretty_text += f"\n* -> {todo.target_end_time}"
+    created = todo.source_annotation.note.timestamp
+    pretty_text += f"\nCreated: {format_time(created)}"
+    if todo.complete:
+        # gotta find the completed time
+        complete_action = Action.get_by_todo_complete(todo.id)
+        if complete_action:
+            pretty_text += f"\nCompleted: {format_time(todo.source_annotation.note.timestamp)}"
+        # TODO: add cancelled time if applicable
     now = datetime.now()
+    # color the text based on status
+    if (todo.target_start_time):
+        print(f'start time exists for todo {todo.todo_text}: {todo.target_start_time}')
+        print(f'now is {now}')
+        print('type of start time is', type(todo.target_start_time))
     if todo.complete:
         pretty_text = colored(pretty_text, "green")
     elif todo.cancelled:
-        pretty_text = colored(pretty_text, "grey")
-    elif todo.target_start_time and todo.target_start_time < now:
+        pretty_text = colored(pretty_text, "light_grey")
+    elif (todo.target_start_time and todo.target_start_time < now
+          and not todo.target_end_time > now if todo.target_end_time else True):
         pretty_text = colored(pretty_text, "yellow")
     elif todo.target_end_time and todo.target_end_time < now:
         pretty_text = colored(pretty_text, "red")
     else:
+        print('todo is not anything')
         pretty_text = colored(pretty_text, "white")
     return pretty_text
 
@@ -153,7 +175,7 @@ def strf_actions(actions: List[Action]) -> str:
 
 
 def strf_curiosity(curiosity: Annotation) -> str:
-    pretty_text = f"{curiosity.note.timestamp}\n{curiosity.note.note_text}\n{format_paragraph(curiosity.annotation_text)}"
+    pretty_text = f"{curiosity.note.timestamp}\n{format_paragraph(curiosity.note.note_text, indents=0)}\n{format_paragraph(curiosity.annotation_text)}"
     return pretty_text
 
 

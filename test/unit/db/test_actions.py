@@ -94,7 +94,7 @@ def test_fetch_action(test_action):
         source_annotation_id=annotation3.id,
     )
     # fetch all actions
-    all_actions = db.Action.read()
+    all_actions = db.Action.get_all()
     assert len(all_actions) > 0
     assert all(action.id is not None for action in all_actions)
     assert all(action.action_text is not None for action in all_actions)
@@ -106,12 +106,12 @@ def test_fetch_action(test_action):
     assert fetched_action.start_time == action.start_time
     assert fetched_action.source_annotation_id == action.source_annotation_id
     # search an action by text
-    searched_actions = db.Action.read(search="Test action 2")
+    searched_actions = db.Action.get_all(search="Test action 2")
     assert len(searched_actions) > 0
     assert all(action.id is not None for action in searched_actions)
     assert all("Test action 2" in action.action_text for action in searched_actions)
     # fetch actions by start and end time
-    timed_actions = db.Action.read(
+    timed_actions = db.Action.get_all(
         after=note.timestamp,
         before=note3.timestamp,
     )

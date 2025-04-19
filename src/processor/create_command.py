@@ -2,7 +2,7 @@ import logging
 from pprint import pformat
 
 from .. import db
-from .client import GrokChatClient
+from ..grok import GrokChatClient
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def get_target_todo_id(annotation: db.Annotation) -> int:
         # in case this is going back and being processed, need to make sure a
         # command doesn't target a note in the future, that the user wasn't 
         # meaning to target
-        todos = db.Todo.read(offset=ii*inc, limit=inc)
+        todos = db.Todo.get_all(offset=ii*inc, limit=inc)
         if not todos:
             break
         todos_str = "\n".join([todo.model_dump_json() for todo in todos])
@@ -95,7 +95,7 @@ def get_target_action_id(annotation: db.Annotation) -> int:
         # in case this is going back and being processed, need to make sure a
         # command doesn't target a note in the future, that the user wasn't 
         # meaning to target
-        actions = db.Action.read(offset=ii*inc, limit=inc)
+        actions = db.Action.get_all(offset=ii*inc, limit=inc)
         if not actions:
             break
         actions_str = "\n".join([action.model_dump_json() for action in actions])

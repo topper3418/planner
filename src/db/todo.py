@@ -201,7 +201,11 @@ class Todo(BaseModel):
             if last_row_id is None:
                 logger.error("Failed to create todo in the database.")
                 raise ValueError("Failed to create todo in the database.")
-        return cls.get_by_id(last_row_id)
+        created_todo = cls.get_by_id(last_row_id)
+        if created_todo is None:
+            logger.error(f"Todo with ID {last_row_id} not found in the database.")
+            raise ValueError(f"Todo with ID {last_row_id} not found in the database.")
+        return created_todo
 
     def delete(self):
         """
@@ -216,7 +220,7 @@ class Todo(BaseModel):
             conn.commit()
 
     @classmethod
-    def read(
+    def get_all(
             cls, 
             before: Optional[str] = None, 
             after: Optional[str] = None, 
@@ -229,29 +233,42 @@ class Todo(BaseModel):
         Reads todos from the database.
         """
         query = '''
-            SELECT * FROM todos
+            SELECT 
+                todos.id, 
+                todos.target_start_time, 
+                todos.target_end_time, 
+                todos.todo_text, 
+                todos.source_note_id, 
+                todos.complete,
+                todos.cancelled
+            FROM todos
         '''
         args = []
-        if before:
-            query += ' WHERE target_start_time < ?'
-            args.append(before)
-        if after:
-            if 'WHERE' in query:
-                query += ' AND target_start_time > ?'
-            else:
-                query += ' WHERE target_start_time > ?'
-            args.append(after)
+        # time range stuff
+        if before or after:
+            query += ' JOIN annotations on todos.source_annotation_id = annotations.id JOIN notes on annotations.source_note_id = notes.id'
+        query += ' WHERE 1=1'  # needs this whether or not timing is involved
+        if before and after:  # todo scheduled time or todo created time should fall within the range
+            query += ' AND (todos.target_start_time BETWEEN ? AND ? OR todos.target_end_time BETWEEN ? AND ? OR notes.timestamp BETWEEN ? AND ?)'
+            args.extend([before, after, before, after, before, after])
+        elif before:  # todo scheduled time or todo created time should be before the given time
+            query += ' AND (todos.target_start_time < ? OR todos.target_end_time < ? OR notes.timestamp < ?)'
+            args.extend([before, before, before])
+        elif after:  # todo scheduled time or todo created time should be after the given time
+            query += ' AND (todos.target_start_time > ? OR todos.target_end_time > ? OR notes.timestamp > ?)'
+            args.extend([after, after, after])
+        ## filter by complete and cancelled
         if complete is not None:
             if 'WHERE' in query:
-                query += ' AND complete = ?'
+                query += ' AND todos.complete = ?'
             else:
-                query += ' WHERE complete = ?'
+                query += ' WHERE todos.complete = ?'
             args.append(int(complete))
         if cancelled is not None:
             if 'WHERE' in query:
-                query += ' AND cancelled = ?'
+                query += ' AND todos.cancelled = ?'
             else:
-                query += ' WHERE cancelled = ?'
+                query += ' WHERE todos.cancelled = ?'
             args.append(int(cancelled))
         query += ' LIMIT ?, ?'
         args.append(offset)

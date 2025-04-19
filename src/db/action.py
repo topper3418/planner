@@ -91,6 +91,23 @@ class Action(BaseModel):
             else:
                 return None
 
+    @classmethod
+    def get_by_todo_complete(cls, todo_id: int) -> Optional["Action"]:
+        """
+        Retrieves actions by todo ID and completion status.
+        """
+        query = '''
+            SELECT * FROM actions WHERE todo_id = ? AND mark_complete = 1
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (todo_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls.from_sqlite_row(row)
+            else:
+                return None
+
     def refresh(self):
         copy = self.get_by_id(self.id)
         if copy:
@@ -179,7 +196,7 @@ class Action(BaseModel):
             conn.commit()
 
     @classmethod
-    def read(
+    def get_all(
             cls,
             before: Optional[str | datetime] = None,
             after: Optional[str | datetime] = None,

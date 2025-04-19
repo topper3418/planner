@@ -9,9 +9,11 @@ from . import (
         config,
         pretty_printing,
         util as utils, 
+        setup_logging
 )
 from .bulk_upload import bulk_upload_notes_list
 from .rest import rest_server
+from .summary import get_summary
 
 
 # both the data and log directories are created if they do not exist
@@ -51,8 +53,9 @@ logging_config = {
     },
 }
 
+# uncomment below if other logging does not work.
 # Apply the configuration
-logging.config.dictConfig(logging_config)
+# logging.config.dictConfig(logging_config)
 
 logger = logging.getLogger(__name__)
 
