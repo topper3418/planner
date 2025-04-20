@@ -94,20 +94,20 @@ def strf_notes(notes: List[Note], show_processed_text: bool = False) -> str:
 def strf_todo(todo: Todo) -> str:
     # create the text
     checkbox_inner = "X" if todo.complete else "O" if todo.cancelled else " "
-    pretty_text = f"[{checkbox_inner}]{todo.id}: {todo.todo_text}"
+    pretty_text = f"[{checkbox_inner}] [{str(todo.id).rjust(4, '0')}]: {todo.todo_text}"
     if todo.target_start_time and todo.target_end_time:
-        pretty_text += f"\n{todo.target_start_time} -> {todo.target_end_time}"
+        pretty_text += f"\n    {todo.target_start_time} -> {todo.target_end_time}"
     elif todo.target_start_time:
-        pretty_text += f"\n{todo.target_start_time} -> *"
+        pretty_text += f"\n    {todo.target_start_time} -> *"
     elif todo.target_end_time:
-        pretty_text += f"\n* -> {todo.target_end_time}"
+        pretty_text += f"\n    * -> {todo.target_end_time}"
     created = todo.source_annotation.note.timestamp
-    pretty_text += f"\nCreated: {format_time(created)}"
+    pretty_text += f"\n    Created: {format_time(created)}"
     if todo.complete:
         # gotta find the completed time
         complete_action = Action.get_by_todo_complete(todo.id)
         if complete_action:
-            pretty_text += f"\nCompleted: {format_time(todo.source_annotation.note.timestamp)}"
+            pretty_text += f"\n    Completed: {format_time(todo.source_annotation.note.timestamp)}"
         # TODO: add cancelled time if applicable
     now = datetime.now()
     # color the text based on status
@@ -168,7 +168,7 @@ def strf_action(action: Action) -> str:
             action_text = colored(action_text, "green")
     else:
         action_text = action.action_text
-    pretty_text = f"{datetime.strftime(action.start_time, TIMESTAMP_FORMAT)}\n\t{action_text}"
+    pretty_text = f"[{str(action.id).rjust(4, '0')}] {datetime.strftime(action.start_time, TIMESTAMP_FORMAT)}\n\t{action_text}"
     return pretty_text
 
 

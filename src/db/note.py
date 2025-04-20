@@ -1,7 +1,7 @@
 import sqlite3
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from ..config import TIMESTAMP_FORMAT
@@ -210,11 +210,12 @@ class Note(BaseModel):
                         writer.writerow(row)
 
     @classmethod
-    def import_csv(cls, filepath: str):
+    def import_csv(cls, filepath: str) -> List["Note"]:
         """
         Imports notes from a CSV file.
         """
         import csv
+        notes = []
         with open(filepath, 'r') as csvfile:
             reader = csv.reader(csvfile)
             headers = next(reader)
@@ -246,6 +247,8 @@ class Note(BaseModel):
                 if processing_error:
                     new_note.processing_error = processing_error
                     new_note.save()
+                notes.append(new_note)
+        return notes
 
 
 

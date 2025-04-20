@@ -17,7 +17,8 @@ class AppModuleFilter(logging.Filter):
 # Custom filter for processing module logs
 class ProcessingModuleFilter(logging.Filter):
     def filter(self, record):
-        return record.name.startswith("src.processing_module")
+        return record.name.startswith("src.processor") or \
+                record.name.startswith("src.grok")
 
 # Custom filter for all package logs (yours and 3rd-party)
 class AllPackagesFilter(logging.Filter):

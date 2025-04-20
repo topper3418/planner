@@ -7,6 +7,7 @@ from pprint import pformat
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Role(Enum):
@@ -33,7 +34,7 @@ class ChatClient:
             system_message = f.read()
             logger.debug('system message template loaded:\n' + system_message)
         try:
-            logger.debug('kwargs are:\n' + str(kwargs))
+            logger.info(f'loading system template "{system_message_filename}", kwargs are:\n' + str(kwargs))
             self.system_message = system_message.format(**kwargs)
         except KeyError as e:
             raise ValueError(f"Missing key in system message: {e}")
@@ -83,7 +84,7 @@ class GrokChatClient(ChatClient):
                 # Parse the response to ensure it’s valid JSON
                 try:
                     response_obj = json.loads(message.content.strip())
-                    logger.debug(f'Chat response for "{self.title}":\n{pformat(response_obj)}')
+                    logger.info(f'Chat response for "{self.title}":\n{pformat(response_obj)}')
                     return response_obj
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse response: {message.content}")
