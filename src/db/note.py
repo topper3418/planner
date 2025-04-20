@@ -1,4 +1,3 @@
-import sqlite3
 import logging
 from datetime import datetime
 from typing import List, Optional
@@ -160,7 +159,16 @@ class Note(BaseModel):
         """
         Fetches notes from the database with optional filters.
         """
-        query = """SELECT id, timestamp, note_text, processed_note_text, processing_error FROM notes WHERE 1=1"""
+        query = """
+        SELECT 
+            notes.id, 
+            notes.timestamp, 
+            notes.note_text, 
+            processed_note_text, 
+            processing_error 
+        FROM notes 
+        WHERE 1=1
+        """
         params = []
 
         if before:

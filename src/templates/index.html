@@ -6,33 +6,37 @@
     <title>Notes Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        #middle-panel {
-            height: calc(100vh - 120px); /* Adjust for header and input */
-            overflow-y: auto;
-        }
-        .note-text, .todo-text, .action-text, .curiosity-text {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: monospace;
-        }
-        .separator {
-            border-top: 1px solid #4b5563; /* Tailwind gray-600 */
-            margin: 0.5rem 0;
-        }
+    .note-text, .todo-text, .action-text, .curiosity-text {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: monospace;
+    }
+    .separator {
+        border-top: 1px solid #4b5563;
+        margin: 0.5rem 0;
+    }
+    body {
+        margin: 0;
+        overflow: hidden; /* Prevent page scrolling */
+        height: 100vh; /* Full height */
+        width: 100vw; /* Full width */
+    }
     </style>
 </head>
 <body class="bg-gray-100">
-    <div class="container mx-auto p-4 max-w-4xl">
-        <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">Notes Management</h1>
-
-        <!-- Middle Panel (Tabs for Todos, Notes, Actions, Curiosities) -->
-        <div id="middle-panel" class="bg-white p-4 rounded shadow">
-            <div class="flex mb-4 space-x-1">
+        <div class="flex flex-col min-h-screen max-h-screen p-4">
+        <!-- Header (Title and Tabs) -->
+        <div class="bg-white p-4 shadow-sm">
+            <h1 class="text-2xl font-bold text-center text-gray-800">Notes Management</h1>
+            <div class="flex mt-4 space-x-1">
                 <button id="todos-button" onclick="showTab('todos')" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Todos</button>
                 <button id="notes-button" onclick="showTab('notes')" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600">Notes</button>
                 <button id="actions-button" onclick="showTab('actions')" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600">Actions</button>
                 <button id="curiosities-button" onclick="showTab('curiosities')" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Curiosities</button>
             </div>
+        </div>
+        <!-- Middle Panel (Tabs for Todos, Notes, Actions, Curiosities) -->
+        <div id="middle-panel" class="bg-white p-4 rounded shadow grow h-max overflow-auto">
             <div id="middle-content" class="text-sm text-gray-800"></div>
         </div>
 
@@ -45,44 +49,47 @@
 
     <!-- Templates -->
     <template id="note-template">
-        <div class="note-item note-text">
-            <div class="note-header">
-                <span class="note-id font-bold"></span>
-                <span class="note-timestamp mx-1"></span>
-                <span>-</span>
-                <span class="note-category text-blue-500 mx-1"></span>
-            </div>
-            <div class="note-error text-red-500" style="display: none;"></div>
-            <div class="note-text-content mt-1"></div>
-            <div class="separator"></div>
+    <div class="note-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
+        <div class="note-header flex items-center space-x-1">
+            <span class="note-id font-bold text-sm"></span>
+            <span class="note-timestamp text-sm text-gray-600"></span>
+            <span class="text-sm">-</span>
+            <span class="note-category text-blue-500 text-sm"></span>
         </div>
+        <div class="note-error text-red-500 text-xs leading-tight" style="display: none;"></div>
+        <div class="note-text-content mt-0.5 text-sm leading-tight"></div>
+        <div class="separator"></div>
+    </div>
     </template>
 
     <template id="todo-template">
-        <div class="todo-item todo-text">
-            <div class="todo-main"></div>
-            <div class="todo-details ml-4"></div>
+    <div class="todo-item bg-gray-100 p-1 rounded-md shadow-sm flex items-center space-x-1 mb-1 hover:bg-gray-200">
+        <input type="checkbox" class="todo-checkbox h-4 w-4 text-green-500 rounded focus:ring-0" disabled>
+        <div class="flex-1">
+            <div class="todo-main text-sm font-medium leading-tight"></div>
+            <div class="todo-details text-xs text-gray-500 leading-tight"></div>
         </div>
+    </div>
     </template>
 
     <template id="action-template">
-        <div class="action-item action-text">
-            <div class="action-header">
-                <span class="action-id font-bold"></span>
-                <span class="action-timestamp mx-1"></span>
-            </div>
-            <div class="action-text-content ml-4"></div>
-            <div class="separator"></div>
+    <div class="action-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
+        <div class="action-header flex items-center space-x-1">
+            <span class="action-id font-bold text-sm"></span>
+            <span class="action-timestamp text-sm text-gray-600"></span>
         </div>
+        <div class="action-text-content ml-2 mt-0.5 text-sm leading-tight"></div>
+        <div class="separator"></div>
+    </div>
     </template>
 
     <template id="curiosity-template">
-        <div class="curiosity-item curiosity-text">
-            <div class="curiosity-timestamp font-bold"></div>
-            <div class="curiosity-note-text mt-1"></div>
-            <div class="curiosity-annotation-text ml-4 mt-1"></div>
-            <div class="separator"></div>
-        </div>
+    <div class="curiosity-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
+        <div class="curiosity-timestamp font-bold text-sm"></div>
+        <div class="curiosity-note-text mt-0.5 text-sm leading-tight"></div>
+        <div class="curiosity-annotation-text ml-2 mt-0.5 text-sm leading-tight"></div>
+        <div class="separator"></div>
+    </div>
     </template>
 
     <script>
@@ -139,20 +146,17 @@
         function renderTodo(todo) {
             const template = document.getElementById('todo-template').content.cloneNode(true);
             const item = template.querySelector('.todo-item');
-            const checkboxInner = todo.complete ? 'X' : todo.cancelled ? 'O' : ' ';
-            let mainText = `[${checkboxInner}] [${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
+            const checkbox = item.querySelector('.todo-checkbox');
+            checkbox.checked = todo.complete;
+            let mainText = `[${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
             let detailsText = '';
-            if (todo.target_start_time && todo.target_end_time) {
-                detailsText += `${todo.target_start_time} -> ${todo.target_end_time}\n`;
-            } else if (todo.target_start_time) {
-                detailsText += `${todo.target_start_time} -> *\n`;
-            } else if (todo.target_end_time) {
-                detailsText += `* -> ${todo.target_end_time}\n`;
+            if (todo.target_start_time || todo.target_end_time) {
+                detailsText += `${todo.target_start_time || '*'} -> ${todo.target_end_time || '*'}`;
             }
             const created = todo.source_annotation?.note?.timestamp || '';
-            detailsText += `Created: ${created}`;
+            if (created) detailsText += `${detailsText ? ' | ' : ''}Created: ${created.split(' ')[0]}`; // Show only date
             if (todo.complete && todo.source_annotation?.note?.timestamp) {
-                detailsText += `\nCompleted: ${todo.source_annotation.note.timestamp}`;
+                detailsText += `${detailsText ? ' | ' : ''}Done: ${todo.source_annotation.note.timestamp.split(' ')[0]}`;
             }
             const now = new Date();
             const startTime = todo.target_start_time ? new Date(todo.target_start_time) : null;
@@ -170,7 +174,7 @@
             else if (red) colorClass = 'text-red-500';
             else if (yellow) colorClass = 'text-yellow-500';
             else if (white) colorClass = 'text-gray-800';
-            else colorClass = 'text-pink-500'; // Fallback for magenta
+            else colorClass = 'text-pink-500';
             item.classList.add(colorClass);
             item.querySelector('.todo-main').textContent = mainText;
             item.querySelector('.todo-details').textContent = detailsText;
@@ -192,6 +196,7 @@
         }
 
         function renderCuriosity(curiosity) {
+            console.log('renderCuriosity', curiosity);
             const template = document.getElementById('curiosity-template').content.cloneNode(true);
             const item = template.querySelector('.curiosity-item');
             item.querySelector('.curiosity-timestamp').textContent = curiosity.note.timestamp;
@@ -216,7 +221,7 @@
                 } else if (currentTab === 'actions') {
                     items = (data.actions || []).map(action => renderAction(action));
                 } else if (currentTab === 'curiosities') {
-                    items = (data.data || []).reverse().map(curiosity => renderCuriosity(curiosity));
+                    items = (data.curiosities || []).reverse().map(curiosity => renderCuriosity(curiosity));
                 }
                 if (items.length === 0) {
                     contentDiv.textContent = `No ${currentTab} found`;
