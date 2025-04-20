@@ -42,33 +42,54 @@ notes_categories = {
         "Update the timestamp for finishing my workout to 1:30"
     ]
 }
+# Create parameter list for pytest
+test_cases = [
+    (category, note)
+    for category, notes in notes_categories.items()
+    for note in notes
+]
 
+@pytest.fixture
+def refresh_database():
+    db.teardown()
+    db.ensure_tables()
+    db.ensure_default_categories()
 
-def test_categorize_notes(setup_database):
-    # create a test note to work with
-    for category_name, notes in notes_categories.items():
-        success_obj = {
-            "success": 0,
-            "fail": 0
-        }
-        success_rate = {
-            "action": success_obj.copy(),
-            "todo": success_obj.copy(),
-            "curiosity": success_obj.copy(),
-            "observation": success_obj.copy(),
-            "command": success_obj.copy()
-        }
-        for note_text in notes:
-            note = db.Note.create(note_text)
-            category = processor.categorize_note(note)
-            assert category is not None
-            if category.name == category_name:
-                success_rate[category_name]["success"] += 1
-            else:
-                print(f"Failed to categorize note: {note_text}. Expected {category_name}, got {category.name}")
-                success_rate[category_name]["fail"] += 1
-        assert success_rate["action"]["fail"] == 0
-        assert success_rate["todo"]["fail"] == 0
-        assert success_rate["curiosity"]["fail"] == 0
-        assert success_rate["observation"]["fail"] == 0
-        assert success_rate["command"]["fail"] == 0
+@pytest.mark.parametrize("expected_category,note_text", test_cases)
+def test_categorize_notes(refresh_database, expected_category, note_text):
+    note = db.Note.create(note_text)
+    category = processor.categorize_note(note)
+    assert category is not None, f"Category should not be None for note: {note_text}"
+    assert category.name == expected_category, (
+        f"Failed to categorize note: {note_text}. "
+        f"Expected {expected_category}, got {category.name}"
+    )
+#
+# def test_categorize_notes(setup_database):
+#     # create a test note to work with
+#     for category_name, notes in notes_categories.items():
+#         success_obj = {
+#             "success": 0,
+#             "fail": 0
+#         }
+#         success_rate = {
+#             "action": success_obj.copy(),
+#             "todo": success_obj.copy(),
+#             "curiosity": success_obj.copy(),
+#             "observation": success_obj.copy(),
+#             "command": success_obj.copy()
+#         }
+#         for note_text in notes:
+#             note = db.Note.create(note_text)
+#             category = processor.categorize_note(note)
+#             assert category is not None
+#             if category.name == category_name:
+#                 success_rate[category_name]["success"] += 1
+#             else:
+#                 print(f"Failed to categorize note: {note_text}. Expected {category_name}, got {category.name}")
+#                 success_rate[category_name]["fail"] += 1
+#         assert success_rate["action"]["fail"] == 0
+#         assert success_rate["todo"]["fail"] == 0
+#         assert success_rate["curiosity"]["fail"] == 0
+#         assert success_rate["observation"]["fail"] == 0
+#         assert success_rate["command"]["fail"] == 0

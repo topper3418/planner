@@ -5,6 +5,10 @@ from src.processor.create_command import get_target_note_id
 
 
 def test_target_first_note(setup_database):
+    # start the db fresh
+    db.teardown()
+    db.ensure_tables()
+    db.ensure_default_categories()
     # Create a test note
     test_note = db.Note.create(
         "I just woke up",
