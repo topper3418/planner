@@ -222,8 +222,8 @@ class Todo(BaseModel):
     @classmethod
     def get_all(
             cls, 
-            before: Optional[str] = None, 
-            after: Optional[str] = None, 
+            before: Optional[datetime | str] = None, 
+            after: Optional[datetime | str] = None, 
             complete: Optional[bool] = None,
             cancelled: Optional[bool] = None,
             offset: Optional[int] = 0,
@@ -247,6 +247,10 @@ class Todo(BaseModel):
         # time range stuff
         if before or after:
             query += ' JOIN annotations on todos.source_annotation_id = annotations.id JOIN notes on annotations.source_note_id = notes.id'
+            if isinstance(before, datetime):
+                before = format_time(before)
+            if isinstance(after, datetime):
+                after = format_time(after)
         query += ' WHERE 1=1'  # needs this whether or not timing is involved
         if before and after:  # todo scheduled time or todo created time should fall within the range
             query += ' AND (todos.target_start_time BETWEEN ? AND ? OR todos.target_end_time BETWEEN ? AND ? OR notes.timestamp BETWEEN ? AND ?)'

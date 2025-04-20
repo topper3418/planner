@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #middle-panel {
+            height: calc(100vh - 120px); /* Adjust for header and input */
+            overflow-y: auto;
+        }
+        .note-text, .todo-text, .action-text, .curiosity-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+        }
+        .separator {
+            border-top: 1px solid #4b5563; /* Tailwind gray-600 */
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4 max-w-4xl">
+        <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">Notes Management</h1>
+
+        <!-- Middle Panel (Tabs for Todos, Notes, Actions, Curiosities) -->
+        <div id="middle-panel" class="bg-white p-4 rounded shadow">
+            <div class="flex mb-4 space-x-1">
+                <button id="todos-button" onclick="showTab('todos')" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Todos</button>
+                <button id="notes-button" onclick="showTab('notes')" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600">Notes</button>
+                <button id="actions-button" onclick="showTab('actions')" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600">Actions</button>
+                <button id="curiosities-button" onclick="showTab('curiosities')" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Curiosities</button>
+            </div>
+            <div id="middle-content" class="text-sm text-gray-800"></div>
+        </div>
+
+        <!-- Note Input (Bottom) -->
+        <div class="mt-4 flex">
+            <input id="note-input" type="text" placeholder="Enter new note" class="flex-1 p-2 border rounded-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="createNote()" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600">Add Note</button>
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="note-template">
+        <div class="note-item note-text">
+            <div class="note-header">
+                <span class="note-id font-bold"></span>
+                <span class="note-timestamp mx-1"></span>
+                <span>-</span>
+                <span class="note-category text-blue-500 mx-1"></span>
+            </div>
+            <div class="note-error text-red-500" style="display: none;"></div>
+            <div class="note-text-content mt-1"></div>
+            <div class="separator"></div>
+        </div>
+    </template>
+
+    <template id="todo-template">
+        <div class="todo-item todo-text">
+            <div class="todo-main"></div>
+            <div class="todo-details ml-4"></div>
+        </div>
+    </template>
+
+    <template id="action-template">
+        <div class="action-item action-text">
+            <div class="action-header">
+                <span class="action-id font-bold"></span>
+                <span class="action-timestamp mx-1"></span>
+            </div>
+            <div class="action-text-content ml-4"></div>
+            <div class="separator"></div>
+        </div>
+    </template>
+
+    <template id="curiosity-template">
+        <div class="curiosity-item curiosity-text">
+            <div class="curiosity-timestamp font-bold"></div>
+            <div class="curiosity-note-text mt-1"></div>
+            <div class="curiosity-annotation-text ml-4 mt-1"></div>
+            <div class="separator"></div>
+        </div>
+    </template>
+
+    <script>
+        let currentTab = 'todos';
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.getElementById('middle-content').innerHTML = '';
+            document.getElementById('todos-button').classList.add('bg-white', 'text-blue-500');
+            document.getElementById('notes-button').classList.add('bg-white', 'text-blue-500');
+            document.getElementById('actions-button').classList.add('bg-white', 'text-blue-500');
+            document.getElementById('curiosities-button').classList.add('bg-white', 'text-blue-500');
+            document.getElementById(`${tab}-button`).classList.remove('bg-white', 'text-blue-500');
+            document.getElementById(`${tab}-button`).classList.add('bg-blue-500', 'text-white');
+            fetchTabContent();
+        }
+
+        function formatParagraph(text, width = 75, indents = 1) {
+            const space = width - 8 * indents;
+            let prettyText = '';
+            if (text.length > space) {
+                prettyText += '    '.repeat(indents) + text.slice(0, space) + '\n';
+                let remainder = text.slice(space);
+                while (remainder) {
+                    if (remainder.length > space) {
+                        prettyText += '    '.repeat(indents) + remainder.slice(0, space) + '\n';
+                        remainder = remainder.slice(space);
+                    } else {
+                        prettyText += '    '.repeat(indents) + remainder + '\n';
+                        remainder = '';
+                    }
+                }
+            } else {
+                prettyText += '    '.repeat(indents) + text + '\n';
+            }
+            return prettyText;
+        }
+
+        function renderNote(note) {
+            const template = document.getElementById('note-template').content.cloneNode(true);
+            const item = template.querySelector('.note-item');
+            item.querySelector('.note-id').textContent = `[${String(note.id).padStart(4, '0')}]`;
+            item.querySelector('.note-timestamp').textContent = note.timestamp;
+            item.querySelector('.note-category').textContent = note.category ? note.category.name : 'Uncategorized';
+            if (note.processing_error) {
+                const errorDiv = item.querySelector('.note-error');
+                errorDiv.textContent = `Error: ${note.processing_error}`;
+                errorDiv.style.display = 'block';
+            }
+            item.querySelector('.note-text-content').textContent = formatParagraph(note.processed_note_text || note.note_text);
+            return item;
+        }
+
+        function renderTodo(todo) {
+            const template = document.getElementById('todo-template').content.cloneNode(true);
+            const item = template.querySelector('.todo-item');
+            const checkboxInner = todo.complete ? 'X' : todo.cancelled ? 'O' : ' ';
+            let mainText = `[${checkboxInner}] [${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
+            let detailsText = '';
+            if (todo.target_start_time && todo.target_end_time) {
+                detailsText += `${todo.target_start_time} -> ${todo.target_end_time}\n`;
+            } else if (todo.target_start_time) {
+                detailsText += `${todo.target_start_time} -> *\n`;
+            } else if (todo.target_end_time) {
+                detailsText += `* -> ${todo.target_end_time}\n`;
+            }
+            const created = todo.source_annotation?.note?.timestamp || '';
+            detailsText += `Created: ${created}`;
+            if (todo.complete && todo.source_annotation?.note?.timestamp) {
+                detailsText += `\nCompleted: ${todo.source_annotation.note.timestamp}`;
+            }
+            const now = new Date();
+            const startTime = todo.target_start_time ? new Date(todo.target_start_time) : null;
+            const endTime = todo.target_end_time ? new Date(todo.target_end_time) : null;
+            const started = startTime && startTime < now;
+            const late = endTime && endTime < now;
+            const yellow = started && !late;
+            const red = late;
+            const green = todo.complete;
+            const grey = todo.cancelled;
+            const white = !started && !endTime;
+            let colorClass = 'text-gray-800';
+            if (green) colorClass = 'text-green-500';
+            else if (grey) colorClass = 'text-gray-400';
+            else if (red) colorClass = 'text-red-500';
+            else if (yellow) colorClass = 'text-yellow-500';
+            else if (white) colorClass = 'text-gray-800';
+            else colorClass = 'text-pink-500'; // Fallback for magenta
+            item.classList.add(colorClass);
+            item.querySelector('.todo-main').textContent = mainText;
+            item.querySelector('.todo-details').textContent = detailsText;
+            return item;
+        }
+
+        function renderAction(action) {
+            const template = document.getElementById('action-template').content.cloneNode(true);
+            const item = template.querySelector('.action-item');
+            let actionText = action.action_text;
+            if (action.todo_id && action.todo) {
+                actionText += ` -> ${action.todo.todo_text}`;
+            }
+            item.classList.add(action.mark_complete ? 'text-green-500' : 'text-gray-800');
+            item.querySelector('.action-id').textContent = `[${String(action.id).padStart(4, '0')}]`;
+            item.querySelector('.action-timestamp').textContent = action.start_time;
+            item.querySelector('.action-text-content').textContent = actionText;
+            return item;
+        }
+
+        function renderCuriosity(curiosity) {
+            const template = document.getElementById('curiosity-template').content.cloneNode(true);
+            const item = template.querySelector('.curiosity-item');
+            item.querySelector('.curiosity-timestamp').textContent = curiosity.note.timestamp;
+            item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
+            item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);
+            return item;
+        }
+
+        async function fetchTabContent() {
+            try {
+                const endpoint = currentTab === 'curiosities' ? '/api/curiosities' : `/api/${currentTab}`;
+                const response = await fetch(`${endpoint}?limit=50`);
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                const contentDiv = document.getElementById('middle-content');
+                contentDiv.innerHTML = '';
+                let items = [];
+                if (currentTab === 'notes') {
+                    items = (data.notes || []).map(note => renderNote(note));
+                } else if (currentTab === 'todos') {
+                    items = (data.todos || []).map(todo => renderTodo(todo));
+                } else if (currentTab === 'actions') {
+                    items = (data.actions || []).map(action => renderAction(action));
+                } else if (currentTab === 'curiosities') {
+                    items = (data.data || []).reverse().map(curiosity => renderCuriosity(curiosity));
+                }
+                if (items.length === 0) {
+                    contentDiv.textContent = `No ${currentTab} found`;
+                } else {
+                    items.forEach(item => contentDiv.appendChild(item));
+                }
+            } catch (error) {
+                document.getElementById('middle-content').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function createNote() {
+            const noteInput = document.getElementById('note-input');
+            const noteText = noteInput.value.trim();
+            if (!noteText) {
+                alert('Please enter a note');
+                return;
+            }
+            try {
+                const response = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: { note: noteText } })
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                noteInput.value = '';
+                if (currentTab === 'notes') fetchTabContent();
+                alert('Note created');
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Initial data fetch
+        showTab('todos');
+    </script>
+</body>
+</html>

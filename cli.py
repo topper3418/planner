@@ -83,7 +83,7 @@ def main():
                                  help='Limit number of curiosities returned (default: 25)')
 
     # summary subparser
-    summary_parser = read_subparsers.add_parser('summary', help='get a summary based on a prompt')
+    summary_parser = subparsers.add_parser('summary', help='get a summary based on a prompt')
     summary_parser.add_argument('summary', nargs='*', help='Prompt for the summary')
 
     args = parser.parse_args()
