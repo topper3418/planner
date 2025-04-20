@@ -20,90 +20,145 @@
         overflow: hidden; /* Prevent page scrolling */
         height: 100vh; /* Full height */
         width: 100vw; /* Full width */
-    }
+    }/* Custom focus styles for buttons */
+        button:focus {
+            outline: 4px solid yellow;
+        }
+        /* Optional: Highlight active tab button */
+        button[aria-pressed="true"] {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
-        <div class="flex flex-col min-h-screen max-h-screen p-4">
+    <div class="flex flex-col min-h-screen max-h-screen p-4">
         <!-- Header (Title and Tabs) -->
         <div class="bg-white p-4 shadow-sm">
-            <h1 class="text-2xl font-bold text-center text-gray-800">Notes Management</h1>
+            <h1 class="text-2xl font-bold text-center text-gray-800">Planner</h1>
             <div class="flex mt-4 space-x-1">
-                <button id="todos-button" onclick="showTab('todos')" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Todos</button>
-                <button id="notes-button" onclick="showTab('notes')" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600">Notes</button>
-                <button id="actions-button" onclick="showTab('actions')" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600">Actions</button>
-                <button id="curiosities-button" onclick="showTab('curiosities')" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Curiosities</button>
+                <button tabindex="1" id="notes-button" onclick="showTab('notes')" aria-label="View Notes" aria-pressed="true" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Notes</button>
+                <button tabindex="2" id="todos-button" onclick="showTab('todos')" aria-label="View Todos" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Todos</button>
+                <button tabindex="3" id="actions-button" onclick="showTab('actions')" aria-label="View Actions" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Actions</button>
+                <button tabindex="4" id="curiosities-button" onclick="showTab('curiosities')" aria-label="View Curiosities" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Curiosities</button>
             </div>
         </div>
         <!-- Middle Panel (Tabs for Todos, Notes, Actions, Curiosities) -->
         <div id="middle-panel" class="bg-white p-4 rounded shadow grow h-max overflow-auto">
             <div id="middle-content" class="text-sm text-gray-800"></div>
         </div>
-
         <!-- Note Input (Bottom) -->
-        <div class="mt-4 flex">
-            <input id="note-input" type="text" placeholder="Enter new note" class="flex-1 p-2 border rounded-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="createNote()" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600">Add Note</button>
+        <div class="mt-4 flex gap-2">
+            <input tabindex="0" id="note-input" type="text" placeholder="Enter new note" class="flex-1 p-2 border rounded-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="add-note-button" onclick="createNote()" aria-label="Add New Note" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Add Note</button>
         </div>
     </div>
 
-    <!-- Templates -->
+    <!-- Templates (unchanged) -->
     <template id="note-template">
-    <div class="note-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
-        <div class="note-header flex items-center space-x-1">
-            <span class="note-id font-bold text-sm"></span>
-            <span class="note-timestamp text-sm text-gray-600"></span>
-            <span class="text-sm">-</span>
-            <span class="note-category text-blue-500 text-sm"></span>
+        <div class="note-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
+            <div class="note-header flex items-center space-x-1">
+                <span class="note-id font-bold text-sm"></span>
+                <span class="note-timestamp text-sm text-gray-600"></span>
+                <span class="text-sm">-</span>
+                <span class="note-category text-blue-500 text-sm"></span>
+            </div>
+            <div class="note-error text-red-500 text-xs leading-tight" style="display: none;"></div>
+            <div class="note-text-content mt-0.5 text-sm leading-tight"></div>
+            <div class="separator"></div>
         </div>
-        <div class="note-error text-red-500 text-xs leading-tight" style="display: none;"></div>
-        <div class="note-text-content mt-0.5 text-sm leading-tight"></div>
-        <div class="separator"></div>
-    </div>
     </template>
-
     <template id="todo-template">
-    <div class="todo-item bg-gray-100 p-1 rounded-md shadow-sm flex items-center space-x-1 mb-1 hover:bg-gray-200">
-        <input type="checkbox" class="todo-checkbox h-4 w-4 text-green-500 rounded focus:ring-0" disabled>
-        <div class="flex-1">
-            <div class="todo-main text-sm font-medium leading-tight"></div>
-            <div class="todo-details text-xs text-gray-500 leading-tight"></div>
+        <div class="todo-item bg-gray-100 p-1 rounded-md shadow-sm flex items-center space-x-1 mb-1 hover:bg-gray-200">
+            <input type="checkbox" class="todo-checkbox h-4 w-4 text-green-500 rounded focus:ring-0" disabled>
+            <div class="flex-1">
+                <div class="todo-main text-sm font-medium leading-tight"></div>
+                <div class="todo-details text-xs text-gray-500 leading-tight"></div>
+            </div>
         </div>
-    </div>
     </template>
-
     <template id="action-template">
-    <div class="action-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
-        <div class="action-header flex items-center space-x-1">
-            <span class="action-id font-bold text-sm"></span>
-            <span class="action-timestamp text-sm text-gray-600"></span>
+        <div class="action-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
+            <div class="action-header flex items-center space-x-1">
+                <span class="action-id font-bold text-sm"></span>
+                <span class="action-timestamp text-sm text-gray-600"></span>
+            </div>
+            <div class="action-text-content ml-2 mt-0.5 text-sm leading-tight"></div>
+            <div class="separator"></div>
         </div>
-        <div class="action-text-content ml-2 mt-0.5 text-sm leading-tight"></div>
-        <div class="separator"></div>
-    </div>
     </template>
-
     <template id="curiosity-template">
-    <div class="curiosity-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
-        <div class="curiosity-timestamp font-bold text-sm"></div>
-        <div class="curiosity-note-text mt-0.5 text-sm leading-tight"></div>
-        <div class="curiosity-annotation-text ml-2 mt-0.5 text-sm leading-tight"></div>
-        <div class="separator"></div>
-    </div>
+        <div class="curiosity-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
+            <div class="curiosity-timestamp font-bold text-sm"></div>
+            <div class="curiosity-note-text mt-0.5 text-sm leading-tight"></div>
+            <div class="curiosity-annotation-text ml-2 mt-0.5 text-sm leading-tight"></div>
+            <div class="separator"></div>
+        </div>
     </template>
 
     <script>
-        let currentTab = 'todos';
+        let currentTab = 'notes';
+
+        // Hotkey listener for Cmd/Ctrl + key
+        document.addEventListener('keydown', (event) => {
+            if (event.metaKey || event.ctrlKey) {
+                const key = event.key.toLowerCase();
+                let targetButton;
+
+                switch (key) {
+                    case 'n': // Cmd/Ctrl + N for Notes
+                        event.preventDefault();
+                        targetButton = document.getElementById('notes-button');
+                        showTab('notes');
+                        break;
+                    case 't': // Cmd/Ctrl + T for Todos
+                        event.preventDefault();
+                        targetButton = document.getElementById('todos-button');
+                        showTab('todos');
+                        break;
+                    case 'a': // Cmd/Ctrl + A for Actions
+                        event.preventDefault();
+                        targetButton = document.getElementById('actions-button');
+                        showTab('actions');
+                        break;
+                    case 'c': // Cmd/Ctrl + C for Curiosities
+                        event.preventDefault();
+                        targetButton = document.getElementById('curiosities-button');
+                        showTab('curiosities');
+                        break;
+                    case 'enter': // Cmd/Ctrl + Enter for Add Note
+                        event.preventDefault();
+                        targetButton = document.getElementById('add-note-button');
+                        createNote();
+                        break;
+                }
+
+                // Focus the button for visual feedback
+                if (targetButton) {
+                    targetButton.focus();
+                }
+            }
+        });
 
         function showTab(tab) {
             currentTab = tab;
             document.getElementById('middle-content').innerHTML = '';
-            document.getElementById('todos-button').classList.add('bg-white', 'text-blue-500');
-            document.getElementById('notes-button').classList.add('bg-white', 'text-blue-500');
-            document.getElementById('actions-button').classList.add('bg-white', 'text-blue-500');
-            document.getElementById('curiosities-button').classList.add('bg-white', 'text-blue-500');
-            document.getElementById(`${tab}-button`).classList.remove('bg-white', 'text-blue-500');
-            document.getElementById(`${tab}-button`).classList.add('bg-blue-500', 'text-white');
+
+            // Update aria-pressed and styles for tab buttons
+            const buttons = ['notes-button', 'todos-button', 'actions-button', 'curiosities-button'];
+            buttons.forEach((btnId) => {
+                const btn = document.getElementById(btnId);
+                if (btnId === `${tab}-button`) {
+                    btn.classList.remove('bg-white', 'text-blue-500');
+                    btn.classList.add('bg-blue-500', 'text-white');
+                    btn.setAttribute('aria-pressed', 'true');
+                } else {
+                    btn.classList.add('bg-white', 'text-blue-500');
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.setAttribute('aria-pressed', 'false');
+                }
+            });
+
             fetchTabContent();
         }
 
@@ -128,11 +183,27 @@
             return prettyText;
         }
 
+        function formatDateTimeUTC(date) {
+            // Ensure input is a Date object
+            const d = date instanceof Date ? date : new Date(date);
+            
+            // Extract UTC components
+            const year = d.getUTCFullYear();
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const hours = String(d.getUTCHours()).padStart(2, '0');
+            const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(d.getUTCSeconds()).padStart(2, '0');
+            
+            // Return formatted string
+            return `${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }        
+
         function renderNote(note) {
             const template = document.getElementById('note-template').content.cloneNode(true);
             const item = template.querySelector('.note-item');
             item.querySelector('.note-id').textContent = `[${String(note.id).padStart(4, '0')}]`;
-            item.querySelector('.note-timestamp').textContent = note.timestamp;
+            item.querySelector('.note-timestamp').textContent = formatDateTimeUTC(note.timestamp)
             item.querySelector('.note-category').textContent = note.category ? note.category.name : 'Uncategorized';
             if (note.processing_error) {
                 const errorDiv = item.querySelector('.note-error');
@@ -151,12 +222,12 @@
             let mainText = `[${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
             let detailsText = '';
             if (todo.target_start_time || todo.target_end_time) {
-                detailsText += `${todo.target_start_time || '*'} -> ${todo.target_end_time || '*'}`;
+                detailsText += `${formatDateTimeUTC(todo.target_start_time) || '*'} -> ${formatDateTimeUTC(todo.target_end_time) || '*'}`;
             }
             const created = todo.source_annotation?.note?.timestamp || '';
-            if (created) detailsText += `${detailsText ? ' | ' : ''}Created: ${created.split(' ')[0]}`; // Show only date
+            if (created) detailsText += `${detailsText ? ' | ' : ''}Created: ${formatDateTimeUTC(created)}`;
             if (todo.complete && todo.source_annotation?.note?.timestamp) {
-                detailsText += `${detailsText ? ' | ' : ''}Done: ${todo.source_annotation.note.timestamp.split(' ')[0]}`;
+                detailsText += `${detailsText ? ' | ' : ''}Done: ${formatDateTimeUTC(todo.source_annotation.note.timestamp)}`;
             }
             const now = new Date();
             const startTime = todo.target_start_time ? new Date(todo.target_start_time) : null;
@@ -190,16 +261,15 @@
             }
             item.classList.add(action.mark_complete ? 'text-green-500' : 'text-gray-800');
             item.querySelector('.action-id').textContent = `[${String(action.id).padStart(4, '0')}]`;
-            item.querySelector('.action-timestamp').textContent = action.start_time;
+            item.querySelector('.action-timestamp').textContent = formatDateTimeUTC(action.start_time);
             item.querySelector('.action-text-content').textContent = actionText;
             return item;
         }
 
         function renderCuriosity(curiosity) {
-            console.log('renderCuriosity', curiosity);
             const template = document.getElementById('curiosity-template').content.cloneNode(true);
             const item = template.querySelector('.curiosity-item');
-            item.querySelector('.curiosity-timestamp').textContent = curiosity.note.timestamp;
+            item.querySelector('.curiosity-timestamp').textContent = formatDateTimeUTC(curiosity.note.timestamp);
             item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
             item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);
             return item;
@@ -228,6 +298,9 @@
                 } else {
                     items.forEach(item => contentDiv.appendChild(item));
                 }
+                // Scroll to the bottom of the container
+                const scrollContainer = document.getElementById('middle-panel');
+                scrollContainer.scrollTop = scrollContainer.scrollHeight;
             } catch (error) {
                 document.getElementById('middle-content').textContent = `Error: ${error.message}`;
             }
@@ -250,14 +323,21 @@
                 if (data.error) throw new Error(data.error);
                 noteInput.value = '';
                 if (currentTab === 'notes') fetchTabContent();
-                alert('Note created');
             } catch (error) {
                 alert(`Error: ${error.message}`);
             }
         }
 
         // Initial data fetch
-        showTab('todos');
+        showTab('notes');
+
+        // Add Enter event listener to the text box
+        document.getElementById('note-input').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter' && !event.metaKey && !event.ctrlKey) {
+                event.preventDefault();
+                createNote();
+            }
+        });
     </script>
 </body>
 </html>
