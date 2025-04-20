@@ -1,6 +1,3 @@
-
-
-
 from src import db
 
 
@@ -20,6 +17,10 @@ def unprocess_note(note: db.Note):
             action.delete()
     # remove the annotation
     annotation.delete()
+    # remove the processed text
+    note.processed_note_text = ""
+    note.processing_error = ""
+    note.save()
 
 
 

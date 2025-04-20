@@ -6,7 +6,7 @@ import time
 
 def main():
    # Get all todos
-   todos = db.Todo.read()
+   todos = db.Todo.get_all()
    title = pretty_printing.banner("Todos")
    todos_strings = pretty_printing.strf_todos(todos)
    # clear the console

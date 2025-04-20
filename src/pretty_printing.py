@@ -92,19 +92,54 @@ def strf_notes(notes: List[Note], show_processed_text: bool = False) -> str:
 
 
 def strf_todo(todo: Todo) -> str:
+    # create the text
     checkbox_inner = "X" if todo.complete else "O" if todo.cancelled else " "
-    pretty_text = f"[{checkbox_inner}]{todo.id}: {todo.todo_text} - {todo.target_start_time} - {todo.target_end_time}"        
-    now = datetime.now()
+    pretty_text = f"[{checkbox_inner}] [{str(todo.id).rjust(4, '0')}]: {todo.todo_text}"
+    if todo.target_start_time and todo.target_end_time:
+        pretty_text += f"\n    {todo.target_start_time} -> {todo.target_end_time}"
+    elif todo.target_start_time:
+        pretty_text += f"\n    {todo.target_start_time} -> *"
+    elif todo.target_end_time:
+        pretty_text += f"\n    * -> {todo.target_end_time}"
+    created = todo.source_annotation.note.timestamp
+    pretty_text += f"\n    Created: {format_time(created)}"
     if todo.complete:
+        # gotta find the completed time
+        complete_action = Action.get_by_todo_complete(todo.id)
+        if complete_action:
+            pretty_text += f"\n    Completed: {format_time(todo.source_annotation.note.timestamp)}"
+        # TODO: add cancelled time if applicable
+    now = datetime.now()
+    # color the text based on status
+    # lets just do this in english, simpler that way
+    start_time = todo.target_start_time
+    started = start_time < now if start_time else False
+    end_time = todo.target_end_time
+    late = end_time < now if end_time else False
+    # yellow if it's started and not yet late
+    yellow = started and not late
+    # red if it's late
+    red = late
+    # green if it's complete
+    green = todo.complete
+    # grey if it's cancelled
+    grey = todo.cancelled
+    # white if no time given
+    white = not started and not end_time
+    # now in order of priority...
+    if green:
         pretty_text = colored(pretty_text, "green")
-    elif todo.cancelled:
-        pretty_text = colored(pretty_text, "grey")
-    elif todo.target_start_time and todo.target_start_time < now:
-        pretty_text = colored(pretty_text, "yellow")
-    elif todo.target_end_time and todo.target_end_time < now:
+    elif grey:
+        pretty_text = colored(pretty_text, "light_grey")
+    elif red:
         pretty_text = colored(pretty_text, "red")
-    else:
+    elif yellow:
+        pretty_text = colored(pretty_text, "yellow")
+    elif white:
         pretty_text = colored(pretty_text, "white")
+    else:
+        print('todo is not anything')
+        pretty_text = colored(pretty_text, "magenta")
     return pretty_text
 
 
@@ -133,7 +168,7 @@ def strf_action(action: Action) -> str:
             action_text = colored(action_text, "green")
     else:
         action_text = action.action_text
-    pretty_text = f"{datetime.strftime(action.start_time, TIMESTAMP_FORMAT)}\n\t{action_text}"
+    pretty_text = f"[{str(action.id).rjust(4, '0')}] {datetime.strftime(action.start_time, TIMESTAMP_FORMAT)}\n\t{action_text}"
     return pretty_text
 
 
@@ -153,7 +188,7 @@ def strf_actions(actions: List[Action]) -> str:
 
 
 def strf_curiosity(curiosity: Annotation) -> str:
-    pretty_text = f"{curiosity.note.timestamp}\n{curiosity.note.note_text}\n{format_paragraph(curiosity.annotation_text)}"
+    pretty_text = f"{curiosity.note.timestamp}\n{format_paragraph(curiosity.note.note_text, indents=0)}\n{format_paragraph(curiosity.annotation_text)}"
     return pretty_text
 
 

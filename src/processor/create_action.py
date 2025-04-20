@@ -1,7 +1,7 @@
 import logging
 import src.db as db
 
-from .client import GrokChatClient
+from ..grok import GrokChatClient
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ def todo_to_str(todo: db.Todo) -> str:
     return f"ID:{todo.id} created: {todo.source_annotation.note.timestamp} - target_start: {todo.target_start_time} - target_end: {todo.target_end_time}: {todo.todo_text}"
 
 
-def apply_action_to_todo(action: db.Action):
+def get_target_todo_id(action: db.Action):
     client = GrokChatClient()
     action.source_annotation.note  # load the note and annotation
     client.load_system_message("apply_action_to_todo", action=action.model_dump())
@@ -53,6 +53,7 @@ def create_action(annotation: db.Annotation):
     start_time = response.get('start_time')
     if not start_time:
         raise ValueError(f"Start time not found in response: {response}")
+    todo_action = response.get('todo_action') # optional
     try:
         action = db.Action.create(
             action_text=action_text,
@@ -65,13 +66,28 @@ def create_action(annotation: db.Annotation):
     if action:
         action.source_annotation = annotation
         # see if the action is relevant to any of our incomplete todos
-        target_todo_id = apply_action_to_todo(action)
+        target_todo_id = get_target_todo_id(action)
         if target_todo_id:
             action.todo_id = target_todo_id
-            action.save()
             todo = db.Todo.get_by_id(target_todo_id)
-            todo.complete = True
+            if not todo:
+                note = annotation.note
+                note.processing_error = f"no todo for id {target_todo_id} found for action {action.id}"
+                note.save()
+                raise ValueError(f"Todo with ID {target_todo_id} not found")
+            action.save()
+            if todo_action == "complete":
+                todo.complete = True
+                action.mark_complete = True
+                todo.target_end_time = action.start_time
+            elif todo_action == "begin":
+                todo.target_start_time = action.start_time
+            elif todo_action == "proceed":
+                pass  # no need, just attach it
+            else:
+                raise ValueError(f"Unknown todo action: {todo_action}")
             todo.save()
+            action.save()
             logger.info(f"todo found for action {action.id}:\n" + str(todo))
         else:
             logger.info(f"no todo found for action {action.id}")

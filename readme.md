@@ -227,3 +227,5 @@ and then the prerequisites should be listed in the todos as a tree
 - [ ] Tags. the user should create tags which are implemented in
 the annotation step. Then they users can apply filters to each
 object type and summarize particular projects from one notebook
+
+- [ ] Add meta tasks for the system. Something along the lines of "schedule my day", and starts a dialogue where it proposes adjustments to the start and end times of todos, and you can converse back and forth to plan your day out

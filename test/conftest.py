@@ -2,7 +2,10 @@ import pytest
 import sqlite3
 from unittest.mock import patch
 
-from src import db
+from src import db, setup_logging
+
+# Initialize logging
+setup_logging.setup_test_logging()
 
 @pytest.fixture(scope="session")
 def mock_sqlite3_connect():

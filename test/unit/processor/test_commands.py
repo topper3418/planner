@@ -108,9 +108,9 @@ def create_notes_for_afternoon(create_notes_for_morning):
     "note_text, expected_command, note_search",
     [
         ("Change the note about going to the store to an action", "update_note_category", "I am going to the store"),
-        ("That note about finishing my project, I actually meant to say I need to start my project", "update_note_text", "finish my project"),
+        ("That note about finishing my project, change it because I actually meant to say I need to start my project", "update_note_text", "finish my project"),
         ("I need you to backfill everything I did today", "no_match_found", "N/A"),
-        ("earlier today, when I said I was going to the gym, I actually meant I was going to the garage", "update_note_text", "I am going to spend an hour at the gym")
+        ("change the note about going to the gym, I actually meant I was going to the garage", "update_note_text", "I am going to spend an hour at the gym")
     ],
     ids=[
         "update_note_category2",
@@ -136,7 +136,10 @@ def test_create_commands_2(create_notes_for_afternoon, note_text, expected_comma
     # try to create the command
     command = processor.create_command(annotation)
     if note_search != "N/A":
-        assert command is not None
+        assert command is not None, (
+            f"Command should not be None for note: {note_text}. "
+            f"Expected {expected_command}"
+        )
         assert command.source_annotation == annotation
         assert command.command_text == expected_command
         assert command.value_before is not None

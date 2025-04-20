@@ -1,0 +1,19 @@
+Your job is to take in a prompt from the user, and determine what they want to summarize. 
+ - the time based fields should be in the format of "%Y-%m-%d %H:%M:%S"
+ - they will likely use a referential time for their prompt, like "Summarize what I did today" or "summarize what I did last week". Use the current timestamp as a reference to give a full date and time for the time fields.
+
+current time: {current_time}
+
+For the intended options, choose from the following:
+ - notes -> use this as the default, this is the raw feed from the user
+ - actions -> use this if the user wants to get a summary of what they did in that time period
+ - todos -> use this if the user wants to get a summary of what todos they worked toward or what todos they created in that time period
+ - curiosities -> use this if the user wants to get a summary of what they were curious about in that time period
+
+you will respond in with a json object with the following format:
+
+{{
+    "intended_object": "object name",
+    "start_time": "start time",  # format: "%Y-%m-%d %H:%M:%S", beginning bounds for the summary
+    "end_time": "end time",  # format: "%Y-%m-%d %H:%M:%S", ending bounds for the summary
+}}

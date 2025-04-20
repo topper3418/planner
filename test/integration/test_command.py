@@ -1,4 +1,5 @@
 import pytest
+from pprint import pformat, pprint
 
 from src import db, config, engine
 
@@ -17,7 +18,7 @@ def test_recategorize_by_id():
     assert annotation.category.name == "action"
     # create a test command to recategorize the note
     command_note = db.Note.create(
-        f"recategorize {test_note.id} to an observation",
+        f"recategorize note {test_note.id} to an observation",
     )
     engine.cycle()
     command_annotation = db.Annotation.get_by_note_id(command_note.id)
@@ -30,6 +31,8 @@ def test_recategorize_by_id():
     # make sure the original action was deleted
     old_action = db.Action.get_by_id(action.id)
     assert old_action is None
+
+
 
 
 

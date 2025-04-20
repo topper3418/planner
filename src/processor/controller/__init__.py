@@ -37,12 +37,12 @@ def route_command(command: db.Command):
                 raise ValueError("Commands cannot be undone")
             if annotation.category.name == "todo":
                 # delete the todo
-                todo = db.Todo.get_by_id(note.id)
+                todo = db.Todo.get_by_source_annotation_id(annotation.id)
                 if todo:
                     todo.delete()
             if annotation.category.name == "action":
                 # delete the action
-                action = db.Action.get_by_id(note.id)
+                action = db.Action.get_by_source_annotation_id(annotation.id)
                 if action:
                     action.delete()
             # update the category
