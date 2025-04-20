@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, render_template, request
 
-from .db import Note, Action, Todo, Annotation
+from .db import Note, Action, Todo, Annotation, Category
 from .summary import get_summary
 from .setup_logging import setup_normal_logging
 from .util import parse_time
@@ -42,18 +42,29 @@ def create_note():
 
 @rest_server.get('/api/notes')
 def handle_notes():
+    # get args
     before_str = request.args.get('before')
     before = parse_time(before_str) if before_str else None
     after_str = request.args.get('after')
     after =  parse_time(after_str) if after_str else None
     search = request.args.get('search')
     limit = request.args.get('limit', default=25, type=int)
-
     try:
         notes = Note.get_all(before=before, after=after, search=search, limit=limit)
+        annotations = Annotation.get_all(before=before, after=after, search=search, limit=limit)
+        annotations_dict = {annotation.note_id: annotation for annotation in annotations}
         notes.reverse()  # Match CLI behavior
-        return jsonify({'notes': [note.model_dump() for note in notes]})
+        notes_json = [note.model_dump() for note in notes]
+        # Populate categories
+        for note in notes_json:
+            annotation = annotations_dict.get(note['id'])
+            if annotation:
+                note['category'] = annotation.category.model_dump()
+            else: 
+                note['category'] = {"name": "uncategorized", "description": "", "color": "#000000"}
+        return jsonify({'notes': notes_json})
     except Exception as e:
+        logger.error(f"Error fetching notes: {e}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -101,17 +112,21 @@ def handle_actions():
 
 @rest_server.get('/api/curiosities')
 def handle_curiosities():
+    logger.warning('Fetching curiosities')
     before = request.args.get('before')
     after = request.args.get('after')
     search = request.args.get('search')
     limit = request.args.get('limit', default=25, type=int)
-
     try:
+        logger.warning(f"Fetching curiosities with before={before}, after={after}, search={search}, limit={limit}")
         annotations = Annotation.get_by_category_name('curiosity', before=before, after=after, search=search, limit=limit)
-        if annotations is None:
-            return jsonify({'curiosities': []})
-        return jsonify({'curiosities': [annotation.model_dump() for annotation in annotations]})
+        logger.warning(f"Curiosities found: {annotations}")
+        curiosities = [annotation.model_dump() for annotation in annotations]
+        for curiosity, annotation in zip(curiosities, annotations):
+            curiosity['note'] = annotation.note.model_dump()
+        return jsonify({'curiosities': curiosities})
     except Exception as e:
+        logger.error(f"Error fetching curiosities: {e}")
         return jsonify({'error': str(e)}), 500
 
 
