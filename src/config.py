@@ -1,6 +1,7 @@
 import os
 
 
-NOTES_DATABASE_FILEPATH = os.path.join("data", "notes.db")
-REST_SERVER_PORT = 9000
+NOTES_DB_FILENAME = os.environ.get("PLANNER_NOTES_DB_FILENAME", "notes.txt")
+NOTES_DATABASE_FILEPATH = os.path.join("data", NOTES_DB_FILENAME)
+SERVER_PORT = os.environ.get("PLANNER_REST_SERVER_PORT", 9000)
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
