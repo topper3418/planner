@@ -235,8 +235,6 @@ class Annotation(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, args)
             rows = cursor.fetchall()
-            logger.info(f'Found {len(rows)} annotations for category {category_name}')
-            logger.info(f'annotations: {rows}')
             return_value = [cls.from_sqlite_row(row) for row in rows] if rows else []
             logger.info(f'get_by_category_name: {return_value}')
             return [cls.from_sqlite_row(row) for row in rows] if rows else []

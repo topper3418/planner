@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notes Management</title>
+    <title>Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
     .note-text, .todo-text, .action-text, .curiosity-text {
@@ -21,21 +21,38 @@
         height: 100vh; /* Full height */
         width: 100vw; /* Full width */
     }/* Custom focus styles for buttons */
-        button:focus {
-            outline: 4px solid yellow;
-        }
-        /* Optional: Highlight active tab button */
-        button[aria-pressed="true"] {
-            background-color: #3b82f6; /* Tailwind blue-500 */
-            color: white;
-        }
+    button:focus {
+        outline: 4px solid yellow;
+    }
+    /* Optional: Highlight active tab button */
+    button[aria-pressed="true"] {
+        background-color: #3b82f6; /* Tailwind blue-500 */
+        color: white;
+    }
+    /* Modal styles */
+    #query-modal {
+        z-index: 1000; /* Ensure modal is above other content */
+    }
+    #query-modal .bg-white {
+        max-height: 90vh; /* Limit modal height */
+        overflow-y: auto; /* Scroll if content overflows */
+    }
+    #query-response h3 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
     </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex flex-col min-h-screen max-h-screen p-4">
         <!-- Header (Title and Tabs) -->
-        <div class="bg-white p-4 shadow-sm">
-            <h1 class="text-2xl font-bold text-center text-gray-800">Planner</h1>
+        <div class="bg-white p-4 shadow-sm flex flex-col">
+            <div class="flex flex-row justify-between m-0 p-0" >
+                <button tabindex="5" id="query-modal-button" aria-label="Open Query Modal" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Query</button>
+                <h1 class="text-2xl font-bold text-center text-gray-800">Planner</h1>
+                <div></div>
+            </div>
             <div class="flex mt-4 space-x-1">
                 <button tabindex="1" id="notes-button" onclick="showTab('notes')" aria-label="View Notes" aria-pressed="true" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Notes</button>
                 <button tabindex="2" id="todos-button" onclick="showTab('todos')" aria-label="View Todos" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Todos</button>
@@ -53,7 +70,22 @@
             <button id="add-note-button" onclick="createNote()" aria-label="Add New Note" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Add Note</button>
         </div>
     </div>
-
+    <!-- Modal -->
+    <div id="query-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
+            <button id="modal-close-button" aria-label="Close Query Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <h2 id="modal-title" class="text-lg font-bold mb-4 ml-8">Query</h2>
+            <div class="flex gap-2 mb-4">
+                <input id="query-input" type="text" placeholder="query your notes" class="flex-1 p-2 border rounded-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Query input">
+                <button id="query-submit-button" aria-label="Submit Query" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Submit</button>
+            </div>
+            <div id="query-response" class="text-sm text-gray-800 p-2 border rounded max-h-400 overflow-auto" aria-live="polite"></div>
+        </div>
+    </div>
     <!-- Templates (unchanged) -->
     <template id="note-template">
         <div class="note-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
@@ -97,11 +129,89 @@
     </template>
 
     <script>
+        // Modal logic
+        const queryModal = document.getElementById('query-modal');
+        const queryModalButton = document.getElementById('query-modal-button');
+        const queryInput = document.getElementById('query-input');
+        const queryResponse = document.getElementById('query-response');
+        const querySubmitButton = document.getElementById('query-submit-button');
+        const modalCloseButton = document.getElementById('modal-close-button');
+
+        // Open modal
+        function openQueryModal() {
+            queryModal.classList.remove('hidden');
+            queryInput.focus(); // Focus input for accessibility
+        }
+
+        // Close modal
+        function closeQueryModal() {
+            queryModal.classList.add('hidden');
+            queryModalButton.focus(); // Return focus to trigger button
+        }
+
+        // Open modal on button click
+        queryModalButton.addEventListener('click', openQueryModal);
+
+        // Close modal on close button click
+        modalCloseButton.addEventListener('click', closeQueryModal);
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !queryModal.classList.contains('hidden')) {
+                closeQueryModal();
+            }
+        });
+
+        // Close modal when clicking outside
+        queryModal.addEventListener('click', (event) => {
+            if (event.target === queryModal) {
+                closeQueryModal();
+            }
+        });
+
+        // Handle query submission
+        async function submitQuery() {
+            const query = queryInput.value.trim();
+            if (!query) {
+                queryResponse.innerHTML = '<p class="text-red-500">Please enter a query</p>';
+                return;
+            }
+            try {
+                queryResponse.innerHTML = '<p>Processing query...</p>';
+                const response = await fetch(`/api/summary?prompt=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (data.error) {
+                    queryResponse.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
+                } else {
+                    // Display the response, convert from the list of strings to a series of paragraphs
+                    const paragraphs = data.summary.map(paragraph => `<p>${paragraph}</p>`).join('');
+                    queryResponse.innerHTML = `<h3>Response:</h3>${paragraphs}`;
+                }
+            } catch (error) {
+                queryResponse.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Submit query on button click
+        querySubmitButton.addEventListener('click', submitQuery);
+
+        // Submit query on Enter key in input
+        queryInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitQuery();
+            }
+        });
+
+        // rendering logic
         let currentTab = 'notes';
 
-        // Hotkey listener for Cmd/Ctrl + key
+        // Hotkey listener for Cmd/Ctrl/opt + key
         document.addEventListener('keydown', (event) => {
-            if (event.metaKey || event.ctrlKey) {
+            if ((event.metaKey || event.ctrlKey || event.altKey) && !event.shiftKey) {
                 const key = event.key.toLowerCase();
                 let targetButton;
 
@@ -126,10 +236,17 @@
                         targetButton = document.getElementById('curiosities-button');
                         showTab('curiosities');
                         break;
-                    case 'enter': // Cmd/Ctrl + Enter for Add Note
+                    case 'q': // Cmd/Ctrl + Q for Query
                         event.preventDefault();
-                        targetButton = document.getElementById('add-note-button');
-                        createNote();
+                        targetButton = document.getElementById('query-modal-button');
+                        openQueryModal();
+                        break;
+                    case 'enter': // Cmd/Ctrl + Enter for focus the note text box
+                        event.preventDefault();
+                        // focus the note input box, or the query input box if the modal is open
+                        const modalOpen = !queryModal.classList.contains('hidden');
+                        targetInput = modalOpen ? queryInput : document.getElementById('note-input');
+                        targetInput.focus();
                         break;
                 }
 
