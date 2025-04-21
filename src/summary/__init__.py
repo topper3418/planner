@@ -4,6 +4,7 @@ import logging
 from ..grok import GrokChatClient
 from ..pretty_printing import strf_notes, strf_todos, strf_actions, strf_todos
 from ..db import Note, Action, Todo
+from ..util import format_time
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,9 @@ def get_summary(prompt: str) -> str:
     """
     # determine what the user wants (what timeframe, and of what)
     intent_client = GrokChatClient()
-    intent_client.load_system_message("get_summary_intent", current_time=datetime.now())
+    intent_client.load_system_message("get_summary_intent", current_time=format_time(datetime.now()))
+    print("SYSTEM MESSAGE-----------")
+    print(intent_client.system_message)
     response = intent_client.chat(prompt)
     intended_object = response.get('intended_object')
     if not intended_object:
@@ -40,7 +43,7 @@ def get_summary(prompt: str) -> str:
         raise ValueError(f"Unknown intended object: {intended_object}")
     # get the summary
     summary_client = GrokChatClient()
-    summary_client.load_system_message("get_summary", current_time=datetime.now())
+    summary_client.load_system_message("get_summary", current_time=format_time(datetime.now()))
     response = summary_client.chat(context_str)
     summary = response.get('summary')
     if not summary:

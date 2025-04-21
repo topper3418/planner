@@ -71,8 +71,14 @@ class GrokChatClient(ChatClient):
             "role": role,
         })
 
+        initial_retries = retries
+
         while retries > 0:
             try:
+                print("CHATTING WITH HISTORY-----------------------------")
+                from pprint import pprint
+                pprint(self.history)
+                logger.debug(f'client "{self.title}" chatting with history:\n' + str(self.history))
                 response = self._client.chat.completions.create(
                     model="grok-2-latest",
                     messages=self.history,
@@ -80,7 +86,6 @@ class GrokChatClient(ChatClient):
                 )
                 message = response.choices[0].message
                 self.history.append(message)
-                logger.debug(f'client "{self.title}" chatting with history:\n' + str(self.history))
                 # Parse the response to ensure it’s valid JSON
                 try:
                     response_obj = json.loads(message.content.strip())
@@ -104,7 +109,7 @@ class GrokChatClient(ChatClient):
                 continue
         
         # If all retries fail
-        logger.error(f"Failed to get valid response after {retries} retries")
-        raise ValueError("Failed to get a valid response from the chat client after retries")
+        logger.error(f"Failed to get valid response after {initial_retries} retries")
+        raise ValueError(f"Failed to get a valid response from the chat client after {initial_retries} retries")
 
 

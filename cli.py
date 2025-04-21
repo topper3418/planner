@@ -84,7 +84,7 @@ def main():
 
     # summary subparser
     query_parser = subparsers.add_parser('query', help='get an answer about your data from a query')
-    query_parser.add_argument('query', nargs='*', help='Prompt for the summary')
+    query_parser.add_argument('query_words', nargs='*', help='Prompt for the summary')
 
     args = parser.parse_args()
 
@@ -181,7 +181,8 @@ def main():
             pretty_notes = pretty_printing.strf_notes(notes, show_processed_text=True)
             print(pretty_notes)
     elif args.command == 'query':
-        title, summary = get_summary("summarize all notes")
+        query = " ".join(args.query_words)
+        title, summary = get_summary(query)
         title_banner = pretty_printing.banner(title)
         summary_paragraph = pretty_printing.format_paragraph(summary, indents=0)
         print(title_banner)
