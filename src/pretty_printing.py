@@ -84,6 +84,8 @@ def strf_notes(notes: List[Note], show_processed_text: bool = False) -> str:
         Woke up and rolled out of bed.
     ---------------------------------------------------------------------------
     """
+    if not notes:
+        return "No notes found"
     pretty_notes = "" 
     for note in notes:
         pretty_text = strf_note(note, show_processed_text)
@@ -150,6 +152,8 @@ def strf_todos(todos: List[Todo]) -> str:
 
     [ ] 1: todo-text - 2023-04-12 06:00:00 - 2023-04-12 06:00:00
     """
+    if not todos:
+        return "No todos found"
     pretty_todos = ""
     for todo in todos:
         pretty_text = strf_todo(todo)
@@ -180,6 +184,8 @@ def strf_actions(actions: List[Action]) -> str:
     2023-04-12 06:00:00 - 2023-04-12 06:00:00
         action-text
     """
+    if not actions:
+        return "No actions found"
     pretty_actions = ""
     for action in actions:
         pretty_text = strf_action(action)
@@ -200,6 +206,8 @@ def strf_curiosities(curiosities: List[Annotation]) -> str:
     original-note
         observation-text
     """
+    if not curiosities:
+        return "No curiosities found"
     curiosities.reverse()
     pretty_curiosities = ""
     for curiosity in curiosities:

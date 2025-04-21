@@ -13,6 +13,7 @@ def get_summary(prompt: str) -> str:
     """
     gets a summary of the given prompt
     """
+    logger.info('getting summary for prompt: ' + prompt)
     # determine what the user wants (what timeframe, and of what)
     intent_client = GrokChatClient()
     intent_client.load_system_message("get_summary_intent", current_time=format_time(datetime.now()))
