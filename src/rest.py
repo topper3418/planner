@@ -43,9 +43,9 @@ def create_note():
 @rest_server.get('/api/notes')
 def handle_notes():
     # get args
-    before_str = request.args.get('before')
+    before_str = request.args.get('endTime')
     before = parse_time(before_str) if before_str else None
-    after_str = request.args.get('after')
+    after_str = request.args.get('startTime')
     after =  parse_time(after_str) if after_str else None
     search = request.args.get('search')
     limit = request.args.get('limit', default=25, type=int)
@@ -70,26 +70,24 @@ def handle_notes():
 
 @rest_server.get('/api/todos')
 def handle_todos():
-    before = request.args.get('before')
-    after = request.args.get('after')
+    before = request.args.get('endTime', type=str)
+    after = request.args.get('startTime', type=str)
     limit = request.args.get('limit', default=25, type=int)
-    incomplete_only = request.args.get('incomplete_only', default=False, type=bool)
-    complete_only = request.args.get('complete_only', default=False, type=bool)
-    cancelled_only = request.args.get('cancelled_only', default=False, type=bool)
-
-    if incomplete_only and complete_only:
-        return jsonify({'error': 'Cannot use both incomplete_only and complete_only'}), 400
-
-    complete = None
-    if incomplete_only:
-        complete = False
-    elif complete_only:
-        complete = True
-
-    cancelled = cancelled_only
+    search = request.args.get('search', type=str)
+    show_complete = request.args.get('completed') == 'true'
+    show_cancelled = request.args.get('cancelled') == 'true'
+    show_active = request.args.get('active') == 'true'
 
     try:
-        todos = Todo.get_all(before=before, after=after, limit=limit, complete=complete, cancelled=cancelled)
+        todos = Todo.get_all(
+            before=before, 
+            after=after, 
+            limit=limit, 
+            complete=show_complete, 
+            cancelled=show_cancelled,
+            active=show_active,
+            search=search
+        )
         return jsonify({'todos': [todo.model_dump() for todo in todos]})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -97,13 +95,24 @@ def handle_todos():
 
 @rest_server.get('/api/actions')
 def handle_actions():
-    before = request.args.get('before')
-    after = request.args.get('after')
+    before = request.args.get('endTime')
+    after = request.args.get('startTime')
     search = request.args.get('search')
     limit = request.args.get('limit', default=25, type=int)
+    has_todo = request.args.get('hasTodo')
+    if has_todo is not None:
+        has_todo = has_todo.lower() == 'true'
+
+    print('has_todo', has_todo)
 
     try:
-        actions = Action.get_all(before=before, after=after, search=search, limit=limit)
+        actions = Action.get_all(
+            before=before, 
+            after=after, 
+            search=search, 
+            limit=limit,
+            applied_to_todo=has_todo
+        )
         actions.reverse()
         return jsonify({'actions': [action.model_dump() for action in actions]})
     except Exception as e:
@@ -113,8 +122,8 @@ def handle_actions():
 @rest_server.get('/api/curiosities')
 def handle_curiosities():
     logger.warning('Fetching curiosities')
-    before = request.args.get('before')
-    after = request.args.get('after')
+    before = request.args.get('endTime')
+    after = request.args.get('startTime')
     search = request.args.get('search')
     limit = request.args.get('limit', default=25, type=int)
     try:

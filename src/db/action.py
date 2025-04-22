@@ -220,6 +220,7 @@ class Action(BaseModel):
             search: Optional[str] = None,
             offset: Optional[int] = 0,
             limit: Optional[int] = 25,
+            applied_to_todo: Optional[bool] = None,
     ):
         """
         Reads actions from the database.
@@ -243,6 +244,12 @@ class Action(BaseModel):
         if search:
             query += ' AND action_text LIKE ?'
             params.append(f'%{search}%')
+        if applied_to_todo is not None:
+            # if true, only show actions where the todoid is not null
+            if applied_to_todo:
+                query += ' AND todo_id IS NOT NULL'
+            else:
+                query += ' AND todo_id IS NULL'
         # apply offset,  limit an order
         query += ' ORDER BY start_time DESC LIMIT ? OFFSET ?'
         params.append(limit)
