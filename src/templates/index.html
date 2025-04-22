@@ -33,14 +33,29 @@
     #query-modal {
         z-index: 1000; /* Ensure modal is above other content */
     }
-    #query-modal .bg-white {
-        max-height: 90vh; /* Limit modal height */
+    /* Modal styles */
+    #query-modal, #filter-modal {
+        z-index: 1000; /* Ensure modals are above other content */
+    }
+    #query-modal .bg-white, #filter-modal .bg-white {
+        max-height: 90vh; /* Increase modal height to 90% of viewport */
+        min-height: 400px; /* Ensure minimum height for taller modal */
         overflow-y: auto; /* Scroll if content overflows */
     }
     #query-response h3 {
         font-size: 1.1rem;
         font-weight: bold;
         margin-bottom: 0.5rem;
+    }
+    /* Style for empty datetime inputs */
+    .empty-datetime {
+        border-color: #d1d5db; /* Tailwind gray-300 */
+        background-color: #f3f4f6; /* Tailwind gray-100 */
+        color: #6b7280; /* Tailwind gray-500 */
+    }
+    .empty-datetime:focus {
+        background-color: #ffffff; /* White background on focus */
+        color: #1f2937; /* Tailwind gray-900 */
     }
     </style>
 </head>
@@ -51,7 +66,7 @@
             <div class="flex flex-row justify-between m-0 p-0" >
                 <button tabindex="5" id="query-modal-button" aria-label="Open Query Modal" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Query</button>
                 <h1 class="text-2xl font-bold text-center text-gray-800">Planner</h1>
-                <div></div>
+                <button id="filter-modal-button" aria-label="Open Filter Modal" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Filter</button>
             </div>
             <div class="flex mt-4 space-x-1">
                 <button tabindex="1" id="notes-button" onclick="showTab('notes')" aria-label="View Notes" aria-pressed="true" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Notes</button>
@@ -70,7 +85,7 @@
             <button id="add-note-button" onclick="createNote()" aria-label="Add New Note" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Add Note</button>
         </div>
     </div>
-    <!-- Modal -->
+    <!-- Query Modal -->
     <div id="query-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="modal-title" aria-modal="true">
         <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
             <button id="modal-close-button" aria-label="Close Query Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
@@ -84,6 +99,65 @@
                 <button id="query-submit-button" aria-label="Submit Query" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Submit</button>
             </div>
             <div id="query-response" class="text-sm text-gray-800 p-2 border rounded max-h-400 overflow-auto" aria-live="polite"></div>
+        </div>
+    </div>
+    <!-- Filter Modal -->
+    <div id="filter-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="filter-modal-title" aria-modal="true">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+            <button id="filter-modal-close-button" aria-label="Close Filter Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <h2 id="filter-modal-title" class="text-lg font-bold mb-4 ml-8">Filter</h2>
+            <!-- Common Filters -->
+            <div class="mb-4">
+                <label for="filter-search" class="block text-sm font-medium text-gray-700">Search</label>
+                <input id="filter-search" type="text" placeholder="Search text" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search filter">
+            </div>
+            <div class="flex gap-2 mb-4">
+                <div class="flex-1">
+                    <label for="filter-start-time" class="block text-sm font-medium text-gray-700">Start Time</label>
+                    <input id="filter-start-time" type="datetime-local" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Start time filter" aria-describedby="filter-start-time-hint">
+                    <p id="filter-start-time-hint" class="text-xs text-gray-500 mt-1">Select start time (e.g., 2025-04-20 00:00)</p>
+                </div>
+                <div class="flex-1">
+                    <label for="filter-end-time" class="block text-sm font-medium text-gray-700">End Time</label>
+                    <input id="filter-end-time" type="datetime-local" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="End time filter" aria-describedby="filter-end-time-hint">
+                    <p id="filter-end-time-hint" class="text-xs text-gray-500 mt-1">Select end time (e.g., 2025-04-20 23:59)</p>
+                </div>
+            </div>
+            <!-- Notes-Specific Filter -->
+            <div id="notes-filter" class="mb-4 hidden">
+                <label for="filter-category" class="block text-sm font-medium text-gray-700">Category</label>
+                <input id="filter-category" type="text" placeholder="Enter category" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Category filter">
+            </div>
+            <!-- Actions-Specific Filter -->
+            <div id="actions-filter" class="mb-4 hidden">
+                <label class="flex items-center">
+                    <input id="filter-applied-to-todo" type="checkbox" class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Applied to Todo filter">
+                    <span class="ml-2 text-sm text-gray-700">Applied to a Todo</span>
+                </label>
+            </div>
+            <!-- Todos-Specific Filters -->
+            <div id="todos-filter" class="mb-4 hidden">
+                <label class="flex items-center mb-2">
+                    <input id="filter-completed" type="checkbox" checked class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Completed todos filter">
+                    <span class="ml-2 text-sm text-gray-700">Completed</span>
+                </label>
+                <label class="flex items-center mb-2">
+                    <input id="filter-cancelled" type="checkbox" class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Cancelled todos filter">
+                    <span class="ml-2 text-sm text-gray-700">Cancelled</span>
+                </label>
+                <label class="flex items-center">
+                    <input id="filter-active" type="checkbox" checked class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Active todos filter">
+                    <span class="ml-2 text-sm text-gray-700">Active</span>
+                </label>
+            </div>
+            <div class="flex gap-2">
+                <button id="filter-apply-button" aria-label="Apply Filters" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Apply</button>
+                <button id="filter-clear-button" aria-label="Clear Filters" class="flex-1 bg-gray-300 text-gray-800 p-2 rounded hover:bg-gray-400 focus:ring-2 focus:ring-blue-500">Clear</button>
+            </div>
         </div>
     </div>
     <!-- Templates (unchanged) -->
@@ -129,7 +203,156 @@
     </template>
 
     <script>
-        // Modal logic
+        // Global filter variables
+        let filterValues = {
+            search: '',
+            startTime: '',
+            endTime: '',
+            notes: { category: '' },
+            actions: { appliedToTodo: false },
+            todos: { completed: true, cancelled: false, active: true }
+        };
+        console.log('rendering with filter values:', filterValues);
+
+        // Filter Modal logic
+        const filterModal = document.getElementById('filter-modal');
+        const filterModalButton = document.getElementById('filter-modal-button');
+        const filterModalCloseButton = document.getElementById('filter-modal-close-button');
+        const filterApplyButton = document.getElementById('filter-apply-button');
+        const filterClearButton = document.getElementById('filter-clear-button');
+        const filterSearch = document.getElementById('filter-search');
+        const filterStartTime = document.getElementById('filter-start-time');
+        const filterEndTime = document.getElementById('filter-end-time');
+        const filterCategory = document.getElementById('filter-category');
+        const filterAppliedToTodo = document.getElementById('filter-applied-to-todo');
+        const filterCompleted = document.getElementById('filter-completed');
+        const filterCancelled = document.getElementById('filter-cancelled');
+        const filterActive = document.getElementById('filter-active');
+
+        // Show/hide tab-specific filters
+        function updateFilterModal() {
+            document.getElementById('notes-filter').classList.toggle('hidden', currentTab !== 'notes');
+            document.getElementById('actions-filter').classList.toggle('hidden', currentTab !== 'actions');
+            document.getElementById('todos-filter').classList.toggle('hidden', currentTab !== 'todos');
+            // Populate fields with current filter values
+            filterSearch.value = filterValues.search;
+            filterStartTime.value = filterValues.startTime || '';
+            filterEndTime.value = filterValues.endTime || '';
+            filterCategory.value = filterValues.notes.category;
+            filterAppliedToTodo.checked = filterValues.actions.appliedToTodo;
+            filterCompleted.checked = filterValues.todos.completed;
+            filterCancelled.checked = filterValues.todos.cancelled;
+            filterActive.checked = filterValues.todos.active;
+            // Apply visual indicator for empty values
+            filterStartTime.classList.toggle('empty-datetime', !filterValues.startTime);
+            filterEndTime.classList.toggle('empty-datetime', !filterValues.endTime);
+        }
+
+        // Open filter modal
+        function openFilterModal() {
+            updateFilterModal();
+            filterModal.classList.remove('hidden');
+            filterSearch.focus(); // Focus search input for accessibility
+        }
+
+        // Close filter modal
+        function closeFilterModal() {
+            filterModal.classList.add('hidden');
+            filterModalButton.focus(); // Return focus to trigger button
+        }
+
+        // Apply filters
+        function applyFilters() {
+            filterValues.search = filterSearch.value.trim();
+            filterValues.startTime = filterStartTime.value;
+            filterValues.endTime = filterEndTime.value;
+            filterValues.notes.category = filterCategory.value.trim();
+            filterValues.actions.appliedToTodo = filterAppliedToTodo.checked;
+            filterValues.todos.completed = filterCompleted.checked;
+            filterValues.todos.cancelled = filterCancelled.checked;
+            filterValues.todos.active = filterActive.checked;
+            fetchTabContent();
+            closeFilterModal();
+        }
+
+        function applyFilterOnEnter(event) {
+            // apply filters on enter
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                applyFilters();
+            }
+        }
+
+        filterSearch.addEventListener('input', applyFilterOnEnter);
+        filterStartTime.addEventListener('input', applyFilterOnEnter);
+        filterEndTime.addEventListener('input', applyFilterOnEnter);
+        filterCategory.addEventListener('input', applyFilterOnEnter);
+        filterAppliedToTodo.addEventListener('input', applyFilterOnEnter);
+        filterCompleted.addEventListener('input', applyFilterOnEnter);
+        filterCancelled.addEventListener('input', applyFilterOnEnter);
+        filterActive.addEventListener('input', applyFilterOnEnter);
+
+
+        // Clear filters
+        function clearFilters() {
+            filterValues = {
+                search: '',
+                startTime: '',
+                endTime: '',
+                notes: { category: '' },
+                actions: { appliedToTodo: false },
+                todos: { completed: true, cancelled: false, active: true }
+            };
+            filterSearch.value = '';
+            filterStartTime.value = '';
+            filterEndTime.value = '';
+            filterCategory.value = '';
+            filterAppliedToTodo.checked = false;
+            filterCompleted.checked = true;
+            filterCancelled.checked = false;
+            filterActive.checked = true;
+            // Reset visual indicators
+            filterStartTime.classList.add('empty-datetime');
+            filterEndTime.classList.add('empty-datetime');
+            fetchTabContent();
+            closeFilterModal();
+        }
+
+        // Open modal on button click
+        filterModalButton.addEventListener('click', openFilterModal);
+
+        // Close modal on close button click
+        filterModalCloseButton.addEventListener('click', closeFilterModal);
+
+        // Apply filters on button click
+        filterApplyButton.addEventListener('click', applyFilters);
+
+        // Clear filters on button click
+        filterClearButton.addEventListener('click', clearFilters);
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !filterModal.classList.contains('hidden')) {
+                closeFilterModal();
+            }
+        });
+
+        // Close modal when clicking outside
+        filterModal.addEventListener('click', (event) => {
+            if (event.target === filterModal) {
+                closeFilterModal();
+            }
+        });
+
+        // Hotkey for opening filter modal (Cmd/Ctrl + F)
+        document.addEventListener('keydown', (event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
+                event.preventDefault();
+                openFilterModal();
+            }
+        });
+
+        // Query modal logic
         const queryModal = document.getElementById('query-modal');
         const queryModalButton = document.getElementById('query-modal-button');
         const queryInput = document.getElementById('query-input');
@@ -300,7 +523,9 @@
             return prettyText;
         }
 
-        function formatDateTimeUTC(date) {
+        function formatDateTime(date, include_year = false) {
+            // if it is an empty string or nullish, return an empty string
+            if (!date) return '';
             // Ensure input is a Date object
             const d = date instanceof Date ? date : new Date(date);
             
@@ -313,6 +538,27 @@
             const seconds = String(d.getUTCSeconds()).padStart(2, '0');
             
             // Return formatted string
+            if (include_year) {
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
+            return `${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }        
+
+        function formatDateTimeFromUTC(date, include_year = false) {
+            // Ensure input is a Date object
+            const d = date instanceof Date ? date : new Date(date);
+            
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            
+            // Return formatted string
+            if (include_year) {
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
             return `${month}-${day} ${hours}:${minutes}:${seconds}`;
         }        
 
@@ -320,7 +566,7 @@
             const template = document.getElementById('note-template').content.cloneNode(true);
             const item = template.querySelector('.note-item');
             item.querySelector('.note-id').textContent = `[${String(note.id).padStart(4, '0')}]`;
-            item.querySelector('.note-timestamp').textContent = formatDateTimeUTC(note.timestamp)
+            item.querySelector('.note-timestamp').textContent = formatDateTime(note.timestamp)
             item.querySelector('.note-category').textContent = note.category ? note.category.name : 'Uncategorized';
             if (note.processing_error) {
                 const errorDiv = item.querySelector('.note-error');
@@ -339,12 +585,12 @@
             let mainText = `[${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
             let detailsText = '';
             if (todo.target_start_time || todo.target_end_time) {
-                detailsText += `${formatDateTimeUTC(todo.target_start_time) || '*'} -> ${formatDateTimeUTC(todo.target_end_time) || '*'}`;
+                detailsText += `${formatDateTime(todo.target_start_time) || '*'} -> ${formatDateTime(todo.target_end_time) || '*'}`;
             }
             const created = todo.source_annotation?.note?.timestamp || '';
-            if (created) detailsText += `${detailsText ? ' | ' : ''}Created: ${formatDateTimeUTC(created)}`;
+            if (created) detailsText += `${detailsText ? ' | ' : ''}Created: ${formatDateTime(created)}`;
             if (todo.complete && todo.source_annotation?.note?.timestamp) {
-                detailsText += `${detailsText ? ' | ' : ''}Done: ${formatDateTimeUTC(todo.source_annotation.note.timestamp)}`;
+                detailsText += `${detailsText ? ' | ' : ''}Done: ${formatDateTime(todo.source_annotation.note.timestamp)}`;
             }
             const now = new Date();
             const startTime = todo.target_start_time ? new Date(todo.target_start_time) : null;
@@ -378,7 +624,7 @@
             }
             item.classList.add(action.mark_complete ? 'text-green-500' : 'text-gray-800');
             item.querySelector('.action-id').textContent = `[${String(action.id).padStart(4, '0')}]`;
-            item.querySelector('.action-timestamp').textContent = formatDateTimeUTC(action.start_time);
+            item.querySelector('.action-timestamp').textContent = formatDateTime(action.start_time);
             item.querySelector('.action-text-content').textContent = actionText;
             return item;
         }
@@ -386,7 +632,7 @@
         function renderCuriosity(curiosity) {
             const template = document.getElementById('curiosity-template').content.cloneNode(true);
             const item = template.querySelector('.curiosity-item');
-            item.querySelector('.curiosity-timestamp').textContent = formatDateTimeUTC(curiosity.note.timestamp);
+            item.querySelector('.curiosity-timestamp').textContent = formatDateTime(curiosity.note.timestamp);
             item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
             item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);
             return item;
@@ -395,7 +641,28 @@
         async function fetchTabContent() {
             try {
                 const endpoint = currentTab === 'curiosities' ? '/api/curiosities' : `/api/${currentTab}`;
-                const response = await fetch(`${endpoint}?limit=50`);
+                console.log('Fetching data from:', endpoint, 'with filters:', filterValues);
+                // Build query parameters
+                const params = new URLSearchParams();
+                params.append('limit', '50');
+                if (filterValues.search) params.append('search', filterValues.search);
+                if (filterValues.startTime) params.append('startTime', formatDateTimeFromUTC(filterValues.startTime, true));
+                if (filterValues.endTime) params.append('endTime', formatDateTimeFromUTC(filterValues.endTime, true));
+                if (currentTab === 'notes' && filterValues.notes.category) {
+                    params.append('category', filterValues.notes.category);
+                }
+                if (currentTab === 'actions' && filterValues.actions.appliedToTodo) {
+                    params.append('hasTodo', 'true');
+                }
+                if (currentTab === 'todos') {
+                    params.append('completed', Boolean(filterValues.todos.completed));
+                    params.append('cancelled', Boolean(filterValues.todos.cancelled));
+                    params.append('active', Boolean(filterValues.todos.active));
+                }
+                console.log('Fetching data with params:', params.toString());
+                const response = await fetch(`${endpoint}?${params.toString()}`, {
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
                 const contentDiv = document.getElementById('middle-content');

@@ -224,8 +224,10 @@ class Todo(BaseModel):
             cls, 
             before: Optional[datetime | str] = None, 
             after: Optional[datetime | str] = None, 
-            complete: Optional[bool] = None,
-            cancelled: Optional[bool] = None,
+            complete: Optional[bool] = True,
+            cancelled: Optional[bool] = False,
+            active: Optional[bool] = True,
+            search: Optional[str] = None,
             offset: Optional[int] = 0,
             limit: Optional[int] = 25,
     ) -> list["Todo"]:
@@ -242,11 +244,13 @@ class Todo(BaseModel):
                 todos.complete,
                 todos.cancelled
             FROM todos
+            JOIN annotations on todos.source_note_id = annotations.id 
+            JOIN notes on annotations.note_id = notes.id
         '''
         args = []
         # time range stuff
         if before or after:
-            query += ' JOIN annotations on todos.source_annotation_id = annotations.id JOIN notes on annotations.source_note_id = notes.id'
+            query += ''
             if isinstance(before, datetime):
                 before = format_time(before)
             if isinstance(after, datetime):
@@ -261,22 +265,32 @@ class Todo(BaseModel):
         elif after:  # todo scheduled time or todo created time should be after the given time
             query += ' AND (todos.target_start_time > ? OR todos.target_end_time > ? OR notes.timestamp > ?)'
             args.extend([after, after, after])
-        ## filter by complete and cancelled
-        if complete is not None:
-            if 'WHERE' in query:
-                query += ' AND todos.complete = ?'
-            else:
-                query += ' WHERE todos.complete = ?'
-            args.append(int(complete))
-        if cancelled is not None:
-            if 'WHERE' in query:
-                query += ' AND todos.cancelled = ?'
-            else:
-                query += ' WHERE todos.cancelled = ?'
-            args.append(int(cancelled))
+        if search:
+            query += ' AND (todos.todo_text LIKE ? OR notes.note_text LIKE ? or annotations.annotation_text LIKE ?)'
+            args.extend(['%' + search + '%', '%' + search + '%', '%' + search + '%'])
+        # filter by status
+        # active means not cancelled or complete
+        # cancelled means cancelled
+        # complete means complete
+        # so, 
+        if active and complete and cancelled:  # all three
+            pass
+        if active and complete and not cancelled:  # active and complete
+            query += ' AND (todos.cancelled = 0)'
+        if active and not complete and cancelled:  # active and cancelled
+            query += ' AND (todos.complete = 0)'
+        if not active and complete and cancelled:  # complete and cancelled
+            query += ' AND (todos.cancelled = 1 or todos.complete = 1)'
+        if not active and complete and not cancelled:  # complete only
+            query += ' AND (todos.complete = 1)'
+        if not active and not complete and cancelled:  # cancelled only
+            query += ' AND (todos.cancelled = 1)'
+        if active and not complete and not cancelled:  # active only
+            query += ' AND (todos.cancelled = 0 and todos.complete = 0)'
         query += ' LIMIT ?, ?'
         args.append(offset)
         args.append(limit)
+        print('query: ', query)
         with get_connection() as conn:
             cursor = conn.cursor()
             if complete is not None:
@@ -284,6 +298,7 @@ class Todo(BaseModel):
             else:
                 cursor.execute(query, args)
             rows = cursor.fetchall()
+            print('rows: ', rows)
             return [cls.from_sqlite_row(row) for row in rows]
 
 
