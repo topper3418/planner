@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, render_template, request
 
-from .db import Note, Action, Todo, Annotation, Category
-from .summary import get_summary
-from .setup_logging import setup_normal_logging
-from .util import parse_time
+from ..db import Note, Action, Todo, Annotation
+from ..summary import get_summary
+from ..setup_logging import setup_normal_logging
+from ..util import parse_time
 
 import logging
 
