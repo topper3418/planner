@@ -1,0 +1,51 @@
+.note-text, .todo-text, .action-text, .curiosity-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: monospace;
+}
+.separator {
+    border-top: 1px solid #4b5563;
+    margin: 0.5rem 0;
+}
+body {
+    margin: 0;
+    overflow: hidden; /* Prevent page scrolling */
+    height: 100vh; /* Full height */
+    width: 100vw; /* Full width */
+}/* Custom focus styles for buttons */
+button:focus {
+    outline: 4px solid yellow;
+}
+/* Optional: Highlight active tab button */
+button[aria-pressed="true"] {
+    background-color: #3b82f6; /* Tailwind blue-500 */
+    color: white;
+}
+/* Modal styles */
+#query-modal {
+    z-index: 1000; /* Ensure modal is above other content */
+}
+/* Modal styles */
+#query-modal, #filter-modal {
+    z-index: 1000; /* Ensure modals are above other content */
+}
+#query-modal .bg-white, #filter-modal .bg-white {
+    max-height: 90vh; /* Increase modal height to 90% of viewport */
+    min-height: 400px; /* Ensure minimum height for taller modal */
+    overflow-y: auto; /* Scroll if content overflows */
+}
+#query-response h3 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+/* Style for empty datetime inputs */
+.empty-datetime {
+    border-color: #d1d5db; /* Tailwind gray-300 */
+    background-color: #f3f4f6; /* Tailwind gray-100 */
+    color: #6b7280; /* Tailwind gray-500 */
+}
+.empty-datetime:focus {
+    background-color: #ffffff; /* White background on focus */
+    color: #1f2937; /* Tailwind gray-900 */
+}

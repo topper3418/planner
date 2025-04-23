@@ -12,7 +12,7 @@ from . import (
         setup_logging
 )
 from .bulk_upload import bulk_upload_notes_list
-from .rest import rest_server
+from .web import rest_server
 from .summary import get_summary
 
 
@@ -20,42 +20,6 @@ from .summary import get_summary
 log_dir = Path("data/log")
 log_dir.mkdir(parents=True, exist_ok=True)
 
-# Configure logging
-logging_config = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "level": "INFO",
-            "formatter": "standard",
-            "stream": "ext://sys.stdout",
-        },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "INFO",
-            "formatter": "standard",
-            "filename": str(log_dir / "app.log"),
-            "maxBytes": 10485760,  # 10MB
-            "backupCount": 5,      # Keep 5 backup files
-            "encoding": "utf8",
-        },
-    },
-    "root": {
-        "level": "DEBUG",
-        "handlers": ["console", "file"],
-    },
-}
-
-# uncomment below if other logging does not work.
-# Apply the configuration
-# logging.config.dictConfig(logging_config)
 
 logger = logging.getLogger(__name__)
 
