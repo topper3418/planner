@@ -6,7 +6,7 @@ let filterValues = {
     endTime: '',
     notes: { category: '' },
     actions: { appliedToTodo: false },
-    todos: { completed: true, cancelled: false, active: true }
+    todos: { completed: false, cancelled: false, active: true }
 };
 
 export function getFilterValues() {

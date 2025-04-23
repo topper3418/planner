@@ -89,7 +89,7 @@ That's it! You are now ready to use the project.
 
 ### CLI
 
-The main method for running the application is via the CLI. With your current working
+The application comes with a fully usable CLI interface. With your current working
 directory set to the project directory, initialize the virtual environment and load 
 helpful aliases by pasting the following command into the terminal and pressing enter:
 
@@ -99,7 +99,7 @@ source .bashrc
 
 Then, you can run the following commands:
 
-    - Planner - root CLI, can use the --help flag for more info
+    - Planner - root CLI, can use the 
 
     - nn - new note, creates a new note stamped with the current time
 
@@ -112,24 +112,32 @@ Then, you can run the following commands:
     - curiosities - displays curiosities
 
     - cycle - cycles the engine, which processes the notes and creates the
-      derivative objects
+      derivative objects. use the flag -c to run the engine persistently
+
+    - serve - starts the REST API server, which allows you to create notes
+      and retrieve todos and actions
 
 For each of these commands, you can use the --help flag to see more information
 
-#### My setup
+### Web
 
-I like to use the terminal with two tabs:
+The application comes with a REST API, with allows for creating notes and retrieving
+most database objects. To run the server, you will need two terminal tabs with the 
+.bashrc file sourced. 
 
-- One tab for the CLI, where I run the commands
+In one tab, run the following command:
 
-- One tab where I run
+```bash
+cycle -c
+```
 
-    ```bash
-    cycle -c
-    ```
+This will run the engine in the background, and you can see the output of the LLM
+processing the notes. In your second tab, run the following command:
 
-This will run the engine in the background, and I can see the output by 
-navigating to that tab.
+```bash
+serve
+```
+
 
 ## Features
 
@@ -150,17 +158,11 @@ can be run a single time, untill there are no further notes to process
 The main method for running the application is via the CLI. the .bashrc
 file contains the following commands:
 
-    - Planner - root CLI, can use the --help flag for more info
+### Web
 
-    - nn - new note, creates a new note stamped with the current time
-
-    - notes - displays notes
-
-    - todos - displays todos
-
-    - observations - displays observations
-
-    - curiosities - displays curiosities
+The application comes with a REST API, which allows for creating notes
+and retrieving todos and actions. The API is built using Flask, and serves
+a web interface, just simple HTML, CSS and javascript. 
 
 ## License
 
@@ -173,19 +175,19 @@ versions of this software, such as iOS apps on the Apple App Store."
 
 ### Initially Useful
 
-- [ ] records notes
+- [X] records notes
 
-- [ ] categorizes and annotates those notes using an LLM
+- [X] categorizes and annotates those notes using an LLM
 
-- [ ] uses those annotations to create todos, actions, and commands
+- [X] uses those annotations to create todos, actions, and commands
 
-- [ ] uses the commands to modify notes, actions and todos
+- [X] uses the commands to modify notes, actions and todos
 
-- [ ] Rest API for creating notes and retrieving todos and actions
+- [X] Rest API for creating notes and retrieving todos and actions
 
-- [ ] CLI for creating notes and retrieving todos and actions
+- [X] CLI for creating notes and retrieving todos and actions
 
-- [ ] use the LLM to create summaries of your day/week
+- [X] use the LLM to create summaries of your day/week
 
 ### More flexible
 
@@ -194,12 +196,15 @@ for more complex notetaking
 
 ### More usable
 
-- [ ] you can retrieve notes from the REST API
+- [X] you can retrieve notes from the REST API
 
-- [ ] UI that allows the user to see all the db objects at once.
+- [X] UI that allows the user to see all the db objects at once.
 Could be web, could be local like tkinter
 
 ### More powerful
+
+- [ ] Provide the LLM with more context during annotation, this will vastly improve
+the quality of the annotations.
 
 - [ ] Todo dependency. Todos could/should have prerequisites,
 and then the prerequisites should be listed in the todos as a tree

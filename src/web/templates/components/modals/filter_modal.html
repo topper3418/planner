@@ -1,0 +1,54 @@
+<div id="filter-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="filter-modal-title" aria-modal="true">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+        <button id="filter-modal-close-button" aria-label="Close Filter Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        <h2 id="filter-modal-title" class="text-lg font-bold mb-4 ml-8">Filter</h2>
+        <div class="mb-4">
+            <label for="filter-search" class="block text-sm font-medium text-gray-700">Search</label>
+            <input id="filter-search" type="text" placeholder="Search text" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search filter">
+        </div>
+        <div class="flex gap-2 mb-4">
+            <div class="flex-1">
+                <label for="filter-start-time" class="block text-sm font-medium text-gray-700">Start Time</label>
+                <input id="filter-start-time" type="datetime-local" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Start time filter" aria-describedby="filter-start-time-hint">
+                <p id="filter-start-time-hint" class="text-xs text-gray-500 mt-1">Select start time (e.g., 2025-04-20 00:00)</p>
+            </div>
+            <div class="flex-1">
+                <label for="filter-end-time" class="block text-sm font-medium text-gray-700">End Time</label>
+                <input id="filter-end-time" type="datetime-local" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="End time filter" aria-describedby="filter-end-time-hint">
+                <p id="filter-end-time-hint" class="text-xs text-gray-500 mt-1">Select end time (e.g., 2025-04-20 23:59)</p>
+            </div>
+        </div>
+        <div id="notes-filter" class="mb-4 hidden">
+            <label for="filter-category" class="block text-sm font-medium text-gray-700">Category</label>
+            <input id="filter-category" type="text" placeholder="Enter category" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Category filter">
+        </div>
+        <div id="actions-filter" class="mb-4 hidden">
+            <label class="flex items-center">
+                <input id="filter-applied-to-todo" type="checkbox" class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Applied to Todo filter">
+                <span class="ml-2 text-sm text-gray-700">Applied to a Todo</span>
+            </label>
+        </div>
+        <div id="todos-filter" class="mb-4 hidden">
+            <label class="flex items-center mb-2">
+                <input id="filter-completed" type="checkbox" checked class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Completed todos filter">
+                <span class="ml-2 text-sm text-gray-700">Completed</span>
+            </label>
+            <label class="flex items-center mb-2">
+                <input id="filter-cancelled" type="checkbox" class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Cancelled todos filter">
+                <span class="ml-2 text-sm text-gray-700">Cancelled</span>
+            </label>
+            <label class="flex items-center">
+                <input id="filter-active" type="checkbox" checked class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Active todos filter">
+                <span class="ml-2 text-sm text-gray-700">Active</span>
+            </label>
+        </div>
+        <div class="flex gap-2">
+            <button id="filter-apply-button" aria-label="Apply Filters" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Apply</button>
+            <button id="filter-clear-button" aria-label="Clear Filters" class="flex-1 bg-gray-300 text-gray-800 p-2 rounded hover:bg-gray-400 focus:ring-2 focus:ring-blue-500">Clear</button>
+        </div>
+    </div>
+</div>
