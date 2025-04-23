@@ -5,151 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{{url_for('static', filename='css/styles.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="bg-gray-100">
     <div class="flex flex-col min-h-screen max-h-screen p-4">
-        <!-- Header (Title and Tabs) -->
-        <div class="bg-white p-4 shadow-sm flex flex-col">
-            <div class="flex flex-row justify-between m-0 p-0" >
-                <button tabindex="5" id="query-modal-button" aria-label="Open Query Modal" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Query</button>
-                <h1 class="text-2xl font-bold text-center text-gray-800">Planner</h1>
-                <button id="filter-modal-button" aria-label="Open Filter Modal" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Filter</button>
-            </div>
-            <div class="flex mt-4 space-x-1">
-                <button tabindex="1" id="notes-button" aria-label="View Notes" aria-pressed="true" class="flex-1 bg-blue-500 text-white p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Notes</button>
-                <button tabindex="2" id="todos-button" aria-label="View Todos" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Todos</button>
-                <button tabindex="3" id="actions-button" aria-label="View Actions" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Actions</button>
-                <button tabindex="4" id="curiosities-button" aria-label="View Curiosities" aria-pressed="false" class="flex-1 bg-white text-blue-500 p-2 hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Curiosities</button>
-            </div>
-        </div>
-        <!-- Middle Panel (Tabs for Todos, Notes, Actions, Curiosities) -->
-        <div id="middle-panel" class="bg-white p-4 rounded shadow grow h-max overflow-auto">
-            <div id="middle-content" class="text-sm text-gray-800"></div>
-        </div>
-        <!-- Note Input (Bottom) -->
-        <div class="mt-4 flex gap-2">
-            <input tabindex="0" id="note-input" type="text" placeholder="Enter new note" class="flex-1 p-2 border rounded-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="add-note-button" onclick="createNote()" aria-label="Add New Note" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Add Note</button>
-        </div>
+        {% include 'components/header.html' %}
+        {% include 'components/middle_panel.html' %}
+        {% include 'components/note_input.html' %}
     </div>
-    <!-- Query Modal -->
-    <div id="query-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="modal-title" aria-modal="true">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-            <button id="modal-close-button" aria-label="Close Query Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            <h2 id="modal-title" class="text-lg font-bold mb-4 ml-8">Query</h2>
-            <div class="flex gap-2 mb-4">
-                <input id="query-input" type="text" placeholder="query your notes" class="flex-1 p-2 border rounded-l border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Query input">
-                <button id="query-submit-button" aria-label="Submit Query" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Submit</button>
-            </div>
-            <div id="query-response" class="text-sm text-gray-800 p-2 border rounded max-h-400 overflow-auto" aria-live="polite"></div>
-        </div>
-    </div>
-    <!-- Filter Modal -->
-    <div id="filter-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="filter-modal-title" aria-modal="true">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
-            <button id="filter-modal-close-button" aria-label="Close Filter Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            <h2 id="filter-modal-title" class="text-lg font-bold mb-4 ml-8">Filter</h2>
-            <!-- Common Filters -->
-            <div class="mb-4">
-                <label for="filter-search" class="block text-sm font-medium text-gray-700">Search</label>
-                <input id="filter-search" type="text" placeholder="Search text" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search filter">
-            </div>
-            <div class="flex gap-2 mb-4">
-                <div class="flex-1">
-                    <label for="filter-start-time" class="block text-sm font-medium text-gray-700">Start Time</label>
-                    <input id="filter-start-time" type="datetime-local" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Start time filter" aria-describedby="filter-start-time-hint">
-                    <p id="filter-start-time-hint" class="text-xs text-gray-500 mt-1">Select start time (e.g., 2025-04-20 00:00)</p>
-                </div>
-                <div class="flex-1">
-                    <label for="filter-end-time" class="block text-sm font-medium text-gray-700">End Time</label>
-                    <input id="filter-end-time" type="datetime-local" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="End time filter" aria-describedby="filter-end-time-hint">
-                    <p id="filter-end-time-hint" class="text-xs text-gray-500 mt-1">Select end time (e.g., 2025-04-20 23:59)</p>
-                </div>
-            </div>
-            <!-- Notes-Specific Filter -->
-            <div id="notes-filter" class="mb-4 hidden">
-                <label for="filter-category" class="block text-sm font-medium text-gray-700">Category</label>
-                <input id="filter-category" type="text" placeholder="Enter category" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Category filter">
-            </div>
-            <!-- Actions-Specific Filter -->
-            <div id="actions-filter" class="mb-4 hidden">
-                <label class="flex items-center">
-                    <input id="filter-applied-to-todo" type="checkbox" class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Applied to Todo filter">
-                    <span class="ml-2 text-sm text-gray-700">Applied to a Todo</span>
-                </label>
-            </div>
-            <!-- Todos-Specific Filters -->
-            <div id="todos-filter" class="mb-4 hidden">
-                <label class="flex items-center mb-2">
-                    <input id="filter-completed" type="checkbox" checked class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Completed todos filter">
-                    <span class="ml-2 text-sm text-gray-700">Completed</span>
-                </label>
-                <label class="flex items-center mb-2">
-                    <input id="filter-cancelled" type="checkbox" class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Cancelled todos filter">
-                    <span class="ml-2 text-sm text-gray-700">Cancelled</span>
-                </label>
-                <label class="flex items-center">
-                    <input id="filter-active" type="checkbox" checked class="h-4 w-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-500" aria-label="Active todos filter">
-                    <span class="ml-2 text-sm text-gray-700">Active</span>
-                </label>
-            </div>
-            <div class="flex gap-2">
-                <button id="filter-apply-button" aria-label="Apply Filters" class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500">Apply</button>
-                <button id="filter-clear-button" aria-label="Clear Filters" class="flex-1 bg-gray-300 text-gray-800 p-2 rounded hover:bg-gray-400 focus:ring-2 focus:ring-blue-500">Clear</button>
-            </div>
-        </div>
-    </div>
-    <!-- Templates (unchanged) -->
-    <template id="note-template">
-        <div class="note-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
-            <div class="note-header flex items-center space-x-1">
-                <span class="note-id font-bold text-sm"></span>
-                <span class="note-timestamp text-sm text-gray-600"></span>
-                <span class="text-sm">-</span>
-                <span class="note-category text-blue-500 text-sm"></span>
-            </div>
-            <div class="note-error text-red-500 text-xs leading-tight" style="display: none;"></div>
-            <div class="note-text-content mt-0.5 text-sm leading-tight"></div>
-            <div class="separator"></div>
-        </div>
-    </template>
-    <template id="todo-template">
-        <div class="todo-item bg-gray-100 p-1 rounded-md shadow-sm flex items-center space-x-1 mb-1 hover:bg-gray-200">
-            <input type="checkbox" class="todo-checkbox h-4 w-4 text-green-500 rounded focus:ring-0" disabled>
-            <div class="flex-1">
-                <div class="todo-main text-sm font-medium leading-tight"></div>
-                <div class="todo-details text-xs text-gray-500 leading-tight"></div>
-            </div>
-        </div>
-    </template>
-    <template id="action-template">
-        <div class="action-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
-            <div class="action-header flex items-center space-x-1">
-                <span class="action-id font-bold text-sm"></span>
-                <span class="action-timestamp text-sm text-gray-600"></span>
-            </div>
-            <div class="action-text-content ml-2 mt-0.5 text-sm leading-tight"></div>
-            <div class="separator"></div>
-        </div>
-    </template>
-    <template id="curiosity-template">
-        <div class="curiosity-item bg-gray-100 p-1 rounded-md shadow-sm mb-1">
-            <div class="curiosity-timestamp font-bold text-sm"></div>
-            <div class="curiosity-note-text mt-0.5 text-sm leading-tight"></div>
-            <div class="curiosity-annotation-text ml-2 mt-0.5 text-sm leading-tight"></div>
-            <div class="separator"></div>
-        </div>
-    </template>
-
-<script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% include 'components/modals/query_modal.html' %}
+    {% include 'components/modals/filter_modal.html' %}
+    {% include 'components/templates/note_template.html' %}
+    {% include 'components/templates/todo_template.html' %}
+    {% include 'components/templates/action_template.html' %}
+    {% include 'components/templates/curiosity_template.html' %}
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
