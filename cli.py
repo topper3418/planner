@@ -1,8 +1,7 @@
 import argparse
 import time
-from typing import List
 
-from src import db, pretty_printing, engine, get_summary, setup_logging
+from src import db, rendering, engine, get_summary, setup_logging, utils
 
 
 setup_logging.setup_normal_logging()
@@ -137,7 +136,7 @@ def main():
                 complete=complete,
                 cancelled=cancelled,
             )
-            pretty_todos = pretty_printing.strf_todos(notes)
+            pretty_todos = rendering.strf_todos(notes)
             print(pretty_todos)
         elif args.type == 'action':
             actions = db.Action.get_all(
@@ -147,7 +146,7 @@ def main():
                 limit=args.limit
             )
             actions.reverse()
-            pretty_actions = pretty_printing.strf_actions(actions)
+            pretty_actions = rendering.strf_actions(actions)
             print(pretty_actions)
         elif args.type == 'observation':
             annotations = db.Annotation.get_by_category_name('observation')
@@ -155,7 +154,7 @@ def main():
                 print("No observations found")
                 return
             notes = [annotation.note for annotation in annotations]
-            pretty_notes = pretty_printing.strf_notes(notes)
+            pretty_notes = rendering.strf_notes(notes)
             print(pretty_notes)
         elif args.type == 'curiosity':
             annotations = db.Annotation.get_by_category_name(
@@ -168,7 +167,7 @@ def main():
             if annotations is None:
                 print("No curiosities found")
                 return
-            pretty_curiosities = pretty_printing.strf_curiosities(annotations)
+            pretty_curiosities = rendering.strf_curiosities(annotations)
             print(pretty_curiosities)
         else:
             notes = db.Note.get_all(
@@ -178,13 +177,13 @@ def main():
                 limit=getattr(args, 'limit', 15)
             )
             notes.reverse()
-            pretty_notes = pretty_printing.strf_notes(notes, show_processed_text=True)
+            pretty_notes = rendering.strf_notes(notes, show_processed_text=True)
             print(pretty_notes)
     elif args.command == 'query':
         query = " ".join(args.query_words)
         title, summary = get_summary(query)
-        title_banner = pretty_printing.banner(title)
-        summary_paragraph = pretty_printing.format_paragraph(summary, indents=0)
+        title_banner = rendering.banner(title)
+        summary_paragraph = utils.format_paragraph(summary, indents=0)
         print(title_banner)
         print(summary_paragraph)
 

@@ -3,8 +3,8 @@ import logging
 from typing import Tuple
 
 from ..grok import GrokChatClient
-from ..pretty_printing import strf_notes, strf_todos, strf_actions, strf_todos
-from ..db import Note, Action, Todo
+from ..rendering import strf_notes
+from ..db import Note
 from ..util import format_time
 
 logger = logging.getLogger(__name__)

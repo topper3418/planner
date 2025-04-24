@@ -94,6 +94,28 @@ export async function submitQueryApi(query) {
     }
 }
 
+export async function fetchDetails(type, id) {
+    // make sure the type is valid
+    const validTypes = ['notes', 'todos', 'actions', 'curiosities'];
+    if (!validTypes.includes(type)) {
+        throw new Error('Invalid type');
+    }
+    console.log('Fetching details for type:', type, 'with id:', id);
+    try {
+        const response = await fetch(`/api/${type}/${id}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        console.log('Details fetched successfully:', data);
+        return data?.data;
+    } catch (error) {
+        console.error('Error fetching details:', error);
+        throw error;
+    }
+}
+
 export function initApi() {
     const addNoteButton = document.getElementById('add-note-button');
     if (addNoteButton) {

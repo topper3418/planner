@@ -1,7 +1,7 @@
 import logging
 from pprint import pformat
 
-from .. import db, pretty_printing
+from .. import db, rendering
 from ..grok import GrokChatClient
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
         if not notes:
             break
         # notes_str = "\n".join([note.model_dump_json() for note in notes])
-        notes_str = pretty_printing.strf_notes(notes)
+        notes_str = rendering.strf_notes(notes)
         logger.debug('notes found:\n' + notes_str)
         response = client.chat(notes_str)
         logger.info(f"get command context response is:\n{response}")
@@ -86,7 +86,7 @@ def get_target_todo_id(annotation: db.Annotation) -> int:
         if not todos:
             break
         # todos_str = "\n".join([todo.model_dump_json() for todo in todos])
-        todos_str = pretty_printing.strf_todos(todos)
+        todos_str = rendering.strf_todos(todos)
         logger.info('todos found:\n' + todos_str)
         response = client.chat(todos_str)
         logger.info(f"get command context response is:\n{response}")
@@ -124,7 +124,7 @@ def get_target_action_id(annotation: db.Annotation) -> int:
         if not actions:
             break
         # actions_str = "\n".join([action.model_dump_json() for action in actions])
-        actions_str = pretty_printing.strf_actions(actions)
+        actions_str = rendering.strf_actions(actions)
         logger.info('actions found:\n' + actions_str)
         response = client.chat(actions_str)
         logger.info(f"get command context response is:\n{response}")

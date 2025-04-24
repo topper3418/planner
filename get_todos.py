@@ -1,5 +1,5 @@
 import sqlite3
-from src import db, pretty_printing
+from src import db, rendering
 
 import time
 
@@ -7,8 +7,8 @@ import time
 def main():
    # Get all todos
    todos = db.Todo.get_all()
-   title = pretty_printing.banner("Todos")
-   todos_strings = pretty_printing.strf_todos(todos)
+   title = rendering.banner("Todos")
+   todos_strings = rendering.strf_todos(todos)
    # clear the console
    print("\033[H\033[J")
    # print the title

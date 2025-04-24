@@ -94,7 +94,7 @@ class Todo(BaseModel):
                 return None
 
     @classmethod
-    def get_by_source_annotation_id(cls, source_annotation_id: int) -> "Todo":
+    def get_by_source_annotation_id(cls, source_annotation_id: int) -> Optional["Todo"]:
         """
         Retrieves a Todo instance by its source annotation ID.
         """
@@ -105,8 +105,7 @@ class Todo(BaseModel):
             if row:
                 return cls.from_sqlite_row(row)
             else:
-                logger.error(f"Todo with source annotation ID {source_annotation_id} not found in the database.")
-                raise ValueError(f"Todo with source annotation ID {source_annotation_id} not found in the database.")
+                return None
 
     def refresh(self) -> "Todo":
         """
@@ -290,7 +289,6 @@ class Todo(BaseModel):
         query += ' LIMIT ?, ?'
         args.append(offset)
         args.append(limit)
-        print('query: ', query)
         with get_connection() as conn:
             cursor = conn.cursor()
             if complete is not None:

@@ -7,7 +7,7 @@ from . import (
         db, 
         processor, 
         config,
-        pretty_printing,
+        rendering,
         util as utils, 
         setup_logging
 )
