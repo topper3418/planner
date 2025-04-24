@@ -1,7 +1,6 @@
 import logging
-import json
 
-from ..grok import GrokChatClient
+from ..llm import get_client
 from .. import db
 
 logger = logging.getLogger(__name__)
@@ -9,10 +8,10 @@ logger = logging.getLogger(__name__)
 
 def annotate_note(note: db.Note, category: db.Category) -> db.Annotation:
     """
-    Annotate a note using the GrokChatClient.
+    Annotate a note using the get_client.
     """
     # Initialize the chat client
-    client = GrokChatClient()
+    client = get_client()
 
     # Load the system message
     client.load_system_message("annotate_" + category.name)

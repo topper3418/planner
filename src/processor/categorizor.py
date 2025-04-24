@@ -1,17 +1,16 @@
 import logging
-import json
 
-from ..grok import GrokChatClient
+from ..llm import get_client
 from .. import db
 
 logger = logging.getLogger(__name__)
 
 def categorize_note(note: db.Note) -> db.Category:
     """
-    Categorize a note using the GrokChatClient.
+    Categorize a note using the get_client.
     """
     # Initialize the chat client
-    client = GrokChatClient()
+    client = get_client()
 
     categories = db.Category.get_all()
 

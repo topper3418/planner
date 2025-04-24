@@ -2,7 +2,7 @@ import logging
 from pprint import pformat
 
 from .. import db, rendering
-from ..grok import GrokChatClient
+from ..llm import get_client
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,7 +14,7 @@ def get_command_text(annotation: db.Annotation) -> str:
     """
     if annotation.category.name != "command":
         raise ValueError(f"annotation category is not command: {annotation.category.name}")
-    client = GrokChatClient()
+    client = get_client()
     client.load_system_message("get_command_text")
     response = client.chat(annotation.note.processed_note_text)
     logger.info(f"get command text response is:\n{response}")
@@ -25,7 +25,7 @@ def get_command_text(annotation: db.Annotation) -> str:
 
 
 def get_target_note_id(annotation: db.Annotation) -> int:
-    client = GrokChatClient()
+    client = get_client()
     object_schema = """
     [<0-padded-note-id>] <timestamp> - <category>
     <note_text>
@@ -60,7 +60,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
 
 
 def get_target_todo_id(annotation: db.Annotation) -> int:
-    client = GrokChatClient()
+    client = get_client()
     object_schema = """
     [<checkbox>] [<0-padded-todo-id>]: <todo_text>
                  <optional-start-time> -> <optional-end-time>
@@ -100,7 +100,7 @@ def get_target_todo_id(annotation: db.Annotation) -> int:
 
 
 def get_target_action_id(annotation: db.Annotation) -> int:
-    client = GrokChatClient()
+    client = get_client()
     object_schema = """
     [<0-padded-action-id>] <action_timestamp>
         <action_text> -> <optional-targeted-todo-text>
@@ -192,7 +192,7 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
         note.processing_error = "no target found"
         note.save()
         return None
-    client = GrokChatClient()
+    client = get_client()
     client.load_system_message("create_command", command_text=command_text, annotation=annotation.model_dump())
 
     response = client.chat(target_str)

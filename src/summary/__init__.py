@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 from typing import Tuple
 
-from ..grok import GrokChatClient
+from ..llm import get_client
 from ..rendering import strf_notes
 from ..db import Note
 from ..util import format_time
@@ -16,7 +16,7 @@ def get_summary(prompt: str) -> Tuple[str, str]:
     """
     logger.info('getting summary for prompt: ' + prompt)
     # determine what the user wants (what timeframe, and of what)
-    intent_client = GrokChatClient()
+    intent_client = get_client()
     intent_client.load_system_message("get_summary_timeframe", current_time=format_time(datetime.now()))
     response = intent_client.chat(prompt)
     start_time = response.get('start_time')
@@ -29,7 +29,7 @@ def get_summary(prompt: str) -> Tuple[str, str]:
     notes = Note.get_all(after=start_time, before=end_time, limit=100)
     context_str = strf_notes(notes)
     # get the summary
-    summary_client = GrokChatClient()
+    summary_client = get_client()
     summary_client.load_system_message("get_summary", current_time=format_time(datetime.now()), context=context_str)
     response = summary_client.chat(prompt)
     summary = response.get('summary')
