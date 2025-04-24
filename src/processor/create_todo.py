@@ -1,7 +1,7 @@
 import logging
 import src.db as db
 
-from ..grok import GrokChatClient
+from ..llm import get_client
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ def create_todo(annotation: db.Annotation):
     """
     if annotation.category.name != "todo":
         raise ValueError(f"annotation category is not todo: {annotation.category.name}")
-    client = GrokChatClient()
+    client = get_client()
     client.load_system_message("create_todo")
 
     response = client.chat(annotation.annotation_text)

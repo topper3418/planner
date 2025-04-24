@@ -1,3 +1,6 @@
+import { fetchDetails } from "./api.js";
+
+
 export function formatParagraph(text, width = 75, indents = 1) {
     const space = width - 8 * indents;
     let prettyText = '';
@@ -48,9 +51,80 @@ export function formatDateTimeFromUTC(date, include_year = false) {
     return `${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+export function renderDataModal(data) {
+    // Notes Section
+    document.getElementById('note-id').textContent = data.note?.id || '';
+    document.getElementById('note-timestamp').textContent = data.note?.timestamp || '';
+    document.getElementById('note-text').textContent = data.note?.note_text || '';
+    document.getElementById('note-processed-text').textContent = data.note?.processed_note_text || '';
+    document.getElementById('note-error').textContent = data.note?.processing_error || '';
+
+    // Annotations Section
+    document.getElementById('annotation-id').textContent = data.annotation?.id || '';
+    document.getElementById('annotation-note-id').textContent = data.annotation?.note_id || '';
+    document.getElementById('annotation-category-id').textContent = data.annotation?.category_id || '';
+    document.getElementById('annotation-text').textContent = data.annotation?.annotation_text || '';
+
+    // Todos Section
+    const todoSection = document.getElementById('todo-modal-data');
+    if (!data.todo) {
+        todoSection.classList.add('hidden');
+    } else {
+        todoSection.classList.remove('hidden');
+        document.getElementById('todo-id').textContent = data.todo.id || '';
+        document.getElementById('todo-start-time').textContent = data.todo.target_start_time || '';
+        document.getElementById('todo-end-time').textContent = data.todo.target_end_time || '';
+        document.getElementById('todo-text').textContent = data.todo.todo_text || '';
+        document.getElementById('todo-source-note-id').textContent = data.todo.source_note_id || '';
+        document.getElementById('todo-complete').textContent = data.todo.complete ? 'Yes' : 'No';
+        document.getElementById('todo-cancelled').textContent = data.todo.cancelled ? 'Yes' : 'No';
+    }
+
+    // Actions Section
+    const actionSection = document.getElementById('action-modal-data');
+    if (!data.action) {
+        actionSection.classList.add('hidden');
+    } else {
+        actionSection.classList.remove('hidden');
+        document.getElementById('action-id').textContent = data.action.id || '';
+        document.getElementById('action-start-time').textContent = data.action.start_time || '';
+        document.getElementById('action-text').textContent = data.action.action_text || '';
+        document.getElementById('action-source-annotation-id').textContent = data.action.source_annotation_id || '';
+        document.getElementById('action-todo-id').textContent = data.action.todo_id || '';
+        document.getElementById('action-mark-complete').textContent = data.action.mark_complete ? 'Yes' : 'No';
+    }
+
+    // Command Section
+    const commandSection = document.getElementById('command-modal-data');
+    if (!data.command) {
+        commandSection.classList.add('hidden');
+    } else {
+        commandSection.classList.remove('hidden');
+        document.getElementById('command-id').textContent = data.command.id || '';
+        document.getElementById('command-text').textContent = data.command.command_text || '';
+        document.getElementById('command-value-before').textContent = data.command.value_before || '';
+        document.getElementById('command-desired-value').textContent = data.command.desired_value || '';
+        document.getElementById('command-source-annotation-id').textContent = data.command.source_annotation_id || '';
+        document.getElementById('command-target-id').textContent = data.command.target_id || '';
+    }
+}
+
+async function fetchAndRenderDetails(type, id) {
+    console.log('Fetching details for:', type, id);
+    const data = await fetchDetails(type, id);
+    if (data.error) {
+        console.error('Error fetching details:', data.error);
+        return;
+    }
+    renderDataModal(data);
+    document.getElementById('data-modal').classList.remove('hidden');
+    document.getElementById('modal-close-button').focus();
+}
+
 export function renderNote(note) {
     const template = document.getElementById('note-template').content.cloneNode(true);
     const item = template.querySelector('.note-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('notes', note.id));
     item.querySelector('.note-id').textContent = `[${String(note.id).padStart(4, '0')}]`;
     item.querySelector('.note-timestamp').textContent = formatDateTime(note.timestamp);
     item.querySelector('.note-category').textContent = note.category ? note.category.name : 'Uncategorized';
@@ -66,6 +140,7 @@ export function renderNote(note) {
 export function renderTodo(todo) {
     const template = document.getElementById('todo-template').content.cloneNode(true);
     const item = template.querySelector('.todo-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('todos', todo.id));
     const checkbox = item.querySelector('.todo-checkbox');
     checkbox.checked = todo.complete;
     let mainText = `[${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
@@ -104,6 +179,7 @@ export function renderTodo(todo) {
 export function renderAction(action) {
     const template = document.getElementById('action-template').content.cloneNode(true);
     const item = template.querySelector('.action-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('actions', action.id));
     let actionText = action.action_text;
     if (action.todo_id && action.todo) {
         actionText += ` -> ${action.todo.todo_text}`;
@@ -118,8 +194,10 @@ export function renderAction(action) {
 export function renderCuriosity(curiosity) {
     const template = document.getElementById('curiosity-template').content.cloneNode(true);
     const item = template.querySelector('.curiosity-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('curiosities', curiosity.id));
     item.querySelector('.curiosity-timestamp').textContent = formatDateTime(curiosity.note.timestamp);
     item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
     item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);
     return item;
 }
+

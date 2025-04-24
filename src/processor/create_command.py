@@ -1,8 +1,8 @@
 import logging
 from pprint import pformat
 
-from .. import db, pretty_printing
-from ..grok import GrokChatClient
+from .. import db, rendering
+from ..llm import get_client
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,7 +14,7 @@ def get_command_text(annotation: db.Annotation) -> str:
     """
     if annotation.category.name != "command":
         raise ValueError(f"annotation category is not command: {annotation.category.name}")
-    client = GrokChatClient()
+    client = get_client()
     client.load_system_message("get_command_text")
     response = client.chat(annotation.note.processed_note_text)
     logger.info(f"get command text response is:\n{response}")
@@ -25,7 +25,7 @@ def get_command_text(annotation: db.Annotation) -> str:
 
 
 def get_target_note_id(annotation: db.Annotation) -> int:
-    client = GrokChatClient()
+    client = get_client()
     object_schema = """
     [<0-padded-note-id>] <timestamp> - <category>
     <note_text>
@@ -46,7 +46,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
         if not notes:
             break
         # notes_str = "\n".join([note.model_dump_json() for note in notes])
-        notes_str = pretty_printing.strf_notes(notes)
+        notes_str = rendering.strf_notes(notes)
         logger.debug('notes found:\n' + notes_str)
         response = client.chat(notes_str)
         logger.info(f"get command context response is:\n{response}")
@@ -60,7 +60,7 @@ def get_target_note_id(annotation: db.Annotation) -> int:
 
 
 def get_target_todo_id(annotation: db.Annotation) -> int:
-    client = GrokChatClient()
+    client = get_client()
     object_schema = """
     [<checkbox>] [<0-padded-todo-id>]: <todo_text>
                  <optional-start-time> -> <optional-end-time>
@@ -86,7 +86,7 @@ def get_target_todo_id(annotation: db.Annotation) -> int:
         if not todos:
             break
         # todos_str = "\n".join([todo.model_dump_json() for todo in todos])
-        todos_str = pretty_printing.strf_todos(todos)
+        todos_str = rendering.strf_todos(todos)
         logger.info('todos found:\n' + todos_str)
         response = client.chat(todos_str)
         logger.info(f"get command context response is:\n{response}")
@@ -100,7 +100,7 @@ def get_target_todo_id(annotation: db.Annotation) -> int:
 
 
 def get_target_action_id(annotation: db.Annotation) -> int:
-    client = GrokChatClient()
+    client = get_client()
     object_schema = """
     [<0-padded-action-id>] <action_timestamp>
         <action_text> -> <optional-targeted-todo-text>
@@ -124,7 +124,7 @@ def get_target_action_id(annotation: db.Annotation) -> int:
         if not actions:
             break
         # actions_str = "\n".join([action.model_dump_json() for action in actions])
-        actions_str = pretty_printing.strf_actions(actions)
+        actions_str = rendering.strf_actions(actions)
         logger.info('actions found:\n' + actions_str)
         response = client.chat(actions_str)
         logger.info(f"get command context response is:\n{response}")
@@ -192,7 +192,7 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
         note.processing_error = "no target found"
         note.save()
         return None
-    client = GrokChatClient()
+    client = get_client()
     client.load_system_message("create_command", command_text=command_text, annotation=annotation.model_dump())
 
     response = client.chat(target_str)

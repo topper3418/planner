@@ -1,7 +1,7 @@
 import logging
 import src.db as db
 
-from ..grok import GrokChatClient
+from ..llm import get_client
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ def todo_to_str(todo: db.Todo) -> str:
 
 
 def get_target_todo_id(action: db.Action):
-    client = GrokChatClient()
+    client = get_client()
     action.source_annotation.note  # load the note and annotation
     client.load_system_message("apply_action_to_todo", action=action.model_dump())
     target_todo_id = 0
@@ -40,7 +40,7 @@ def create_action(annotation: db.Annotation):
     """
     if annotation.category.name != "action":
         raise ValueError(f"annotation category is not action: {annotation.category.name}")
-    client = GrokChatClient()
+    client = get_client()
     client.load_system_message("create_action")
     
     response = client.chat(annotation.annotation_text)

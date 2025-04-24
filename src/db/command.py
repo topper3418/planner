@@ -89,6 +89,22 @@ class Command(BaseModel):
                 return None
             return cls.from_sqlite_row(row)
 
+    @classmethod
+    def get_by_source_annotation_id(cls, annotation_id: int) -> Optional["Command"]:
+        """
+        Retrieves a Command instance by its source annotation ID.
+        """
+        query = '''
+            SELECT * FROM commands WHERE source_annotation_id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (annotation_id,))
+            row = cursor.fetchone()
+            if row is None:
+                return None
+            return cls.from_sqlite_row(row)
+
     def refresh(self):
         """
         Refreshes the Command instance by reloading it from the database.

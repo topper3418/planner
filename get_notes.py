@@ -1,5 +1,5 @@
 import sqlite3
-from src import db, pretty_printing
+from src import db, rendering
 
 import time
 
@@ -8,7 +8,7 @@ def main():
    # Get all notes
    notes = db.Note.get_all(limit=75)
    notes.reverse()
-   pretty_notes = pretty_printing.strf_notes(notes, show_processed_text=True)
+   pretty_notes = rendering.strf_notes(notes, show_processed_text=True)
    # clear the console
    print("\033[H\033[J")
    print("===================================")

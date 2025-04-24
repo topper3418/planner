@@ -103,6 +103,7 @@ class Action(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query, (annotation_id,))
             row = cursor.fetchone()
+            print(f'fetched row for action by annotation id {annotation_id}', row)
             if row:
                 return cls.from_sqlite_row(row)
             else:
