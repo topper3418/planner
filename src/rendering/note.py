@@ -1,4 +1,6 @@
 from typing import List
+
+from src.db.command import Command
 from ..db import Note, Annotation, Action, Todo
 from ..util import format_time, format_paragraph
 
@@ -57,8 +59,10 @@ def json_note(note: Note) -> dict:
     annotation = Annotation.get_by_note_id(note.id)
     # find the related objects
     todo = Todo.get_by_source_annotation_id(note.id)
-    action = Action.get_by_source_annotation_id(note.id)
+    action = Action.get_by_source_annotation_id(annotation.id) if annotation else None
+    command = Command.get_by_source_annotation_id(annotation.id) if annotation else None
     output_json["annotation"] = annotation.model_dump() if annotation else None
     output_json["todo"] = todo.model_dump() if todo else None
     output_json["action"] = action.model_dump() if action else None
+    output_json["command"] = command.model_dump() if command else None
     return output_json

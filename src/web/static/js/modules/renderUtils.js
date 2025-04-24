@@ -93,6 +93,20 @@ export function renderDataModal(data) {
         document.getElementById('action-todo-id').textContent = data.action.todo_id || '';
         document.getElementById('action-mark-complete').textContent = data.action.mark_complete ? 'Yes' : 'No';
     }
+
+    // Command Section
+    const commandSection = document.getElementById('command-modal-data');
+    if (!data.command) {
+        commandSection.classList.add('hidden');
+    } else {
+        commandSection.classList.remove('hidden');
+        document.getElementById('command-id').textContent = data.command.id || '';
+        document.getElementById('command-text').textContent = data.command.command_text || '';
+        document.getElementById('command-value-before').textContent = data.command.value_before || '';
+        document.getElementById('command-desired-value').textContent = data.command.desired_value || '';
+        document.getElementById('command-source-annotation-id').textContent = data.command.source_annotation_id || '';
+        document.getElementById('command-target-id').textContent = data.command.target_id || '';
+    }
 }
 
 async function fetchAndRenderDetails(type, id) {
@@ -125,8 +139,8 @@ export function renderNote(note) {
 
 export function renderTodo(todo) {
     const template = document.getElementById('todo-template').content.cloneNode(true);
-    template.addEventListener('click', () => fetchAndRenderDetails('todos', todo.id));
     const item = template.querySelector('.todo-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('todos', todo.id));
     const checkbox = item.querySelector('.todo-checkbox');
     checkbox.checked = todo.complete;
     let mainText = `[${String(todo.id).padStart(4, '0')}]: ${todo.todo_text}`;
@@ -164,8 +178,8 @@ export function renderTodo(todo) {
 
 export function renderAction(action) {
     const template = document.getElementById('action-template').content.cloneNode(true);
-    template.addEventListener('click', () => fetchAndRenderDetails('actions', action.id));
     const item = template.querySelector('.action-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('actions', action.id));
     let actionText = action.action_text;
     if (action.todo_id && action.todo) {
         actionText += ` -> ${action.todo.todo_text}`;
@@ -179,8 +193,8 @@ export function renderAction(action) {
 
 export function renderCuriosity(curiosity) {
     const template = document.getElementById('curiosity-template').content.cloneNode(true);
-    template.addEventListener('click', () => fetchAndRenderDetails('curiosities', curiosity.id));
     const item = template.querySelector('.curiosity-item');
+    item.addEventListener('click', () => fetchAndRenderDetails('curiosities', curiosity.id));
     item.querySelector('.curiosity-timestamp').textContent = formatDateTime(curiosity.note.timestamp);
     item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
     item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);

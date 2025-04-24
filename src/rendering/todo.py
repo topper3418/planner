@@ -80,7 +80,7 @@ def json_todo(todo: Todo) -> dict:
     Converts a todo to a json object
     """
     output_json = {}
-    output_json = todo.model_dump()
+    output_json["todo"] = todo.model_dump()
     # find the related objects
     annotation = todo.source_annotation
     note = annotation.note if annotation else None
