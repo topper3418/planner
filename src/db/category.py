@@ -127,7 +127,7 @@ class Category(BaseModel):
             return cls.from_sqlite_row(row)
 
     @classmethod
-    def find_by_name(cls, name) -> "Category":
+    def get_by_name(cls, name) -> "Category":
         """
         Finds a category by its name.
         """

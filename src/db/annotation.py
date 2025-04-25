@@ -205,7 +205,7 @@ class Annotation(BaseModel):
         Retrieves all annotations for a given category.
         """
         # make sure the category is authentic
-        category = Category.find_by_name(category_name)
+        category = Category.get_by_name(category_name)
         if category is None:
             logger.error(f'Category {category_name} not found')
             raise ValueError(f"Category with name '{category_name}' not found")

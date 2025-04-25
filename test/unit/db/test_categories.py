@@ -18,7 +18,7 @@ def test_category_insertion(setup_database):
 
 def test_save_category(setup_database):
     # Test saving a new category
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     category.description = "Test description"
@@ -55,11 +55,11 @@ def test_fetch_categories(setup_database):
 
 def test_find_category_by_name(setup_database):
     # Test finding a category by name
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     assert category.description is not None
     assert category.color is not None
     # Test finding a non-existent category
     with pytest.raises(ValueError):
-        db.Category.find_by_name("non_existent_category")
+        db.Category.get_by_name("non_existent_category")

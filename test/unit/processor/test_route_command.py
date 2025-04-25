@@ -31,7 +31,7 @@ def test_recategorize_from_action(initial_note):
     command_note = db.Note.create(
         f"recategorize note {initial_note.id} to an observation",
     )
-    command_category = db.Category.find_by_name("command")
+    command_category = db.Category.get_by_name("command")
     annotation = db.Annotation.create(
         note_id=command_note.id,
         category_id=command_category.id,

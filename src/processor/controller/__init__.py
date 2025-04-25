@@ -23,7 +23,7 @@ def route_command(command: db.Command):
         elif command.command_text == "update_note_category":
             # update the note category
             buffer = NoteProcessBuffer(note)
-            category = db.Category.find_by_name(command.desired_value)
+            category = db.Category.get_by_name(command.desired_value)
             if not category:
                 raise ValueError(f"Category with name {command.desired_value} not found")
             buffer.category = category

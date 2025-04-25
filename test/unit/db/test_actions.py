@@ -9,7 +9,7 @@ def test_action(setup_database):
         "I just woke up",
         timestamp="2023-04-12 12:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     annotation = db.Annotation.create(
         note.id,
         category.id,
@@ -66,7 +66,7 @@ def test_fetch_action(test_action):
         "I just woke up again",
         timestamp="2023-04-12 13:00:00",
     )
-    category2 = db.Category.find_by_name("action")
+    category2 = db.Category.get_by_name("action")
     annotation2 = db.Annotation.create(
         note2.id,
         category2.id,
@@ -82,7 +82,7 @@ def test_fetch_action(test_action):
         "I just woke up again and again",
         timestamp="2023-04-12 14:00:00",
     )
-    category3 = db.Category.find_by_name("action")
+    category3 = db.Category.get_by_name("action")
     annotation3 = db.Annotation.create(
         note3.id,
         category3.id,

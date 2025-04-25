@@ -9,7 +9,7 @@ def bulk_upload_notes(note_list):
             note_text,
             timestamp=timestamp,
         )
-        category = db.Category.find_by_name(category_name)
+        category = db.Category.get_by_name(category_name)
         db.Annotation.create(
             note_id=note.id,
             category_id=category.id,
@@ -54,7 +54,7 @@ def create_notes_for_morning(setup_database):
 def test_create_commands(create_notes_for_morning, note_text, expected_command, note_search):
     # create a test note to work with
     initial_note = db.Note.create(note_text)
-    category = db.Category.find_by_name("command")
+    category = db.Category.get_by_name("command")
     assert category is not None
     assert category.name == "command"
     # try to annotate the note
@@ -122,7 +122,7 @@ def create_notes_for_afternoon(create_notes_for_morning):
 def test_create_commands_2(create_notes_for_afternoon, note_text, expected_command, note_search):
     # create a test note to work with
     initial_note = db.Note.create(note_text)
-    category = db.Category.find_by_name("command")
+    category = db.Category.get_by_name("command")
     assert category is not None
     assert category.name == "command"
     # try to annotate the note
@@ -156,7 +156,7 @@ def test_create_commands_2(create_notes_for_afternoon, note_text, expected_comma
 def test_invalid_command(create_notes_for_afternoon):
     # create a test note to work with
     initial_note = db.Note.create("I need you to do my homework for me")
-    category = db.Category.find_by_name("command")
+    category = db.Category.get_by_name("command")
     assert category is not None
     assert category.name == "command"
     # try to annotate the note

@@ -41,7 +41,7 @@ def ensure_default_categories():
     for category in default_categories:
         # Check if the category already exists
         try:
-            Category.find_by_name(category.name)
+            Category.get_by_name(category.name)
             logger.debug(f"Category '{category.name}' already exists. Skipping insertion.")
             continue
         except ValueError:

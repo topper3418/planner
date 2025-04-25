@@ -13,7 +13,7 @@ def sample_annotations(setup_database):
         "I just woke up",
         timestamp="2023-04-12 12:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     # create the annotation
     annotation = db.Annotation.create(
         note.id,
@@ -107,16 +107,16 @@ def test_get_by_category_name(setup_database):
     db.ensure_tables()
     db.ensure_default_categories()
     # test get by category name
-    action_category = db.Category.find_by_name("action")
+    action_category = db.Category.get_by_name("action")
     assert action_category is not None
     assert action_category.name == "action"
-    curiosity_category = db.Category.find_by_name("curiosity")
+    curiosity_category = db.Category.get_by_name("curiosity")
     assert curiosity_category is not None
     assert curiosity_category.name == "curiosity"
-    observation_category = db.Category.find_by_name("observation")
+    observation_category = db.Category.get_by_name("observation")
     assert observation_category is not None
     assert observation_category.name == "observation"
-    todo_category = db.Category.find_by_name("todo")
+    todo_category = db.Category.get_by_name("todo")
     assert todo_category is not None
     assert todo_category.name == "todo"
     categories = [category.model_dump() for category in [

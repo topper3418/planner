@@ -30,7 +30,7 @@ def test_target_first_note(setup_database):
     # create an annotation for the command note
     command_annotation = db.Annotation.create(
         note_id=command_note.id,
-        category_id=db.Category.find_by_name("command").id,
+        category_id=db.Category.get_by_name("command").id,
         annotation_text="The user wants to recategorize note with id 1 to the category 'observation'.",
     )
     # make sure the command note is categorized as a command

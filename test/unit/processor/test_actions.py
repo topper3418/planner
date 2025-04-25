@@ -11,7 +11,7 @@ def test_create_action(setup_database):
         "I am going to the gym",
         timestamp=timestamp,
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     # try to annotate the note
@@ -40,7 +40,7 @@ def test_create_recent_action(setup_database):
         "I just spent 15 minutes cleaning the kitchen",
         timestamp=timestamp,
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     # try to annotate the note
@@ -69,7 +69,7 @@ def test_create_immediate_action(setup_database):
         "I am going to spend the next hour in the garden",
         timestamp="2025-04-05 10:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     # try to annotate the note
@@ -98,7 +98,7 @@ def test_create_retroactive_action(setup_database):
         "I spent 30 minutes cleaning the kitchen this morning",
         timestamp="2025-04-05 15:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     # try to annotate the note
@@ -127,7 +127,7 @@ def test_create_retroactive_action_2(setup_database):
         "I worked out for about an hour last night around 8",
         timestamp="2025-04-05 15:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     assert category is not None
     assert category.name == "action"
     # try to annotate the note

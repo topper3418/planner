@@ -28,7 +28,7 @@ def categorize_note(note: db.Note) -> db.Category:
     logger.info(f"note {note.note_text} categorized as {category_name}")
     
     # Find the category in the database
-    category = db.Category.find_by_name(category_name)
+    category = db.Category.get_by_name(category_name)
     
     if not category:
         raise ValueError(f"Category '{category_name}' not found in database.")

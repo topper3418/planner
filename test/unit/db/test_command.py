@@ -10,7 +10,7 @@ def first_command(setup_database):
         "I just woke up",
         timestamp="2023-04-12 12:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     annotation = db.Annotation.create(
         note.id,
         category.id,
