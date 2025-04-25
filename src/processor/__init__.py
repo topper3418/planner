@@ -1,6 +1,5 @@
 import logging
 
-from .. import db
 from .categorizor import categorize_note
 from .annotator import annotate_note
 from .create_action import create_action
