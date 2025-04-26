@@ -42,4 +42,4 @@ def format_paragraph(text: str, width: int = 75, indents=1) -> str:
     return pretty_text
 
 
-
+NL = "\n"

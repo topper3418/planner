@@ -31,7 +31,7 @@ def get_light_client() -> OpenAI:
     Factory function to create a light client based on the configured chat service.
     """
     if CHAT_SERVICE == "grok":
-        logger.info("Using GrokChatClient")
+        logger.info("Using Grok")
         api_key = os.getenv("XAI_API_KEY")
         if not api_key:
             raise ValueError("Missing API key")
@@ -40,7 +40,7 @@ def get_light_client() -> OpenAI:
             base_url="https://api.x.ai/v1"
         )
     elif CHAT_SERVICE == "openai":
-        logger.info("Using OpenAIChatClient")
+        logger.info("Using OpenAI")
         return OpenAI()
     else:
         raise ValueError(f"Unsupported chat service: {CHAT_SERVICE}")

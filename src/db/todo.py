@@ -296,7 +296,6 @@ class Todo(BaseModel):
             else:
                 cursor.execute(query, args)
             rows = cursor.fetchall()
-            print('rows: ', rows)
             return [cls.from_sqlite_row(row) for row in rows]
 
 

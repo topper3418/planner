@@ -155,7 +155,15 @@ class Note(BaseModel):
             conn.commit()
 
     @classmethod
-    def get_all(cls, before=None, after=None, search=None, offset=0, limit=15):
+    def get_all(
+            cls, 
+            before: Optional[datetime | str]=None, 
+            after: Optional[datetime | str]=None, 
+            search: Optional[str]=None, 
+            offset=0, 
+            limit=15,
+            max_id: Optional[int] = None,
+    ):
         """
         Fetches notes from the database with optional filters.
         """
@@ -184,7 +192,9 @@ class Note(BaseModel):
         if search:
             query += ' AND note_text LIKE ?'
             params.append(f'%{search}%')
-        
+        if max_id: 
+            query += ' AND id < ?'
+            params.append(max_id)
         query += ' ORDER BY id desc LIMIT ? OFFSET ?'
         params.append(limit)
         params.append(offset)
