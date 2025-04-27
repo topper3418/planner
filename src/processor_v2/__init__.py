@@ -12,6 +12,25 @@ from .annotate_note import annotate_note, get_annotate_note_tool
 
 logger = logging.getLogger(__name__)
 
+# moving this to outside of the class for unit testing purposes
+annotation_system_prompt_template = """
+You are a world class note taking assistant. The user will create notes throughout the day. You will be fed the notes one at a time, and be tasked with processing them.
+
+For context, you will be given a chunk of the most recent notes, actions, and todos from past annotations.
+
+here are the notes: 
+
+{notes}
+
+here are the actions:
+
+{actions}
+
+here are the todos:
+
+{todos}
+"""
+
 
 def strf_note(note: Note) -> str:
     return f"{note.id} - {note.timestamp} - {note.processed_note_text}"
@@ -19,6 +38,8 @@ def strf_action(action: Action) -> str:
     return f"{action.id} - {action.start_time} - {action.action_text}"
 def strf_todo(todo: Todo) -> str:
     return f"{todo.id} - {todo.target_start_time} - {todo.target_end_time} - {todo.todo_text}"
+
+
 class NoteProcessor:
     def __init__(self, note: Note):
         self.note = note
@@ -34,23 +55,11 @@ class NoteProcessor:
         ]
         logger.info(f"Tools:\n{pformat(self.annotation_tools)}")
         logger.info(f"Generated system prompt with {len(self.context_notes)} notes, {len(self.context_actions)} actions, and {len(self.context_todos)} todos.")
-        self.annotation_system_prompt = f"""
-        You are a world class note taking assistant. The user will create notes throughout the day. You will be fed the notes one at a time, and be tasked with processing them.
-
-        For context, you will be given a chunk of the most recent notes, actions, and todos from past annotations.
-
-        here are the notes: 
-
-        {NL.join(strf_note(note) for note in self.context_notes) if self.context_notes else "No notes found."}
-
-        here are the actions:
-
-        {NL.join(strf_action(action) for action in self.context_actions) if self.context_actions else "No actions found."}
-
-        here are the todos:
-
-        {NL.join(strf_todo(todo) for todo in self.context_todos) if self.context_todos else 'No todos found.'}
-        """
+        self.annotation_system_prompt = annotation_system_prompt_template.format(
+            notes=NL.join(strf_note(note) for note in self.context_notes) if self.context_notes else "No notes found.",
+            actions=NL.join(strf_action(action) for action in self.context_actions) if self.context_actions else "No actions found.",
+            todos=NL.join(strf_todo(todo) for todo in self.context_todos) if self.context_todos else 'No todos found.'
+        )
 
 # we will process the notes in the following sequence: 
     def process_annotation(self):
@@ -61,7 +70,7 @@ class NoteProcessor:
             tools=self.annotation_tools,
         )
         from pprint import pprint
-        pprint(response)
+        [pprint(output.model_dump()) for output in response.output]
 
 
 # 1. pass the raw note to a chatbot along with the last two hours (or 25, whichever is more), open todos, and actions from the past two hours

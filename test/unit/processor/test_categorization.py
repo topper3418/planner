@@ -49,12 +49,6 @@ test_cases = [
     for note in notes
 ]
 
-@pytest.fixture
-def refresh_database():
-    db.teardown()
-    db.ensure_tables()
-    db.ensure_default_categories()
-
 @pytest.mark.parametrize("expected_category,note_text", test_cases)
 def test_categorize_notes(refresh_database, expected_category, note_text):
     note = db.Note.create(note_text)

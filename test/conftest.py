@@ -29,3 +29,10 @@ def setup_database(mock_sqlite3_connect):
     # SETUP: insert the default category
     db.ensure_default_categories()
 
+
+@pytest.fixture
+def refresh_database():
+    db.teardown()
+    db.ensure_tables()
+    db.ensure_default_categories()
+
