@@ -1,6 +1,8 @@
 import logging
 from typing import List, Optional
 
+from openai.types.responses import ToolParam
+
 
 
 from ..config import TIMESTAMP_FORMAT
@@ -44,7 +46,7 @@ def create_action(
     return action
 
 
-def get_create_action_tool(todos: List[Todo]) -> dict:
+def get_create_action_tool(todos: List[Todo]) -> ToolParam:
     return {
         "type": "function",
         "name": "create_action",
@@ -59,7 +61,7 @@ def get_create_action_tool(todos: List[Todo]) -> dict:
                 },
                 "action_timestamp": {
                     "type": "string",
-                    "description": f"Timestamp of the action. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. Use the current time if not specified. If the time specified is in the past, (I did this yesterday, I did that two hours ago, etc), use the timestamp from the note and extrapolate to get a best guess.",
+                    "description": f"Timestamp of the action. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. Use the current time if not specified. If the time specified is in the past, (I did this yesterday, I did that two hours ago, etc), use the timestamp from the note and extrapolate to get a best guess. Do not drop any digits, always show trailing zero's",
                 },
                 "todo_id": {
                     "type": "integer",
@@ -68,7 +70,7 @@ def get_create_action_tool(todos: List[Todo]) -> dict:
                 },
                 "mark_complete": {
                     "type": "boolean",
-                    "description": "True if the action marks the todo as complete. This is only relevant if a todo_id is specified.",
+                    "description": "True if the action marks the todo as complete. This is only relevant if a todo_id is specified",
                 },
             },
             "required": ["action_text", "action_timestamp"],

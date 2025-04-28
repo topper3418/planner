@@ -1,5 +1,7 @@
 import logging
 
+from openai.types.responses import ToolParam
+
 
 from ..config import TIMESTAMP_FORMAT
 from ..db import Note, Category, Annotation
@@ -39,7 +41,7 @@ def annotate_note(
 
 categories = Category.get_all()
 
-def get_annotate_note_tool(categories):
+def get_annotate_note_tool(categories) -> ToolParam:
     return {
         "type": "function",
         "name": "annotate_note",
