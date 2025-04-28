@@ -164,7 +164,7 @@ class Action(BaseModel):
             source_annotation_id: int, 
             todo_id: Optional[int] = None, 
             mark_complete: bool = False
-    ):
+    ) -> "Action":
         """
         Creates a new action in the database.
         """

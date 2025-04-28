@@ -8,6 +8,8 @@ from ..util import NL
 from ..db import Note, Category, Annotation, Action, Todo
 # we will import the various functions and and respective schemas from their files in this directory
 from .annotate_note import annotate_note, get_annotate_note_tool
+from .create_action import create_action, get_create_action_tool
+from .find_todo import find_todo, get_find_todo_tool
 # we will define a processor class
 
 logger = logging.getLogger(__name__)
@@ -49,9 +51,11 @@ class NoteProcessor:
         self.context_actions = Action.get_all(limit=25)
         self.context_todos = Todo.get_all(limit=25, complete=False)
         self.annotate_note_tool = get_annotate_note_tool(self.categories)
+        self.create_action_tool = get_create_action_tool(self.context_todos)
 # we will assign the function schemas to a tools property
         self.annotation_tools: List[ToolParam] = [
-            self.annotate_note_tool
+            self.annotate_note_tool,
+            self.create_action_tool,
         ]
         logger.info(f"Tools:\n{pformat(self.annotation_tools)}")
         logger.info(f"Generated system prompt with {len(self.context_notes)} notes, {len(self.context_actions)} actions, and {len(self.context_todos)} todos.")
@@ -70,7 +74,7 @@ class NoteProcessor:
             tools=self.annotation_tools,
         )
         from pprint import pprint
-        [pprint(output.model_dump()) for output in response.output]
+        pprint(response.model_dump())
 
 
 # 1. pass the raw note to a chatbot along with the last two hours (or 25, whichever is more), open todos, and actions from the past two hours

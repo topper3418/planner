@@ -4,6 +4,7 @@ import logging
 from ..config import TIMESTAMP_FORMAT
 from ..db import Note, Category, Annotation
 from ..util import NL
+from ..rendering import strf_category_light
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +39,6 @@ def annotate_note(
 
 categories = Category.get_all()
 
-def render_category_str(category: Category) -> str:
-    """
-    Render a category as a string.
-    """
-    return f"\t - {category.name} - {category.description}"
-
-
-
 def get_annotate_note_tool(categories):
     return {
         "type": "function",
@@ -53,7 +46,7 @@ def get_annotate_note_tool(categories):
         "description": f"""Annotate a note with a category and give a third person description of the note.
          - refer to the user as "the user"
          - choose the relevant category from the following list:
-         {NL.join(render_category_str(category) for category in categories)}
+         {NL.join(strf_category_light(category) for category in categories)}
         """,
         "parameters": {
             "type": "object",

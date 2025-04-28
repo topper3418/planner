@@ -33,6 +33,10 @@ def strf_note(note: Note, show_processed_text: bool = False) -> str:
     return pretty_text
 
 
+def strf_note_light(note: Note) -> str:
+    return f"{note.id} - {note.timestamp} - {note.processed_note_text}"
+
+
 def strf_notes(notes: List[Note], show_processed_text: bool = False) -> str:
     """
     Pretty prints a note like: 

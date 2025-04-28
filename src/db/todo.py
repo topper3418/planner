@@ -175,7 +175,13 @@ class Todo(BaseModel):
             return [self.from_sqlite_row(row) for row in rows]
 
     @classmethod
-    def create(cls, todo_text, source_annotation_id, target_start_time: Optional[str | datetime]=None, target_end_time: Optional[str | datetime]=None) -> "Todo":
+    def create(
+            cls, 
+            todo_text, 
+            source_annotation_id, 
+            target_start_time: Optional[str | datetime]=None, 
+            target_end_time: Optional[str | datetime]=None
+    ) -> "Todo":
         """
         Creates a new Todo instance and saves it to the database.
         """

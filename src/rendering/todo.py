@@ -59,6 +59,9 @@ def strf_todo(todo: Todo) -> str:
     return pretty_text
 
 
+def strf_todo_light(todo: Todo) -> str:
+    return f"{todo.id} - {todo.target_start_time} - {todo.target_end_time} - {todo.todo_text}"
+
 
 def strf_todos(todos: List[Todo]) -> str:
     """

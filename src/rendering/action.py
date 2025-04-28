@@ -22,6 +22,10 @@ def strf_action(action: Action) -> str:
     return pretty_text
 
 
+def strf_action_light(action: Action) -> str:
+    return f"{action.id} - {action.start_time} - {action.action_text}"
+
+
 def strf_actions(actions: List[Action]) -> str:
     """
     Pretty prints an action like: 

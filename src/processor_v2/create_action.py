@@ -1,0 +1,77 @@
+import logging
+from typing import List, Optional
+
+
+
+from ..config import TIMESTAMP_FORMAT
+from ..db import Note, Category, Annotation, Action, Todo
+from ..util import NL
+
+from .find_todo import find_todo
+
+logger = logging.getLogger(__name__)
+
+
+def create_action(
+        annotation: Annotation,
+        action_text: str,
+        action_timestamp: str,
+        todo_id: Optional[int] = None,
+        mark_complete: bool = False,
+) -> Action:
+    # make sure the annotation is for a category
+    category = Category.get_by_id(annotation.category_id)
+    if category.name != 'action':
+        raise ValueError("Annotation is not for an action")
+    # if a todo id of 0 is given, return all todos from the past three months and try again.
+    action = Action.create(
+        start_time=action_timestamp,
+        action_text=action_text,
+        source_annotation_id=annotation.id,
+    )
+    if not todo_id:
+        todo_response = find_todo(action)
+        if todo_response is not None:
+            todo, mark_complete = todo_response
+            todo_id = todo.id
+        else:
+            return action
+    # if a todo id is given, attach it to the action
+    if todo_id is not None:
+        action.todo_id = todo_id
+        action.mark_complete = mark_complete
+        action.save()
+    return action
+
+
+def get_create_action_tool(todos: List[Todo]) -> dict:
+    return {
+        "type": "function",
+        "name": "create_action",
+        "description": f"""Create an action, when the user logs an action.
+        """,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action_text": {
+                    "type": "string",
+                    "description": "Text of the aciton. It should read like a logbook",
+                },
+                "action_timestamp": {
+                    "type": "string",
+                    "description": f"Timestamp of the action. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. Use the current time if not specified. If the time specified is in the past, (I did this yesterday, I did that two hours ago, etc), use the timestamp from the note and extrapolate to get a best guess.",
+                },
+                "todo_id": {
+                    "type": "integer",
+                    "description": "ID of the todo associated with the action. If specified, use this ID, but only if it appears in the list of todos. If not specified, try to find the todo based on the action text. Do not get creative, the user should try to make it obvious if they are trying to match to a todo and they will log many actions that have nothing to do with their todo list.",
+                    "enum": [todo.id for todo in todos],
+                },
+                "mark_complete": {
+                    "type": "boolean",
+                    "description": "True if the action marks the todo as complete. This is only relevant if a todo_id is specified.",
+                },
+            },
+            "required": ["action_text", "action_timestamp"],
+        }
+    }
+
