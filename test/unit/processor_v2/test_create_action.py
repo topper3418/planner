@@ -15,7 +15,6 @@ def sample_todos(refresh_database):
     first_note = db.Note.create("Placeholder")
     first_annotation = db.Annotation.create(
         note_id=first_note.id,
-        category_id=1,
         annotation_text="This is a test annotation",
     )
     ann_id = first_annotation.id
@@ -217,13 +216,18 @@ def test_create_action(
         assert start_time_str == expected_action_start_time, (
             f"Expected start time {expected_action_start_time}, but got {start_time_str}"
         )
-    if expected_action_start_time_range:
+    elif expected_action_start_time_range:
         expected_start_time_str, expected_end_time_str = expected_action_start_time_range
         start_time = utils.parse_time(start_time_str)
         expected_start_time = utils.parse_time(expected_start_time_str)
         expected_end_time = utils.parse_time(expected_end_time_str)
         assert expected_start_time <= start_time <= expected_end_time, (
             f"Expected start time {expected_start_time} <= {start_time} <= {expected_end_time}"
+        )
+    else:
+        assert start_time_str is None, (
+            f"Start time should be None for note: {note_text}. "
+            f"Output: {create_action_args}"
         )
     todo_id = create_action_args.get('todo_id')
     mark_complete = create_action_args.get('mark_complete')

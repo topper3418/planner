@@ -13,7 +13,7 @@ from ..util import NL
 logger = logging.getLogger(__name__)
 
 
-def find_todo(input_obj: Command | Action) -> Optional[Tuple[Todo, bool]]:
+def find_todo(input_obj: Command | Action | Todo) -> Optional[Tuple[Todo, bool]]:
     client = get_light_client()
     one_month_ago = datetime.now() - timedelta(days=30)
     todos = Todo.get_all(after=one_month_ago)
@@ -51,12 +51,13 @@ def find_todo(input_obj: Command | Action) -> Optional[Tuple[Todo, bool]]:
     return todo, mark_complete
 
 
-def get_find_todo_tool(todos: List[Todo]) -> dict:
+def get_find_todo_tool(todos: List[Todo]) -> ToolParam:
     return {
         "type": "function",
         "name": "find_todo",
-        "description": f"""Match a todo to an action or command, and indicate whether or not the action marks the todo complete. 
-         - If the command specifies a todo by its id, use that ID. Otherwise, infer the todo from the action or command. 
+        "description": f"""Match a todo to a user action, command or subtask
+         - if it is an action being given indicate whether or not the action marks the todo complete. 
+         - If the user input specifies a todo by its id, use that ID. Otherwise, infer the todo from the action or command. 
          - The user will try be clear, so don't go too far out on a limb. If the todo it is supposed to match is not clear, just return nothing
          - for marking complete, infer the todo's workflow and work out where that action would take place in the workflow. For example, if they are arriving home from doing something, where that something was an errand, it is complete. if the user says that a task is done, mark complete. if they say they are starting on a task, do not mark complete. if the todo is to build a fence, and they say they put in fence posts, do not mark complete. if you have a todo x, and the user says they just did x and add a bunch of notes, that todo is still a mark complete.""",
         "parameters": {

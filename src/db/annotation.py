@@ -4,7 +4,6 @@ import logging
 
 from pydantic import BaseModel, Field, PrivateAttr
 
-from .category import Category
 from .note import Note
 from .connection import get_connection
 from ..util import format_time
@@ -52,7 +51,7 @@ class Annotation(BaseModel):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 note_id INTEGER NOT NULL,
                 annotation_text TEXT NOT NULL,
-                FOREIGN KEY (note_id) REFERENCES notes(id),
+                FOREIGN KEY (note_id) REFERENCES notes(id)
             )
         '''
         with get_connection() as conn:
@@ -84,7 +83,7 @@ class Annotation(BaseModel):
         query = '''
             UPDATE annotations SET annotation_text = ?, reprocess = ? WHERE id = ?
         '''
-        args = (self.annotation_text, self.reprocess, self.id)
+        args = (self.annotation_text, self.id)
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, args)

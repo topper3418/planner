@@ -9,7 +9,6 @@ def sample_todos(refresh_database):
     first_note = db.Note.create("Placeholder")
     first_annotation = db.Annotation.create(
         note_id=first_note.id,
-        category_id=1,
         annotation_text="This is a test annotation",
     )
     ann_id = first_annotation.id
@@ -67,7 +66,6 @@ def test_find_todo(sample_todos, action_text, expected_todo_text, mark_complete)
     note = db.Note.create(action_text)
     annotation = db.Annotation.create(
         note_id=note.id,
-        category_id=1,
         annotation_text="This is a test annotation",
     )
     action = db.Action.create(

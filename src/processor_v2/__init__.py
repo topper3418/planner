@@ -6,9 +6,11 @@ from openai.types.responses import ToolParam
 from ..llm import get_light_client
 from ..util import NL
 from ..db import Note, Annotation, Action, Todo
+from ..rendering import strf_action_light, strf_todo_light, strf_note_light
 # we will import the various functions and and respective schemas from their files in this directory
 from .annotate_note import annotate_note, get_annotate_note_tool
 from .create_action import create_action, get_create_action_tool
+from .create_todo import create_todo, get_create_todo_tool
 from .find_todo import find_todo, get_find_todo_tool
 # we will define a processor class
 
@@ -34,14 +36,6 @@ here are the todos:
 """
 
 
-def strf_note(note: Note) -> str:
-    return f"{note.id} - {note.timestamp} - {note.processed_note_text}"
-def strf_action(action: Action) -> str:
-    return f"{action.id} - {action.start_time} - {action.action_text}"
-def strf_todo(todo: Todo) -> str:
-    return f"{todo.id} - {todo.target_start_time} - {todo.target_end_time} - {todo.todo_text}"
-
-
 class NoteProcessor:
     def __init__(self, note: Note):
         self.note = note
@@ -51,21 +45,25 @@ class NoteProcessor:
         self.context_todos = Todo.get_all(limit=25, complete=False)
         self.annotate_note_tool = get_annotate_note_tool()
         self.create_action_tool = get_create_action_tool(self.context_todos)
+        self.create_todo_tool = get_create_todo_tool()
 # we will assign the function schemas to a tools property
         self.annotation_tools: List[ToolParam] = [
             self.annotate_note_tool,
             self.create_action_tool,
+            self.create_todo_tool
         ]
         logger.info(f"Tools:\n{pformat(self.annotation_tools)}")
         logger.info(f"Generated system prompt with {len(self.context_notes)} notes, {len(self.context_actions)} actions, and {len(self.context_todos)} todos.")
+# 1. pass the raw note to a chatbot along with the last two hours (or 25, whichever is more), open todos, and actions from the past two hours
         self.annotation_system_prompt = annotation_system_prompt_template.format(
-            notes=NL.join(strf_note(note) for note in self.context_notes) if self.context_notes else "No notes found.",
-            actions=NL.join(strf_action(action) for action in self.context_actions) if self.context_actions else "No actions found.",
-            todos=NL.join(strf_todo(todo) for todo in self.context_todos) if self.context_todos else 'No todos found.'
+            notes=NL.join(strf_note_light(note) for note in self.context_notes) if self.context_notes else "No notes found.",
+            actions=NL.join(strf_action_light(action) for action in self.context_actions) if self.context_actions else "No actions found.",
+            todos=NL.join(strf_todo_light(todo) for todo in self.context_todos) if self.context_todos else 'No todos found.'
         )
 
 # we will process the notes in the following sequence: 
     def process_annotation(self):
+# 1a. the chatbot will be presented with tooling to categorize, annotate, and create spinoff objects
         response = self.client.responses.create(
             model="gpt-4.1",
             instructions=self.annotation_system_prompt,
@@ -76,11 +74,7 @@ class NoteProcessor:
         pprint(response.model_dump())
 
 
-# 1. pass the raw note to a chatbot along with the last two hours (or 25, whichever is more), open todos, and actions from the past two hours
-# 1a. the chatbot will be presented with tooling to categorize, annotate, and create spinoff objects
 # 1b. the chatbot will have a tool to get additional context, if an action or command is created.
-# ###NOTE: I need to create a new DB object for curiosities
-
 # 2. if 1b is the case, the chatbot will be passed todos in chunks of 20 of the items at a time that it will try to find the ID of.
 # 2a. run a loop until the chatbot returns a valid id or the max number of tries is reached
 # 3. after the command is routed, create a new object in the DB, (make a new table)

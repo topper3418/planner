@@ -1,10 +1,8 @@
-import sqlite3
 import logging
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from ..config import TIMESTAMP_FORMAT
 from ..util import format_time, parse_time
 from .note import Note
 from .connection import get_connection
@@ -22,6 +20,7 @@ class Todo(BaseModel):
     target_end_time: Optional[datetime] = Field(None, description="Target end time of the todo")
     todo_text: str = Field(..., description="Text of the todo")
     source_note_id: int = Field(..., description="ID of the source note")
+    parent_id: Optional[int] = Field(None, description="ID of the parent todo")
     complete: bool = Field(False, description="True if the task has been completed")
     cancelled: bool = Field(False, description="True if the task has been cancelled")
 
@@ -42,6 +41,21 @@ class Todo(BaseModel):
         if not note.id == self.source_note_id:
             raise ValueError("note ID does not match source_note_id")
         self._source_note = note
+    @property
+    def parent(self) -> Optional["Todo"]:
+        """
+        Returns the parent todo.
+        """
+        if self.parent_id is None:
+            return None
+        else:
+            return Todo.get_by_id(self.parent_id)
+    @property
+    def children(self) -> List["Todo"]:
+        """
+        Returns the children todos.
+        """
+        return Todo.get_by_source_note_id(self.id)
 
     @classmethod
     def ensure_table(cls):
@@ -55,8 +69,11 @@ class Todo(BaseModel):
                 target_end_time DATETIME DEFAULT NULL,
                 todo_text TEXT NOT NULL,
                 source_note_id INTEGER NOT NULL,
+                parent_id INTEGER DEFAULT NULL,
                 complete INTEGER NOT NULL DEFAULT 0,
-                cancelled INTEGER NOT NULL DEFAULT 0
+                cancelled INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (source_note_id) REFERENCES notes(id),
+                FOREIGN KEY (parent_id) REFERENCES todos(id)
             );
         '''
         with get_connection() as conn:
@@ -75,8 +92,9 @@ class Todo(BaseModel):
             target_end_time=parse_time(row[2]) if row[2] else None,
             todo_text=row[3],
             source_note_id=row[4],
-            complete=bool(row[5]),
-            cancelled=bool(row[6]),
+            parent_id=row[5],
+            complete=bool(row[6]),
+            cancelled=bool(row[7]),
         )
 
     @classmethod
@@ -125,19 +143,21 @@ class Todo(BaseModel):
         """
         query = '''
             UPDATE todos
-            SET target_start_time = ?, target_end_time = ?, todo_text = ?, complete = ?, cancelled = ?
+            SET target_start_time = ?, target_end_time = ?, todo_text = ?, complete = ?, cancelled = ?, parent_id = ?
             WHERE id = ?;
         '''
+        args = (
+            format_time(self.target_start_time) if self.target_start_time else None, 
+            format_time(self.target_end_time) if self.target_end_time else None, 
+            self.todo_text, 
+            self.complete, 
+            self.cancelled, 
+            self.parent_id,
+            self.id
+        )
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (
-                format_time(self.target_start_time) if self.target_start_time else None, 
-                format_time(self.target_end_time) if self.target_end_time else None, 
-                self.todo_text, 
-                self.complete, 
-                self.cancelled, 
-                self.id
-            ))
+            cursor.execute(query, args)
             conn.commit()
 
     @classmethod
@@ -157,7 +177,7 @@ class Todo(BaseModel):
             return [cls.from_sqlite_row(row) for row in rows]
 
     @classmethod
-    def get_cancelled(self) -> list["Todo"]:
+    def get_cancelled(cls) -> list["Todo"]:
         """
         Retrieves a list of cancelled Todo instances from the database.
         """
@@ -169,7 +189,7 @@ class Todo(BaseModel):
             cursor = conn.cursor()
             cursor.execute(query)
             rows = cursor.fetchall()
-            return [self.from_sqlite_row(row) for row in rows]
+            return [cls.from_sqlite_row(row) for row in rows]
 
     @classmethod
     def create(
@@ -177,20 +197,22 @@ class Todo(BaseModel):
             todo_text, 
             source_note_id, 
             target_start_time: Optional[str | datetime]=None, 
-            target_end_time: Optional[str | datetime]=None
+            target_end_time: Optional[str | datetime]=None,
+            parent_id: Optional[int] = None,
     ) -> "Todo":
         """
         Creates a new Todo instance and saves it to the database.
         """
         query = '''
-            INSERT INTO todos (target_start_time, target_end_time, todo_text, source_note_id)
-            VALUES (?, ?, ?, ?);
+            INSERT INTO todos (target_start_time, target_end_time, todo_text, source_note_id, parent_id)
+            VALUES (?, ?, ?, ?, ?);
         '''
         args = (
             target_start_time, 
             target_end_time, 
             todo_text, 
-            source_note_id
+            source_note_id,
+            parent_id
         )
         if isinstance(target_start_time, datetime):
             target_start_time = format_time(target_start_time)
@@ -244,6 +266,7 @@ class Todo(BaseModel):
                 todos.target_end_time, 
                 todos.todo_text, 
                 todos.source_note_id, 
+                todos.parent_id,
                 todos.complete,
                 todos.cancelled
             FROM todos
