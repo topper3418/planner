@@ -7,12 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 def todo_to_str(todo: db.Todo) -> str:
-    return f"ID:{todo.id} created: {todo.source_annotation.note.timestamp} - target_start: {todo.target_start_time} - target_end: {todo.target_end_time}: {todo.todo_text}"
+    return f"ID:{todo.id} created: {todo.source_note.note.timestamp} - target_start: {todo.target_start_time} - target_end: {todo.target_end_time}: {todo.todo_text}"
 
 
 def get_target_todo_id(action: db.Action):
     client = get_client()
-    action.source_annotation.note  # load the note and annotation
+    action.source_note.note  # load the note and annotation
     client.load_system_message("apply_action_to_todo", action=action.model_dump())
     target_todo_id = 0
     ii = 0
@@ -58,13 +58,13 @@ def create_action(annotation: db.Annotation):
         action = db.Action.create(
             action_text=action_text,
             start_time=start_time,
-            source_annotation_id=annotation.id,
+            source_note_id=annotation.id,
         )
     except TypeError as e:
         raise ValueError(f"Invalid response format: {e}")
     logger.info("action created:\n" + str(action))
     if action:
-        action.source_annotation = annotation
+        action.source_note = annotation
         # see if the action is relevant to any of our incomplete todos
         target_todo_id = get_target_todo_id(action)
         if target_todo_id:

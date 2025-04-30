@@ -1,12 +1,18 @@
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ..config import TIMESTAMP_FORMAT
 from ..util import format_time
 from .connection import get_connection
 
+if TYPE_CHECKING:
+    from .action import Action
+    from .todo import Todo
+    from .command import Command
+    from .curiosity import Curiosity
+    from .annotation import Annotation
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +26,42 @@ class Note(BaseModel):
     note_text: str = Field(..., description="Text of the note")
     processed_note_text: str = Field("", description="The text of the note, as processed by the LLM")
     processing_error: str = Field("", description="Error message if processing failed")
+
+    @property
+    def annotation(self) -> Optional["Annotation"]:
+        """
+        Returns the annotations associated with the note.
+        """
+        from .annotation import Annotation
+        return Annotation.get_by_source_note_id(self.id)
+    @property
+    def actions(self) -> List["Action"]:
+        """
+        Returns the actions associated with the note.
+        """
+        from .action import Action
+        return Action.get_by_source_note_id(self.id)
+    @property
+    def todos(self) -> List["Todo"]:
+        """
+        Returns the todos associated with the note.
+        """
+        from .todo import Todo
+        return Todo.get_by_source_note_id(self.id)
+    @property
+    def commands(self) -> List["Command"]:
+        """
+        Returns the commands associated with the note.
+        """
+        from .command import Command
+        return Command.get_by_source_note_id(self.id)
+    @property
+    def curiosities(self) -> List["Curiosity"]:
+        """
+        Returns the curiosities associated with the note.
+        """
+        from .curiosity import Curiosity
+        return Curiosity.get_by_source_note_id(self.id)
 
     @classmethod
     def ensure_table(cls):

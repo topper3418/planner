@@ -45,7 +45,7 @@ def test_get_command_by_id(first_command):
     assert retrieved_command.command_text == command.command_text
     assert retrieved_command.value_before == command.value_before
     assert retrieved_command.desired_value == command.desired_value
-    assert retrieved_command.source_annotation_id == command.source_annotation_id
+    assert retrieved_command.source_note_id == command.source_annotation_id
     assert retrieved_command.target_id == command.target_id
 
 

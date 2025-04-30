@@ -1,12 +1,12 @@
 import sqlite3
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
 from ..config import TIMESTAMP_FORMAT
 from ..util import format_time, parse_time
-from .annotation import Annotation
+from .note import Note
 from .connection import get_connection
 
 
@@ -21,27 +21,27 @@ class Todo(BaseModel):
     target_start_time: Optional[datetime] = Field(None, description="Target start time of the todo")
     target_end_time: Optional[datetime] = Field(None, description="Target end time of the todo")
     todo_text: str = Field(..., description="Text of the todo")
-    source_annotation_id: int = Field(..., description="ID of the source annotation")
+    source_note_id: int = Field(..., description="ID of the source note")
     complete: bool = Field(False, description="True if the task has been completed")
     cancelled: bool = Field(False, description="True if the task has been cancelled")
 
-    _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
+    _source_note: Optional[Note] = PrivateAttr(default=None)
     @property
-    def source_annotation(self) -> Annotation:
+    def source_note(self) -> Note:
         """
         Returns the note associated with the todo.
         """
-        if self._source_annotation is None:
-            self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
-            if self._source_annotation is None:
-                logger.error(f"Annotation with ID {self.source_annotation_id} not found in the database.")
-                raise ValueError(f"Annotation with ID {self.source_annotation_id} not found in the database.")
-        return self._source_annotation
-    @source_annotation.setter
-    def source_annotation(self, annotation: Annotation):
-        if not annotation.id == self.source_annotation_id:
-            raise ValueError("annotation ID does not match source_note_id")
-        self._source_annotation = annotation
+        if self._source_note is None:
+            self._source_note = Note.get_by_id(self.source_note_id)
+            if self._source_note is None:
+                logger.error(f"Note with ID {self.source_note_id} not found in the database.")
+                raise ValueError(f"Note with ID {self.source_note_id} not found in the database.")
+        return self._source_note
+    @source_note.setter
+    def source_note(self, note: Note):
+        if not note.id == self.source_note_id:
+            raise ValueError("note ID does not match source_note_id")
+        self._source_note = note
 
     @classmethod
     def ensure_table(cls):
@@ -74,7 +74,7 @@ class Todo(BaseModel):
             target_start_time=parse_time(row[1]) if row[1] else None,
             target_end_time=parse_time(row[2]) if row[2] else None,
             todo_text=row[3],
-            source_annotation_id=row[4],
+            source_note_id=row[4],
             complete=bool(row[5]),
             cancelled=bool(row[6]),
         )
@@ -94,18 +94,15 @@ class Todo(BaseModel):
                 return None
 
     @classmethod
-    def get_by_source_annotation_id(cls, source_annotation_id: int) -> Optional["Todo"]:
+    def get_by_source_note_id(cls, source_note_id: int) -> List["Todo"]:
         """
-        Retrieves a Todo instance by its source annotation ID.
+        Retrieves a Todo instance by its source note ID.
         """
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM todos WHERE source_note_id = ?", (source_annotation_id,))
-            row = cursor.fetchone()
-            if row:
-                return cls.from_sqlite_row(row)
-            else:
-                return None
+            cursor.execute("SELECT * FROM todos WHERE source_note_id = ?", (source_note_id,))
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows] if rows else []
 
     def refresh(self) -> "Todo":
         """
@@ -178,7 +175,7 @@ class Todo(BaseModel):
     def create(
             cls, 
             todo_text, 
-            source_annotation_id, 
+            source_note_id, 
             target_start_time: Optional[str | datetime]=None, 
             target_end_time: Optional[str | datetime]=None
     ) -> "Todo":
@@ -189,18 +186,19 @@ class Todo(BaseModel):
             INSERT INTO todos (target_start_time, target_end_time, todo_text, source_note_id)
             VALUES (?, ?, ?, ?);
         '''
+        args = (
+            target_start_time, 
+            target_end_time, 
+            todo_text, 
+            source_note_id
+        )
         if isinstance(target_start_time, datetime):
             target_start_time = format_time(target_start_time)
         if isinstance(target_end_time, datetime):
             target_end_time = format_time(target_end_time)
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (
-                target_start_time, 
-                target_end_time, 
-                todo_text, 
-                source_annotation_id
-            ))
+            cursor.execute(query, args)
             conn.commit()
             last_row_id = cursor.lastrowid
             if last_row_id is None:
@@ -249,8 +247,7 @@ class Todo(BaseModel):
                 todos.complete,
                 todos.cancelled
             FROM todos
-            JOIN annotations on todos.source_note_id = annotations.id 
-            JOIN notes on annotations.note_id = notes.id
+            JOIN notes on todos.source_note_id = notes.id
         '''
         args = []
         # time range stuff
@@ -271,8 +268,8 @@ class Todo(BaseModel):
             query += ' AND (todos.target_start_time > ? OR todos.target_end_time > ? OR notes.timestamp > ?)'
             args.extend([after, after, after])
         if search:
-            query += ' AND (todos.todo_text LIKE ? OR notes.note_text LIKE ? or annotations.annotation_text LIKE ?)'
-            args.extend(['%' + search + '%', '%' + search + '%', '%' + search + '%'])
+            query += ' AND (todos.todo_text LIKE ? OR notes.note_text LIKE ?)'
+            args.extend(['%' + search + '%', '%' + search + '%'])
         # filter by status
         # active means not cancelled or complete
         # cancelled means cancelled

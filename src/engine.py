@@ -29,33 +29,13 @@ def cycle_note_processor():
     return note
 
 
-def cycle_annotation_reprocessor():
-    """
-    This function will cycle through annotations marked for reprocessing one at a time in the database and process them.
-    """
-    annotation = db.Annotation.get_next_reprocess_candidate()
-    if not annotation:
-        logger.debug("No annotations marked for reprocessing found.")
-        return
-    annotation_processor = processor.NoteProcessor(annotation.note)
-    annotation_processor.category = annotation.category
-    annotation_processor.annotation = annotation
-    annotation_processor.process()
-
-    processing_payload = pformat(annotation_processor.to_json())
-    text_file_logger.info(f"Note processing payload:\n{processing_payload}")
-    return annotation
-
-
 def cycle():
     """
     Main function to run the note processor and annotation reprocessor.
     """
     note = cycle_note_processor()
-    annotation = cycle_annotation_reprocessor()
-    if not note and not annotation:
+    if not note:
         return
     return {
         "note": note,
-        "annotation": annotation,
     }

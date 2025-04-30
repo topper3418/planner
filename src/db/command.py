@@ -1,8 +1,8 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
-from .annotation import Annotation
+from .note import Note
 from .connection import get_connection
 
 
@@ -17,26 +17,26 @@ class Command(BaseModel):
     command_text: str = Field(..., description="Text of the command")
     value_before: str = Field(..., description="Value before the command")
     desired_value: str = Field(..., description="Desired value after the command")
-    source_annotation_id: int = Field(..., description="ID of the source annotation")
+    source_note_id: int = Field(..., description="ID of the source note")
     target_id: int = Field(..., description="ID of the target")
 
-    _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
+    _source_note: Optional[Note] = PrivateAttr(default=None)
     @property
-    def source_annotation(self) -> Annotation:
+    def source_note(self) -> Note:
         """
         Returns the note associated with the command.
         """
-        if self._source_annotation is None:
-            self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
-            if self._source_annotation is None:
-                logger.error(f"Annotation with ID {self.source_annotation_id} not found in the database.")
-                raise ValueError(f"Annotation with ID {self.source_annotation_id} not found in the database.")
-        return self._source_annotation
-    @source_annotation.setter
-    def source_annotation(self, annotation: Annotation):
-        if not annotation.id == self.source_annotation_id:
-            raise ValueError("annotation ID does not match source_note_id")
-        self._source_annotation = annotation
+        if self._source_note is None:
+            self._source_note = Note.get_by_id(self.source_note_id)
+            if self._source_note is None:
+                logger.error(f"Note with ID {self.source_note_id} not found in the database.")
+                raise ValueError(f"Note with ID {self.source_note_id} not found in the database.")
+        return self._source_note
+    @source_note.setter
+    def source_note(self, Note: Note):
+        if not Note.id == self.source_note_id:
+            raise ValueError("note ID does not match source_note_id")
+        self._source_note = Note
 
     @classmethod
     def ensure_table(cls):
@@ -49,9 +49,9 @@ class Command(BaseModel):
                 command_text TEXT NOT NULL,
                 value_before TEXT NOT NULL,
                 desired_value TEXT NOT NULL,
-                source_annotation_id INTEGER NOT NULL,
+                source_note_id INTEGER NOT NULL,
                 target_id INTEGER NOT NULL,
-                FOREIGN KEY (source_annotation_id) REFERENCES annotations(id)
+                FOREIGN KEY (source_note_id) REFERENCES note(id)
             );
         '''
         with get_connection() as conn:
@@ -69,7 +69,7 @@ class Command(BaseModel):
             command_text=row[1],
             value_before=row[2],
             desired_value=row[3],
-            source_annotation_id=row[4],
+            source_note_id=row[4],
             target_id=row[5],
         )
 
@@ -90,20 +90,19 @@ class Command(BaseModel):
             return cls.from_sqlite_row(row)
 
     @classmethod
-    def get_by_source_annotation_id(cls, annotation_id: int) -> Optional["Command"]:
+    def get_by_source_note_id(cls, annotation_id: int) -> List["Command"]:
         """
         Retrieves a Command instance by its source annotation ID.
         """
         query = '''
-            SELECT * FROM commands WHERE source_annotation_id = ?
+            SELECT * FROM commands WHERE source_note_id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (annotation_id,))
-            row = cursor.fetchone()
-            if row is None:
-                return None
-            return cls.from_sqlite_row(row)
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows] if rows else []
+            
 
     def refresh(self):
         """
@@ -114,8 +113,8 @@ class Command(BaseModel):
             self.command_text = copy.command_text
             self.value_before = copy.value_before
             self.desired_value = copy.desired_value
-            self.source_annotation_id = copy.source_annotation_id
-            self._source_annotation = None
+            self.source_note_id = copy.source_note_id
+            self._source_note = None
         else:
             logger.error(f"Command with ID {self.id} not found in the database.")
             raise ValueError(f"Command with ID {self.id} not found in the database.")
@@ -126,7 +125,7 @@ class Command(BaseModel):
         """
         query = '''
             UPDATE commands
-            SET command_text = ?, value_before = ?, desired_value = ?, source_annotation_id = ?, target_id = ?
+            SET command_text = ?, value_before = ?, desired_value = ?, source_note_id = ?, target_id = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
@@ -135,7 +134,7 @@ class Command(BaseModel):
                 self.command_text,
                 self.value_before,
                 self.desired_value,
-                self.source_annotation_id,
+                self.source_note_id,
                 self.target_id,
                 self.id
             ))
@@ -147,18 +146,19 @@ class Command(BaseModel):
             command_text: str, 
             value_before: str, 
             desired_value: str, 
-            source_annotation_id: int, 
+            source_note_id: int, 
             target_id: int
     ) -> "Command":
         """
         Creates a new command in the database.
         """
         query = '''
-            INSERT INTO commands (command_text, value_before, desired_value, source_annotation_id, target_id) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO commands (command_text, value_before, desired_value, source_note_id, target_id) VALUES (?, ?, ?, ?, ?)
         '''
+        args = (command_text, value_before, desired_value, source_note_id, target_id)
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (command_text, value_before, desired_value, source_annotation_id, target_id))
+            cursor.execute(query, args)
             conn.commit()
         if cursor.lastrowid is None:
             raise ValueError("Failed to create command")

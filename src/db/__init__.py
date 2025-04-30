@@ -4,11 +4,11 @@ import sqlite3
 from ..config import NOTES_DATABASE_FILEPATH
 
 from .note import Note
-from .category import Category, default_categories
 from .annotation import Annotation
 from .action import Action
 from .todo import Todo
 from .command import Command
+from .curiosity import Curiosity
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 def ensure_tables():
     logger.debug("ensuring tables...")
     Note.ensure_table()
-    Category.ensure_table()
     Annotation.ensure_table()
     Action.ensure_table()
     Todo.ensure_table()
     Command.ensure_table()
+    Curiosity.ensure_table()
     logger.info("tables ensured.")
 
 
@@ -32,26 +32,9 @@ def teardown():
         cursor.execute("DROP TABLE IF EXISTS todos")
         cursor.execute("DROP TABLE IF EXISTS commands")
         cursor.execute("DROP TABLE IF EXISTS annotations")
-        cursor.execute("DROP TABLE IF EXISTS categories")
+        cursor.execute("DROP TABLE IF EXISTS curiosities")
         cursor.execute("DROP TABLE IF EXISTS notes")
         conn.commit()
-
-def ensure_default_categories():
-    logger.debug("ensuring default categories...")
-    for category in default_categories:
-        # Check if the category already exists
-        try:
-            Category.get_by_name(category.name)
-            logger.debug(f"Category '{category.name}' already exists. Skipping insertion.")
-            continue
-        except ValueError:
-            Category.create(
-                category.name,
-                description=category.description,
-                color=category.color,
-            )
-    logger.info("default categories ensured.")
-
 
 def strip_db():
     """
@@ -65,7 +48,7 @@ def strip_db():
         cursor.execute("DROP TABLE IF EXISTS todos")
         cursor.execute("DROP TABLE IF EXISTS commands")
         cursor.execute("DROP TABLE IF EXISTS annotations")
-        cursor.execute("DROP TABLE IF EXISTS categories")
+        cursor.execute("DROP TABLE IF EXISTS curiosities")
         cursor.execute("update notes set processed_note_text = ''")
         conn.commit()
     logger.info("database stripped.")

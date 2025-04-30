@@ -19,7 +19,7 @@ def test_target_first_note(setup_database):
     # Get the first note from the sample notes
     first_note = db.Note.get_all(search="I just woke up")[0]
     assert first_note is not None
-    first_annotation = db.Annotation.get_by_note_id(first_note.id)
+    first_annotation = db.Annotation.get_by_source_note_id(first_note.id)
     assert first_annotation is not None
     assert first_annotation.category.name == "action"
     # Create a command to recategorize the note
@@ -34,7 +34,7 @@ def test_target_first_note(setup_database):
         annotation_text="The user wants to recategorize note with id 1 to the category 'observation'.",
     )
     # make sure the command note is categorized as a command
-    command_annotation = db.Annotation.get_by_note_id(command_note.id)
+    command_annotation = db.Annotation.get_by_source_note_id(command_note.id)
     assert command_annotation is not None
     assert command_annotation.category.name == "command"
     # have it find the target note

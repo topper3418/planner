@@ -49,10 +49,9 @@ def json_action(action: Action) -> dict:
     output_json["action"] = action.model_dump()
     # find the related objects
     todo = Todo.get_by_id(action.todo_id) if action.todo_id else None
-    annotation = action.source_annotation
-    note = annotation.note if annotation else None
+    note = action.source_note
     # attach the related objects to the json
     output_json["todo"] = todo.model_dump() if todo else None
-    output_json["annotation"] = annotation.model_dump() if annotation else None
+    output_json["annotation"] = note.annotation.model_dump() if note.annotation else None
     output_json["note"] = note.model_dump() if note else None
     return output_json

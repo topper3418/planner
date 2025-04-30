@@ -154,7 +154,7 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
         # get the note as a string
         target_dict = target.model_dump()
         if "category" in command_text:
-            note_annotation = db.Annotation.get_by_note_id(target_id)
+            note_annotation = db.Annotation.get_by_source_note_id(target_id)
             if not note_annotation:
                 annotation.note.processing_error = "no target note found"
                 annotation.note.save()
@@ -211,14 +211,14 @@ def create_command(annotation: db.Annotation) -> db.Command | None:
             command_text=command_text,
             value_before=value_before or "",
             desired_value=desired_value or "",
-            source_annotation_id=annotation.id,
+            source_note_id=annotation.id,
             target_id=target_id,
         )
     except TypeError as e:
         raise ValueError(f"Invalid response format: {e}")
     logger.info("command created:\n" + str(command))
     if command:
-        command.source_annotation = annotation
+        command.source_note = annotation
     command.save()
     return command
 

@@ -5,7 +5,7 @@ from openai.types.responses import ToolParam
 # we will import a newly created get_client equivalent, it will just give us the OpenAI client
 from ..llm import get_light_client
 from ..util import NL
-from ..db import Note, Category, Annotation, Action, Todo
+from ..db import Note, Annotation, Action, Todo
 # we will import the various functions and and respective schemas from their files in this directory
 from .annotate_note import annotate_note, get_annotate_note_tool
 from .create_action import create_action, get_create_action_tool
@@ -46,11 +46,10 @@ class NoteProcessor:
     def __init__(self, note: Note):
         self.note = note
         self.client = get_light_client()
-        self.categories = Category.get_all()
         self.context_notes = Note.get_all(limit=25)
         self.context_actions = Action.get_all(limit=25)
         self.context_todos = Todo.get_all(limit=25, complete=False)
-        self.annotate_note_tool = get_annotate_note_tool(self.categories)
+        self.annotate_note_tool = get_annotate_note_tool()
         self.create_action_tool = get_create_action_tool(self.context_todos)
 # we will assign the function schemas to a tools property
         self.annotation_tools: List[ToolParam] = [

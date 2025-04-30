@@ -21,7 +21,7 @@ def test_recategorize_from_action(initial_note):
     # cycle the engine to categorize the note
     engine.cycle()
     # get the annotation for the note
-    annotation = db.Annotation.get_by_note_id(initial_note.id)
+    annotation = db.Annotation.get_by_source_note_id(initial_note.id)
     assert annotation is not None
     # get the action for the annotation
     action = db.Action.find_by_annotation_id(annotation.id)
@@ -42,11 +42,11 @@ def test_recategorize_from_action(initial_note):
         target_id=initial_note.id,
         desired_value="observation",
         value_before="action",
-        source_annotation_id=initial_note.id,
+        source_note_id=initial_note.id,
     )
     processor.route_command(command)
     # Check that the note was recategorized
-    new_annotation = db.Annotation.get_by_note_id(initial_note.id)
+    new_annotation = db.Annotation.get_by_source_note_id(initial_note.id)
     assert new_annotation is not None
     assert new_annotation.category.name == "observation"
     # Check that the original action was deleted

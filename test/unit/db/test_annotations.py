@@ -95,7 +95,7 @@ def test_delete_annotation(sample_annotations):
 def test_get_by_note_id(sample_annotations):
     note, category, annotation = sample_annotations
     # test get by note id
-    fetched_annotation = db.Annotation.get_by_note_id(note.id)
+    fetched_annotation = db.Annotation.get_by_source_note_id(note.id)
     assert fetched_annotation is not None
     assert fetched_annotation.id == annotation.id
     assert fetched_annotation.note_id == note.id

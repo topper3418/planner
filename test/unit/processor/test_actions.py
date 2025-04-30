@@ -25,7 +25,7 @@ def test_create_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_annotation == annotation
+    assert action.source_note == annotation
     assert "gym" in action.action_text
     assert action.start_time == initial_note.timestamp
 
@@ -54,7 +54,7 @@ def test_create_recent_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_annotation == annotation
+    assert action.source_note == annotation
     assert "kitchen" in action.action_text
     assert action.start_time == initial_note.timestamp
     assert "15 minutes" in action.action_text
@@ -83,7 +83,7 @@ def test_create_immediate_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_annotation == annotation
+    assert action.source_note == annotation
     assert "garden" in action.action_text
     assert action.start_time == initial_note.timestamp
     assert "1 hour" in action.action_text
@@ -112,7 +112,7 @@ def test_create_retroactive_action(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_annotation == annotation
+    assert action.source_note == annotation
     assert "kitchen" in action.action_text
     assert "30 minutes" in action.action_text
     assert action.start_time.hour < 12
@@ -141,7 +141,7 @@ def test_create_retroactive_action_2(setup_database):
     # try to create the action
     action = processor.create_action(annotation)
     assert action is not None
-    assert action.source_annotation == annotation
+    assert action.source_note == annotation
     assert "work" in action.action_text.lower()
     assert "out" in action.action_text.lower()
     start_time = action.start_time

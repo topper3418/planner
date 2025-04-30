@@ -10,7 +10,8 @@ from . import (
         config,
         rendering,
         util as utils, 
-        setup_logging
+        setup_logging,
+        categories
 )
 from .bulk_upload import bulk_upload_notes_list
 from .web import rest_server
@@ -26,4 +27,3 @@ logger = logging.getLogger(__name__)
 
 logger.info("Initializing Database")
 db.ensure_tables()
-db.ensure_default_categories()

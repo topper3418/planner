@@ -27,13 +27,13 @@ def create_todo(annotation: db.Annotation):
             todo_text=todo_text,
             target_start_time=response.get('target_start_time'),
             target_end_time=response.get('target_end_time'),
-            source_annotation_id=annotation.id,
+            source_note_id=annotation.id,
         )
     except TypeError as e:
         raise ValueError(f"Invalid response format: {e}")
     logger.info("todo created:\n" + str(todo))
     if todo:
-        todo.source_annotation = annotation
+        todo.source_note = annotation
     todo.save()
     return todo
 

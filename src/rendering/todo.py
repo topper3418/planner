@@ -17,13 +17,13 @@ def strf_todo(todo: Todo) -> str:
         pretty_text += f"\n    {todo.target_start_time} -> *"
     elif todo.target_end_time:
         pretty_text += f"\n    * -> {todo.target_end_time}"
-    created = todo.source_annotation.note.timestamp
+    created = todo.source_note.timestamp
     pretty_text += f"\n    Created: {format_time(created)}"
     if todo.complete:
         # gotta find the completed time
         complete_action = Action.get_by_todo_complete(todo.id)
         if complete_action:
-            pretty_text += f"\n    Completed: {format_time(todo.source_annotation.note.timestamp)}"
+            pretty_text += f"\n    Completed: {format_time(todo.source_note.timestamp)}"
         # TODO: add cancelled time if applicable
     now = datetime.now()
     # color the text based on status
@@ -85,7 +85,7 @@ def json_todo(todo: Todo) -> dict:
     output_json = {}
     output_json["todo"] = todo.model_dump()
     # find the related objects
-    annotation = todo.source_annotation
+    annotation = todo.source_note
     note = annotation.note if annotation else None
     # attach the related objects to the json
     output_json["annotation"] = annotation.model_dump() if annotation else None

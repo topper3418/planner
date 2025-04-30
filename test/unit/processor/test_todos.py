@@ -25,7 +25,7 @@ def test_create_basic_todo(setup_database):
     # try to create the todo
     todo = processor.create_todo(annotation)
     assert todo is not None
-    assert todo.source_annotation == annotation
+    assert todo.source_note == annotation
 
 
 def test_create_open_todo(setup_database):
@@ -48,7 +48,7 @@ def test_create_open_todo(setup_database):
     # try to create the todo
     todo = processor.create_todo(annotation)
     assert todo is not None
-    assert todo.source_annotation == annotation
+    assert todo.source_note == annotation
     assert todo.target_start_time is not None
     assert todo.target_end_time is None
     assert todo.todo_text is not None
@@ -78,7 +78,7 @@ def test_create_full_todo(setup_database):
     # try to create the todo
     todo = processor.create_todo(annotation)
     assert todo is not None
-    assert todo.source_annotation == annotation
+    assert todo.source_note == annotation
     assert todo.target_start_time is not None
     assert todo.target_end_time is not None
     assert todo.todo_text is not None

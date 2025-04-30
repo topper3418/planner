@@ -22,31 +22,31 @@ def sample_todos(refresh_database):
     todos = [
         db.Todo.create(
             todo_text="finish my coding project", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
         db.Todo.create(
             todo_text="talk to the vendor", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
         db.Todo.create(
             todo_text="change the oil in the truck", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
         db.Todo.create(
             todo_text="call my mom", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
         db.Todo.create(
             todo_text="work out today", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
         db.Todo.create(
             todo_text="do laundry", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
         db.Todo.create(
             todo_text="clean the house", 
-            source_annotation_id=ann_id,
+            source_note_id=ann_id,
         ),
     ]
     return todos

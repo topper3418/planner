@@ -6,7 +6,7 @@ from openai.types.responses import ToolParam
 
 
 from ..config import TIMESTAMP_FORMAT
-from ..db import Note, Category, Annotation, Action, Todo
+from ..db import Note, Annotation, Action, Todo
 from ..util import NL
 
 from .find_todo import find_todo
@@ -21,15 +21,11 @@ def create_action(
         todo_id: Optional[int] = None,
         mark_complete: bool = False,
 ) -> Action:
-    # make sure the annotation is for a category
-    category = Category.get_by_id(annotation.category_id)
-    if category.name != 'action':
-        raise ValueError("Annotation is not for an action")
     # if a todo id of 0 is given, return all todos from the past three months and try again.
     action = Action.create(
         start_time=action_timestamp,
         action_text=action_text,
-        source_annotation_id=annotation.id,
+        source_note_id=annotation.id,
     )
     if not todo_id:
         todo_response = find_todo(action)
@@ -50,8 +46,7 @@ def get_create_action_tool(todos: List[Todo]) -> ToolParam:
     return {
         "type": "function",
         "name": "create_action",
-        "description": f"""Create an action, when the user logs an action.
-        """,
+        "description": "Create an action, when the user logs an action.",
         "parameters": {
             "type": "object",
             "properties": {

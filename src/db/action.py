@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field, PrivateAttr, ValidationError
 
 from ..config import TIMESTAMP_FORMAT
 from ..util import parse_time
-from .annotation import Annotation
+from .note import Note
 from .connection import get_connection
 
 
@@ -19,26 +19,26 @@ class Action(BaseModel):
     id: int = Field(..., description="Unique identifier for the action")
     start_time: datetime = Field(..., description="Start time of the action")
     action_text: str = Field(..., description="Text of the action")
-    source_annotation_id: int = Field(..., description="ID of the source annotation")
+    source_note_id: int = Field(..., description="ID of the source note")
     todo_id: Optional[int] = Field(None, description="ID of the todo associated with the action")
     mark_complete: bool = Field(False, description="True if the action marks the todo as complete")
 
-    _source_annotation: Optional[Annotation] = PrivateAttr(default=None)
+    _source_note: Optional[Note] = PrivateAttr(default=None)
     @property
-    def source_annotation(self) -> Annotation:
+    def source_note(self) -> Note:
         """
         Returns the note associated with the action. """
-        if self._source_annotation is None:
-            self._source_annotation = Annotation.get_by_id(self.source_annotation_id)
-            if self._source_annotation is None:
-                logger.error(f"Annotation with ID {self.source_annotation_id} not found in the database.")
-                raise ValueError(f"Annotation with ID {self.source_annotation_id} not found in the database.")
-        return self._source_annotation
-    @source_annotation.setter
-    def source_annotation(self, note: Annotation):
-        if not note.id == self.source_annotation_id:
+        if self._source_note is None:
+            self._source_note = Note.get_by_id(self.source_note_id)
+            if self._source_note is None:
+                logger.error(f"Annotation with ID {self.source_note_id} not found in the database.")
+                raise ValueError(f"Annotation with ID {self.source_note_id} not found in the database.")
+        return self._source_note
+    @source_note.setter
+    def source_note(self, note: Note):
+        if not note.id == self.source_note_id:
             raise ValueError("note ID does not match source_annotation_id")
-        self._source_annotation = note
+        self._source_note = note
 
     @classmethod
     def ensure_table(cls):
@@ -50,10 +50,10 @@ class Action(BaseModel):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
                 action_text TEXT NOT NULL,
-                source_annotation_id INTEGER NOT NULL,
+                source_note_id INTEGER NOT NULL,
                 todo_id INTEGER DEFAULT NULL,
                 mark_complete INTEGER NOT NULL DEFAULT 0,
-                FOREIGN KEY (source_annotation_id) REFERENCES annotations(id),
+                FOREIGN KEY (source_note_id) REFERENCES notes(id),
                 FOREIGN KEY (todo_id) REFERENCES todos(id)
             )
         '''
@@ -71,7 +71,7 @@ class Action(BaseModel):
             id=row[0],
             start_time=parse_time(row[1]),
             action_text=row[2],
-            source_annotation_id=row[3],
+            source_note_id=row[3],
             todo_id=row[4],
             mark_complete=bool(row[5]),
         )
@@ -92,22 +92,18 @@ class Action(BaseModel):
                 return None
 
     @classmethod
-    def get_by_source_annotation_id(cls, annotation_id: int) -> Optional["Action"]:
+    def get_by_source_note_id(cls, note_id: int) -> List["Action"]:
         """
         Retrieves actions by source annotation ID.
         """
         query = '''
-            SELECT * FROM actions WHERE source_annotation_id = ?
+            SELECT * FROM actions WHERE source_note_id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (annotation_id,))
-            row = cursor.fetchone()
-            print(f'fetched row for action by annotation id {annotation_id}', row)
-            if row:
-                return cls.from_sqlite_row(row)
-            else:
-                return None
+            cursor.execute(query, (note_id,))
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows] if rows else []
 
     @classmethod
     def get_by_todo_complete(cls, todo_id: int) -> Optional["Action"]:
@@ -161,7 +157,7 @@ class Action(BaseModel):
             cls, 
             action_text: str, 
             start_time: str | datetime, 
-            source_annotation_id: int, 
+            source_note_id: int, 
             todo_id: Optional[int] = None, 
             mark_complete: bool = False
     ) -> "Action":
@@ -169,7 +165,7 @@ class Action(BaseModel):
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, action_text, source_annotation_id, todo_id, mark_complete)
+            INSERT INTO actions (start_time, action_text, source_note_id, todo_id, mark_complete)
             VALUES (?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
@@ -177,7 +173,7 @@ class Action(BaseModel):
             cursor.execute(query, (
                 start_time if isinstance(start_time, str) else datetime.strftime(start_time, TIMESTAMP_FORMAT),
                 action_text, 
-                source_annotation_id, 
+                source_note_id, 
                 todo_id, 
                 mark_complete
             ))
@@ -190,6 +186,9 @@ class Action(BaseModel):
         except ValidationError as e:
             logger.error(f"Failed to create action: {e}")
             raise
+        if action is None:
+            logger.error(f"Failed to retrieve created action with ID {action_id}.")
+            raise ValueError(f"Failed to retrieve created action with ID {action_id}.")
         return action
 
     def delete(self):

@@ -69,7 +69,7 @@ def test_create_commands(create_notes_for_morning, note_text, expected_command, 
     command = processor.create_command(annotation)
     if note_search != "N/A":
         assert command is not None
-        assert command.source_annotation == annotation
+        assert command.source_note == annotation
         assert command.command_text == expected_command
         assert command.value_before is not None
         assert command.desired_value is not None
@@ -140,7 +140,7 @@ def test_create_commands_2(create_notes_for_afternoon, note_text, expected_comma
             f"Command should not be None for note: {note_text}. "
             f"Expected {expected_command}"
         )
-        assert command.source_annotation == annotation
+        assert command.source_note == annotation
         assert command.command_text == expected_command
         assert command.value_before is not None
         assert command.desired_value is not None
