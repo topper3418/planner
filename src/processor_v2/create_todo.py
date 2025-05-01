@@ -1,13 +1,12 @@
 import logging
-from typing import List, Optional
+from typing import Optional
 
-from openai.types.responses import ToolParam
+from openai.types.responses import FunctionToolParam
 
 
 
 from ..config import TIMESTAMP_FORMAT
-from ..db import Note, Annotation, Action, Todo
-from ..util import NL
+from ..db import Note, Todo
 
 from .find_todo import find_todo
 
@@ -41,12 +40,12 @@ def create_todo(
     return todo
 
 
-def get_create_todo_tool() -> ToolParam:
-    return {
-        "type": "function",
-        "name": "create_todo",
-        "description": "Create a todo, when the user mentions something they need to do but are not intending to do right away.",
-        "parameters": {
+def get_create_todo_tool() -> FunctionToolParam:
+    return FunctionToolParam(
+        type="function",
+        name="create_todo",
+        description="Create a todo, when the user mentions something they need to do but are not intending to do right away.",
+        parameters={
             "type": "object",
             "properties": {
                 "todo_text": {
@@ -67,7 +66,8 @@ def get_create_todo_tool() -> ToolParam:
                 },
             },
             "required": ['todo_text'],
-        }
-    }
+        },
+        strict=True,
+    )
 
 
