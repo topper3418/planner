@@ -1,17 +1,16 @@
 import logging
 from typing import Optional
 
-from openai.types.responses import ToolParam
+from openai.types.responses import FunctionToolParam, ToolParam
 
 
 from ..config import TIMESTAMP_FORMAT
 from ..db import Note, Annotation
-from ..util import NL
 
 logger = logging.getLogger(__name__)
 
 
-def annotate_note(
+def create_annotation(
         note: Note, 
         annotation_text: str,
         processed_note_text: Optional[str],
@@ -33,12 +32,12 @@ def annotate_note(
 
     return annotation
 
-def get_annotate_note_tool() -> ToolParam:
-    return {
-        "type": "function",
-        "name": "annotate_note",
-        "description": "Clean up text for the note",
-        "parameters": {
+def get_create_annotation_tool() -> ToolParam:
+    return FunctionToolParam(
+        type="function",
+        name="create_annotation",
+        description="Clean up text for the note",
+        parameters={
             "type": "object",
             "properties": {
                 "annotation_text": {
@@ -47,9 +46,11 @@ def get_annotate_note_tool() -> ToolParam:
                 },
                 "processed_note_text": {
                     "type": "string",
-                    "description": "Processed note text. Reword the note to be more concise and clear. Do not get creative, if it is already concise and clear and perfect you can leave this one out.",
+                    "description": "Processed note text. Reword the note to be more concise and clear. Do not get creative, if it is already concise and clear and perfect you can leave this one out. Unlike the annotation text, this rewording should be from the perspective of the user",
                 }
             },
             "required": ["annotation_text"],
-        }
-    }
+            "additionalProperties": False,
+        },
+        strict=False,
+    )

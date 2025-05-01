@@ -82,12 +82,16 @@ def json_todo(todo: Todo) -> dict:
     """
     Converts a todo to a json object
     """
+    # extract props for cleanliness
+    note = todo.source_note
+    annotation = note.annotation
+    parent = todo.parent
+    children = todo.children
+    # attach the related objects to the json
     output_json = {}
     output_json["todo"] = todo.model_dump()
-    # find the related objects
-    annotation = todo.source_note
-    note = annotation.note if annotation else None
-    # attach the related objects to the json
-    output_json["annotation"] = annotation.model_dump() if annotation else None
     output_json["note"] = note.model_dump() if note else None
+    output_json["annotation"] = annotation.model_dump() if annotation else None
+    output_json["parent"] = parent.model_dump() if parent else None
+    output_json["children"] = [child.model_dump() for child in children]
     return output_json

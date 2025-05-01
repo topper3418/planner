@@ -43,17 +43,8 @@ def handle_notes():
     limit = request.args.get('limit', default=25, type=int)
     try:
         notes = Note.get_all(before=before, after=after, search=search, limit=limit)
-        annotations = Annotation.get_all(before=before, after=after, search=search, limit=limit)
-        annotations_dict = {annotation.note_id: annotation for annotation in annotations}
         notes.reverse()  # Match CLI behavior
         notes_json = [note.model_dump() for note in notes]
-        # Populate categories
-        for note in notes_json:
-            annotation = annotations_dict.get(note['id'])
-            if annotation:
-                note['category'] = annotation.category.model_dump()
-            else: 
-                note['category'] = {"name": "uncategorized", "description": "", "color": "#000000"}
         return jsonify({'notes': notes_json})
     except Exception as e:
         logger.error(f"Error fetching notes: {e}")

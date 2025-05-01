@@ -17,7 +17,7 @@ class Action(BaseModel):
     Represents an action that the user took
     """
     id: int = Field(..., description="Unique identifier for the action")
-    start_time: datetime = Field(..., description="Start time of the action")
+    timestamp: datetime = Field(..., description="Start time of the action")
     action_text: str = Field(..., description="Text of the action")
     source_note_id: int = Field(..., description="ID of the source note")
     todo_id: Optional[int] = Field(None, description="ID of the todo associated with the action")
@@ -39,6 +39,15 @@ class Action(BaseModel):
         if not note.id == self.source_note_id:
             raise ValueError("note ID does not match source_annotation_id")
         self._source_note = note
+    @property
+    def todo(self) -> Optional["Todo"]:
+        """
+        Returns the todo associated with the action.
+        """
+        if self.todo_id:
+            from .todo import Todo
+            return Todo.get_by_id(self.todo_id)
+        return None
 
     @classmethod
     def ensure_table(cls):
@@ -48,7 +57,7 @@ class Action(BaseModel):
         query = '''
             CREATE TABLE IF NOT EXISTS actions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 action_text TEXT NOT NULL,
                 source_note_id INTEGER NOT NULL,
                 todo_id INTEGER DEFAULT NULL,
@@ -69,7 +78,7 @@ class Action(BaseModel):
         """
         return cls(
             id=row[0],
-            start_time=parse_time(row[1]),
+            timestamp=parse_time(row[1]),
             action_text=row[2],
             source_note_id=row[3],
             todo_id=row[4],
@@ -122,10 +131,24 @@ class Action(BaseModel):
             else:
                 return None
 
+    @classmethod
+    def get_by_todo_id(cls, todo_id: int) -> List["Action"]:
+        """
+        Retrieves actions by todo ID.
+        """
+        query = '''
+            SELECT * FROM actions WHERE todo_id = ?
+        '''
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (todo_id,))
+            rows = cursor.fetchall()
+            return [cls.from_sqlite_row(row) for row in rows] if rows else []
+
     def refresh(self):
         copy = self.get_by_id(self.id)
         if copy:
-            self.start_time = copy.start_time
+            self.timestamp = copy.timestamp
             self.action_text = copy.action_text
             self.todo_id = copy.todo_id
             self.mark_complete = copy.mark_complete
@@ -138,13 +161,13 @@ class Action(BaseModel):
         """
         query = '''
             UPDATE actions
-            SET start_time = ?, action_text = ?, todo_id = ?, mark_complete = ?
+            SET timestamp = ?, action_text = ?, todo_id = ?, mark_complete = ?
             WHERE id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, (
-                datetime.strftime(self.start_time, TIMESTAMP_FORMAT),
+                datetime.strftime(self.timestamp, TIMESTAMP_FORMAT),
                 self.action_text,
                 self.todo_id,
                 int(self.mark_complete),
@@ -165,7 +188,7 @@ class Action(BaseModel):
         Creates a new action in the database.
         """
         query = '''
-            INSERT INTO actions (start_time, action_text, source_note_id, todo_id, mark_complete)
+            INSERT INTO actions (timestamp, action_text, source_note_id, todo_id, mark_complete)
             VALUES (?, ?, ?, ?, ?)
         '''
         with get_connection() as conn:
@@ -232,12 +255,12 @@ class Action(BaseModel):
         params = []
         # build the query dynamically
         if before:
-            query += ' AND start_time < ?'
+            query += ' AND timestamp < ?'
             if isinstance(before, datetime):
                 before = datetime.strftime(before, TIMESTAMP_FORMAT)
             params.append(before)
         if after:
-            query += ' AND start_time > ?'
+            query += ' AND timestamp > ?'
             if isinstance(after, datetime):
                 after = datetime.strftime(after, TIMESTAMP_FORMAT)
             params.append(after)
@@ -251,7 +274,7 @@ class Action(BaseModel):
             else:
                 query += ' AND todo_id IS NULL'
         # apply offset,  limit an order
-        query += ' ORDER BY start_time DESC LIMIT ? OFFSET ?'
+        query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?'
         params.append(limit)
         params.append(offset)
         # run query and return results
@@ -267,7 +290,7 @@ class Action(BaseModel):
         Finds actions by annotation ID.
         """
         query = '''
-            SELECT * FROM actions WHERE source_annotation_id = ?
+            SELECT * FROM actions WHERE source_note_id = ?
         '''
         with get_connection() as conn:
             cursor = conn.cursor()

@@ -1,97 +1,74 @@
 import logging
-import src.db as db
+from typing import List, Optional
 
-from ..llm import get_client
+from openai.types.responses import FunctionToolParam, ToolParam
+
+
+from ..config import TIMESTAMP_FORMAT
+from ..db import Annotation, Action, Todo, Note
+
+from .find_todo import find_todo
 
 logger = logging.getLogger(__name__)
 
 
-def todo_to_str(todo: db.Todo) -> str:
-    return f"ID:{todo.id} created: {todo.source_note.note.timestamp} - target_start: {todo.target_start_time} - target_end: {todo.target_end_time}: {todo.todo_text}"
-
-
-def get_target_todo_id(action: db.Action):
-    client = get_client()
-    action.source_note.note  # load the note and annotation
-    client.load_system_message("apply_action_to_todo", action=action.model_dump())
-    target_todo_id = 0
-    ii = 0
-    inc = 5
-    while int(target_todo_id) == 0:
-        todos = db.Todo.get_incomplete(offset=ii*inc, limit=inc)
-        if not todos:
-            break
-        todos_str = "\n".join([todo_to_str(todo) for todo in todos])
-        logger.info('todos found:\n' + todos_str)
-        response = client.chat(todos_str)
-        logger.info(f"apply action to todo response is:\n{response}")
-        target_todo_id = response.get('target_todo_id')
-        if target_todo_id is None:
-            raise ValueError(f"Target todo ID not found in response: {response}")
-        if not int(target_todo_id):
-            ii += 1
-            logger.info(f"no target todo found, trying again with offset {ii}")
-    return int(target_todo_id)
-
-
-def create_action(annotation: db.Annotation):
-    """
-    Create an action from an annotation.
-    """
-    if annotation.category.name != "action":
-        raise ValueError(f"annotation category is not action: {annotation.category.name}")
-    client = get_client()
-    client.load_system_message("create_action")
-    
-    response = client.chat(annotation.annotation_text)
-    logger.info(f"response is:\n{response}")
-
-    # parse the response
-    action_text = response.get('action_text')
-    if not action_text:
-        raise ValueError(f"Action text not found in response: {response}")
-    start_time = response.get('start_time')
-    if not start_time:
-        raise ValueError(f"Start time not found in response: {response}")
-    todo_action = response.get('todo_action') # optional
-    try:
-        action = db.Action.create(
-            action_text=action_text,
-            start_time=start_time,
-            source_note_id=annotation.id,
-        )
-    except TypeError as e:
-        raise ValueError(f"Invalid response format: {e}")
-    logger.info("action created:\n" + str(action))
-    if action:
-        action.source_note = annotation
-        # see if the action is relevant to any of our incomplete todos
-        target_todo_id = get_target_todo_id(action)
-        if target_todo_id:
-            action.todo_id = target_todo_id
-            todo = db.Todo.get_by_id(target_todo_id)
-            if not todo:
-                note = annotation.note
-                note.processing_error = f"no todo for id {target_todo_id} found for action {action.id}"
-                note.save()
-                raise ValueError(f"Todo with ID {target_todo_id} not found")
-            action.save()
-            if todo_action == "complete":
-                todo.complete = True
-                action.mark_complete = True
-                todo.target_end_time = action.start_time
-            elif todo_action == "begin":
-                todo.target_start_time = action.start_time
-            elif todo_action == "proceed":
-                pass  # no need, just attach it
-            else:
-                raise ValueError(f"Unknown todo action: {todo_action}")
-            todo.save()
-            action.save()
-            logger.info(f"todo found for action {action.id}:\n" + str(todo))
+def create_action(
+        note: Note,
+        action_text: str,
+        action_timestamp: str,
+        todo_id: Optional[int] = None,
+        mark_complete: bool = False,
+) -> Action:
+    # if a todo id of 0 is given, return all todos from the past three months and try again.
+    action = Action.create(
+        start_time=action_timestamp,
+        action_text=action_text,
+        source_note_id=note.id,
+    )
+    if not todo_id:
+        todo_response = find_todo(action)
+        if todo_response is not None:
+            todo, mark_complete = todo_response
+            todo_id = todo.id
         else:
-            logger.info(f"no todo found for action {action.id}")
-
+            return action
+    # if a todo id is given, attach it to the action
+    if todo_id is not None:
+        action.todo_id = todo_id
+        action.mark_complete = mark_complete
+        action.save()
     return action
 
+
+def get_create_action_tool(todos: List[Todo]) -> ToolParam:
+    return FunctionToolParam(
+        type="function",
+        name="create_action",
+        description="Create an action, when the user logs an action.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "action_text": {
+                    "type": "string",
+                    "description": "Text of the aciton. It should read like a logbook",
+                },
+                "action_timestamp": {
+                    "type": "string",
+                    "description": f"Timestamp of the action. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. Use the current time if not specified. If the time specified is in the past, (I did this yesterday, I did that two hours ago, etc), use the timestamp from the note and extrapolate to get a best guess. Do not drop any digits, always show trailing zero's",
+                },
+                "todo_id": {
+                    "type": "integer",
+                    "description": "ID of the todo associated with the action. If specified, use this ID, but only if it appears in the list of todos. If not specified, try to find the todo based on the action text. Do not get creative, the user should try to make it obvious if they are trying to match to a todo and they will log many actions that have nothing to do with their todo list.",
+                    "enum": [todo.id for todo in todos],
+                },
+                "mark_complete": {
+                    "type": "boolean",
+                    "description": "True if the action marks the todo as complete. This is only relevant if a todo_id is specified",
+                },
+            },
+            "required": ["action_text", "action_timestamp"],
+            "additionalProperties": False,
+        },
+        strict=False,
+    )
 

@@ -103,7 +103,7 @@ def test_fetch_action(test_action):
     assert fetched_action is not None
     assert fetched_action.id == action.id
     assert fetched_action.action_text == action.action_text
-    assert fetched_action.start_time == action.start_time
+    assert fetched_action.timestamp == action.start_time
     assert fetched_action.source_note_id == action.source_annotation_id
     # search an action by text
     searched_actions = db.Action.get_all(search="Test action 2")
@@ -116,8 +116,8 @@ def test_fetch_action(test_action):
         before=note3.timestamp,
     )
     assert len(timed_actions) > 0
-    assert all(action.start_time >= note.timestamp for action in timed_actions)
-    assert all(action.start_time <= note3.timestamp for action in timed_actions)
+    assert all(action.timestamp >= note.timestamp for action in timed_actions)
+    assert all(action.timestamp <= note3.timestamp for action in timed_actions)
 
 
 def test_action_delete(test_action):

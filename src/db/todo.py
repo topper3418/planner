@@ -1,12 +1,14 @@
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
 from ..util import format_time, parse_time
 from .note import Note
 from .connection import get_connection
 
+if TYPE_CHECKING:
+    from .action import Action
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,13 @@ class Todo(BaseModel):
         Returns the children todos.
         """
         return Todo.get_by_source_note_id(self.id)
+    @property
+    def actions(self) -> List["Action"]:
+        """
+        Returns the actions associated with the todo.
+        """
+        from .action import Action
+        return Action.get_by_todo_id(self.id)
 
     @classmethod
     def ensure_table(cls):

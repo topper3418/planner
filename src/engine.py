@@ -22,10 +22,10 @@ def cycle_note_processor():
         logger.debug("No unprocessed notes found.")
         return
     note_processor = processor.NoteProcessor(note)
-    note_processor.process()
+    note_processor.process_note()
 
-    processing_payload = pformat(note_processor.to_json())
-    text_file_logger.info(f"Note processing payload:\n{processing_payload}")
+    # processing_payload = pformat(note_processor.to_json())
+    # text_file_logger.info(f"Note processing payload:\n{processing_payload}")
     return note
 
 

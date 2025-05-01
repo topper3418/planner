@@ -18,12 +18,17 @@ def strf_action(action: Action) -> str:
             action_text = colored(action_text, "green")
     else:
         action_text = action.action_text
-    pretty_text = f"[{str(action.id).rjust(4, '0')}] {datetime.strftime(action.start_time, TIMESTAMP_FORMAT)}\n\t{action_text}"
+    pretty_text = f"[{str(action.id).rjust(4, '0')}] {datetime.strftime(action.timestamp, TIMESTAMP_FORMAT)}\n\t{action_text}"
     return pretty_text
 
 
 def strf_action_light(action: Action) -> str:
-    return f"{action.id} - {action.start_time} - {action.action_text}"
+    action_str = f"{action.id} - {action.timestamp} - {action.action_text}"
+    if action.todo and action.mark_complete:
+        action_str += f" -> {action.todo.todo_text} (completed)"
+    elif action.todo:
+        action_str += f" -> {action.todo.todo_text}"
+    return action_str
 
 
 def strf_actions(actions: List[Action]) -> str:
@@ -41,17 +46,19 @@ def strf_actions(actions: List[Action]) -> str:
         pretty_actions += pretty_text + "\n" + "-" * 75 + "\n"     
     return pretty_actions
 
+
 def json_action(action: Action) -> dict:
     """
     Converts an action to a json object
     """
+    # find the related objects
+    todo = action.todo
+    note = action.source_note
+    annotation = note.annotation
+    # attach the related objects to the json
     output_json = {}
     output_json["action"] = action.model_dump()
-    # find the related objects
-    todo = Todo.get_by_id(action.todo_id) if action.todo_id else None
-    note = action.source_note
-    # attach the related objects to the json
     output_json["todo"] = todo.model_dump() if todo else None
-    output_json["annotation"] = note.annotation.model_dump() if note.annotation else None
+    output_json["annotation"] = annotation.model_dump() if annotation else None
     output_json["note"] = note.model_dump() if note else None
     return output_json

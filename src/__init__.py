@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import (
         db, 
-        processor_v2,
+        processor,
         config,
         rendering,
         util as utils, 

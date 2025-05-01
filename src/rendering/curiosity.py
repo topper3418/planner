@@ -1,6 +1,6 @@
 from typing import List
 
-from ..db import Annotation
+from ..db import Annotation, Curiosity
 from ..util import format_paragraph
 
 def strf_curiosity(curiosity: Annotation) -> str:
@@ -26,14 +26,16 @@ def strf_curiosities(curiosities: List[Annotation]) -> str:
     return pretty_curiosities
 
 
-def json_curiosity(curiosity: Annotation) -> dict:
+def json_curiosity(curiosity: Curiosity) -> dict:
     """
     Converts an curiosity to a json object
     """
-    output_json = {}
-    output_json['annotation'] = curiosity.model_dump()
-    # find the related objects
-    note = curiosity.note
+    # extract props for cleanliness
+    note = curiosity.source_note
+    annotation = note.annotation
     # attach the related objects to the json
+    output_json = {}
+    output_json['curiosity'] = curiosity.model_dump()
+    output_json['annotation'] = annotation.model_dump() if annotation else None
     output_json["note"] = note.model_dump() if note else None
     return output_json

@@ -106,7 +106,7 @@ def test_processor(notes):
     assert note_processor.action is not None
     assert note_processor.action.id > 0
     assert note_processor.action.source_note_id == note_processor.annotation.id
-    assert note_processor.action.start_time == initial_note.timestamp
+    assert note_processor.action.timestamp == initial_note.timestamp
     
     # lets do the next note
     second_note = db.Note.get_next_unprocessed_note()
@@ -223,7 +223,7 @@ def test_processor(notes):
     # an action should have been created
     assert note_processor.action is not None
     assert note_processor.action.source_note_id == note_processor.annotation.id
-    assert note_processor.action.start_time == reprocess_note.timestamp
+    assert note_processor.action.timestamp == reprocess_note.timestamp
     # the note was previously categorized as an observation, so nothing to 
     # make sure is deleted
     # lets check and see if that todo was completed
@@ -250,7 +250,7 @@ def test_processor(notes):
     # an action should have been created
     assert note_processor.action is not None
     assert note_processor.action.source_note_id == note_processor.annotation.id
-    assert note_processor.action.start_time == sixth_note.timestamp
+    assert note_processor.action.timestamp == sixth_note.timestamp
 
 
 

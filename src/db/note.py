@@ -76,7 +76,7 @@ class Note(BaseModel):
                 note_text TEXT NOT NULL,
                 processed_note_text TEXT DEFAULT "",
                 processing_error TEXT DEFAULT "",
-                processed INTEGER DEFAULT 0,
+                processed INTEGER DEFAULT 0
             )
         '''
         with get_connection() as conn:

@@ -3,13 +3,27 @@ from openai.types.responses import FunctionToolParam
 from ..db import Note
 
 
-def update_note(note_id: int, note_text: Optional[str], processed_note_text: Optional[str]) -> Optional[Note]:
+# TODO:
+# figure out if this is really necessary, or if just updating the derivative objects is enough
+
+
+def update_note(note_id: int, note_text: str) -> Optional[Note]:
     note = Note.get_by_id(note_id)
     if note is None:
         return None
-    note.note_text = note_text or "";
-    note.processed_note_text = processed_note_text or "";
+    # reset the note
+    note.note_text = note_text;
+    note.processed_note_text = "";
     note.processed = False
+    # remove the derivatives
+    if note.annotation:
+        note.annotation.delete()
+    for action in note.actions:
+        action.delete()
+    for todo in note.todos:
+        todo.delete()
+    for curiosity in note.curiosities:
+        curiosity.delete()
     note.save()
     return note
 
@@ -26,12 +40,13 @@ def get_update_note_tool() -> FunctionToolParam:
                     "type": "integer",
                     "description": "The ID of the note to update.",
                 },
-                "processed_note_text": {
+                "note_text": {
                     "type": "string",
-                    "description": "A new way to have",
+                    "description": "the raw text of the note"
                 },
             },
             "required": ["note_id", "note_text"],
+            "additionalProperties": False,
         },
-        strict=True,
+        strict=True
     )

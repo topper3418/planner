@@ -81,7 +81,7 @@ class Annotation(BaseModel):
         Updates the annotation in the database.
         """
         query = '''
-            UPDATE annotations SET annotation_text = ?, reprocess = ? WHERE id = ?
+            UPDATE annotations SET annotation_text = ? WHERE id = ?
         '''
         args = (self.annotation_text, self.id)
         with get_connection() as conn:

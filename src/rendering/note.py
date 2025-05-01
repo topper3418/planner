@@ -56,7 +56,7 @@ def json_note(note: Note) -> dict:
     output_json["note"] = note.model_dump()
     # find the related objects
     output_json["annotation"] = note.annotation.model_dump() if note.annotation else None
-    output_json["todo"] = [todo.model_dump() for todo in note.todos]
-    output_json["action"] = [action.model_dump() for action in note.actions]
-    output_json["command"] = [command.model_dump() for command in note.commands]
+    output_json["todos"] = [todo.model_dump() for todo in note.todos]
+    output_json["actions"] = [action.model_dump() for action in note.actions]
+    output_json["commands"] = [command.model_dump() for command in note.commands]
     return output_json
