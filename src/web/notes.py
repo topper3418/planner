@@ -3,7 +3,7 @@ from flask import request, jsonify, Blueprint
 
 from ..db import Note, Annotation
 from ..util import parse_time
-from ..rendering import json_note
+from ..rendering import json_note, json_note_light
 
 
 notes_bp = Blueprint('notes', __name__)
@@ -44,7 +44,7 @@ def handle_notes():
     try:
         notes = Note.get_all(before=before, after=after, search=search, limit=limit)
         notes.reverse()  # Match CLI behavior
-        notes_json = [note.model_dump() for note in notes]
+        notes_json = [json_note_light(note) for note in notes]
         return jsonify({'notes': notes_json})
     except Exception as e:
         logger.error(f"Error fetching notes: {e}")

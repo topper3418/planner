@@ -5,7 +5,7 @@ from openai.types.responses import FunctionToolParam, ToolParam
 
 
 from ..config import TIMESTAMP_FORMAT
-from ..db import Annotation, Action, Todo, Note
+from ..db import Action, Todo, Note
 
 from .find_todo import find_todo
 
@@ -25,17 +25,16 @@ def create_action(
         action_text=action_text,
         source_note_id=note.id,
     )
-    if not todo_id:
-        todo_response = find_todo(action)
-        if todo_response is not None:
-            todo, mark_complete = todo_response
-            todo_id = todo.id
-        else:
-            return action
-    # if a todo id is given, attach it to the action
     if todo_id is not None:
+        todo_response = find_todo(action)
+        if todo_response is None:
+            return action
+        todo, mark_complete = todo_response
+        todo_id = todo.id
         action.todo_id = todo_id
         action.mark_complete = mark_complete
+        todo.complete = mark_complete
+        todo.save()
         action.save()
     return action
 
@@ -44,7 +43,7 @@ def get_create_action_tool(todos: List[Todo]) -> ToolParam:
     return FunctionToolParam(
         type="function",
         name="create_action",
-        description="Create an action, when the user logs an action.",
+        description="Create an action, derived from the user's note when applicable. For instance, if they indicate that they just did something, or are about to start doing something, that is an action.",
         parameters={
             "type": "object",
             "properties": {

@@ -13,10 +13,13 @@ from ..util import NL
 logger = logging.getLogger(__name__)
 
 
-def find_todo(input_obj: Command | Action | Todo) -> Optional[Tuple[Todo, bool]]:
+def find_todo(input_obj: Command | Action | Todo, exclude_todo_id: Optional[int] = None) -> Optional[Tuple[Todo, bool]]:
     client = get_light_client()
     one_month_ago = datetime.now() - timedelta(days=30)
     todos = Todo.get_all(after=one_month_ago)
+    # filter out the todo with the exclude_todo_id
+    if exclude_todo_id is not None:
+        todos = [todo for todo in todos if todo.id != exclude_todo_id]
     tools: List[ToolParam] = [get_find_todo_tool(todos)]
     tool_response_json = client.responses.create(
         model="gpt-4.1",

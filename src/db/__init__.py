@@ -49,6 +49,6 @@ def strip_db():
         cursor.execute("DROP TABLE IF EXISTS commands")
         cursor.execute("DROP TABLE IF EXISTS annotations")
         cursor.execute("DROP TABLE IF EXISTS curiosities")
-        cursor.execute("update notes set processed_note_text = ''")
+        cursor.execute("update notes set processed_note_text = '', processing_error = '', processed = 0")
         conn.commit()
     logger.info("database stripped.")

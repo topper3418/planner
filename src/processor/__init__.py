@@ -23,7 +23,11 @@ logger = logging.getLogger(__name__)
 
 # moving this to outside of the class for unit testing purposes
 annotation_system_prompt_template = """
-You are a world class note taking assistant. The user will create notes throughout the day. You will be fed the notes one at a time, and be tasked with processing them.
+You are a world class note taking assistant. The user will create notes throughout the day. You will be fed the notes one at a time, and be tasked with processing them. Your main job is to 
+ - log any actions the user takes along with a precise timestamp as to when they took the actions
+ - log any todos the user creates along with timestamps for when they intend to start and finish, when included in the users notes
+ - provide short insights into things the user wonders about (curiosities)
+ - finally, the user might ask you to modify an entry in their notebook, so you will be provided the tools to do so.
 
 For context, you will be given a chunk of the most recent notes, actions, and todos from past annotations.
 
@@ -46,9 +50,9 @@ class NoteProcessor:
         self.note = note
         self.client = get_light_client()
         # load context
-        self.context_notes = Note.get_all(limit=25)
-        self.context_actions = Action.get_all(limit=25)
-        self.context_todos = Todo.get_all(limit=25, complete=False)
+        self.context_notes = Note.get_all(limit=25, before=self.note.timestamp)
+        self.context_actions = Action.get_all(limit=25, before=self.note.timestamp)
+        self.context_todos = Todo.get_all(limit=25, complete=False, before=self.note.timestamp)
         # load tools
         self.create_annotation_tool = get_create_annotation_tool()
         self.create_action_tool = get_create_action_tool(self.context_todos)
@@ -80,7 +84,7 @@ class NoteProcessor:
     def process_note(self):
 # 1a. the chatbot will be presented with tooling to categorize, annotate, and create spinoff objects
         response = self.client.responses.create(
-            model="gpt-4.1",
+            model="gpt-3.5-turbo",
             instructions=self.annotation_system_prompt,
             input=self.note.model_dump_json(),
             tools=self.annotation_tools,

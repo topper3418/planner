@@ -60,3 +60,14 @@ def json_note(note: Note) -> dict:
     output_json["actions"] = [action.model_dump() for action in note.actions]
     output_json["commands"] = [command.model_dump() for command in note.commands]
     return output_json
+
+
+def json_note_light(note: Note) -> dict:
+    """
+    Converts a note to a json object
+    """
+    note_json = note.model_dump()
+    # find the related objects
+    note_json["num_todos"] = note.num_todos
+    note_json["num_actions"] = note.num_actions
+    return note_json

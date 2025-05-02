@@ -131,6 +131,63 @@ class Todo(BaseModel):
             rows = cursor.fetchall()
             return [cls.from_sqlite_row(row) for row in rows] if rows else []
 
+    @classmethod
+    def count(
+            cls,
+            complete: Optional[bool] = None,
+            cancelled: Optional[bool] = None, 
+            active: Optional[bool] = None,
+            source_note_id: Optional[int] = None,
+            parent_id: Optional[int] = None,
+            before: Optional[datetime | str] = None,
+            after: Optional[datetime | str] = None,
+    ) -> int:
+        """
+        Counts the number of Todo instances in the database.
+        """
+        query = '''
+            SELECT COUNT(*) FROM todos
+            JOIN notes on todos.source_note_id = notes.id
+            WHERE 1=1
+        '''
+        args = []
+        if complete is not None:
+            query += ' AND complete = ?'
+            args.append(complete)
+        if cancelled is not None:
+            query += ' AND cancelled = ?'
+            args.append(cancelled)
+        if active is not None:
+            query += ' AND (cancelled <> ? AND complete <> ?)'
+            args.append(active)
+            args.append(active)
+        if source_note_id is not None:
+            query += ' AND source_note_id = ?'
+            args.append(source_note_id)
+        if parent_id is not None:
+            query += ' AND parent_id = ?'
+            args.append(parent_id)
+        if before or after:
+            query += ''
+            if isinstance(before, datetime):
+                before = format_time(before)
+            if isinstance(after, datetime):
+                after = format_time(after)
+        if before and after:
+            query += ' AND (todos.target_start_time BETWEEN ? AND ? OR todos.target_end_time BETWEEN ? AND ? OR notes.timestamp BETWEEN ? AND ?)'
+            args.extend([before, after, before, after, before, after])
+        elif before:
+            query += ' AND (todos.target_start_time < ? OR todos.target_end_time < ? OR notes.timestamp < ?)'
+            args.extend([before, before, before])
+        elif after:
+            query += ' AND (todos.target_start_time > ? OR todos.target_end_time > ? OR notes.timestamp > ?)'
+            args.extend([after, after, after])
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, args)
+            count = cursor.fetchone()[0]
+            return count
+
     def refresh(self) -> "Todo":
         """
         Refreshes the Todo instance by reloading it from the database.

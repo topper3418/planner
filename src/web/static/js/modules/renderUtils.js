@@ -127,7 +127,18 @@ export function renderNote(note) {
     item.addEventListener('click', () => fetchAndRenderDetails('notes', note.id));
     item.querySelector('.note-id').textContent = `[${String(note.id).padStart(4, '0')}]`;
     item.querySelector('.note-timestamp').textContent = formatDateTime(note.timestamp);
-    item.querySelector('.note-category').textContent = note.category ? note.category.name : 'Uncategorized';
+    if (note.processed) {
+        item.querySelector('.note-unprocessed').textContent = "";
+        let statusText = "";
+        console.log('rendering note:', note);
+        if (note.num_actions) statusText += `Actions: ${note.num_actions}`;
+        if (note.num_todos) statusText += `${statusText ? ' | ' : ''}Todos: ${note.num_todos}`;
+        if (!note.num_todos && !note.num_actions) statusText = "Note";
+        item.querySelector('.note-processed').textContent = statusText;
+    } else {
+        item.querySelector('.note-processed').textContent = "";
+        item.querySelector('.note-unprocessed').textContent = "Unprocessed";
+    }
     if (note.processing_error) {
         const errorDiv = item.querySelector('.note-error');
         errorDiv.textContent = `Error: ${note.processing_error}`;
@@ -186,7 +197,7 @@ export function renderAction(action) {
     }
     item.classList.add(action.mark_complete ? 'text-green-500' : 'text-gray-800');
     item.querySelector('.action-id').textContent = `[${String(action.id).padStart(4, '0')}]`;
-    item.querySelector('.action-timestamp').textContent = formatDateTime(action.start_time);
+    item.querySelector('.action-timestamp').textContent = formatDateTime(action.timestamp);
     item.querySelector('.action-text-content').textContent = actionText;
     return item;
 }

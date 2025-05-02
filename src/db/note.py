@@ -43,12 +43,26 @@ class Note(BaseModel):
         from .action import Action
         return Action.get_by_source_note_id(self.id)
     @property
+    def num_actions(self) -> int:
+        """
+        Returns the number of actions associated with the note.
+        """
+        from .action import Action
+        return Action.count(source_note_id=self.id)
+    @property
     def todos(self) -> List["Todo"]:
         """
         Returns the todos associated with the note.
         """
         from .todo import Todo
         return Todo.get_by_source_note_id(self.id)
+    @property
+    def num_todos(self) -> int:
+        """
+        Returns the number of todos associated with the note.
+        """
+        from .todo import Todo
+        return Todo.count(source_note_id=self.id)
     @property
     def commands(self) -> List["Command"]:
         """

@@ -28,7 +28,7 @@ def create_todo(
         source_note_id=note.id,
     )
     if parent_id == 0:
-        todo_response = find_todo(todo)
+        todo_response = find_todo(todo, exclude_todo_id=todo.id)
         if todo_response is not None:
             todo, _ = todo_response
             todo.parent_id = todo.id
@@ -44,7 +44,7 @@ def get_create_todo_tool(todos: List[Todo]) -> FunctionToolParam:
     return FunctionToolParam(
         type="function",
         name="create_todo",
-        description="Create a todo, when the user mentions something they need to do but are not intending to do right away.",
+        description="Create a todo, when the user mentions something they need to do but are not intending to do right away. If they say they need to do something or they plan to do something at a future time, that is a todo.",
         parameters={
             "type": "object",
             "properties": {
@@ -54,11 +54,11 @@ def get_create_todo_tool(todos: List[Todo]) -> FunctionToolParam:
                 },
                 "target_start_time": {
                     "type": "string",
-                    "description": f"Timestamp of the todo. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. This is relevant when the user mentions what time they want to start a task. I need to do this at noon. Tomorrow at this time I have to do that. Use the current time of the note to extrapolate to a best guess for time."
+                    "description": f"Planned time for the start of the task. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. This is relevant when the user mentions what time they want to start a task. I need to do this at noon. Tomorrow at this time I have to do that. Use the current time of the note to extrapolate to a best guess for time. This is an optional field so do not give a start time unless the user specifies one.",
                 },
                 "target_end_time": {
                     "type": "string",
-                    "description": f"Timestamp of the todo. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. This is relevant when the user mentions what time they want to finish a task. I need to have this done by noon. I need to have that done by tomorrow at 3. Use the current time of the note to extrapolate to a best guess for time."
+                    "description": f"Planned time for the end of the task. It should conform to the format {TIMESTAMP_FORMAT}. If specified, use the time given in the note. This is relevant when the user mentions what time they want to finish a task. I need to have this done by noon. I need to have that done by tomorrow at 3. Use the current time of the note to extrapolate to a best guess for time. This is an optional field so do not give a completion time unless the user specifies one.",
                 },
                 "parent_id": {
                     "type": "integer",

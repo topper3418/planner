@@ -115,6 +115,42 @@ class Action(BaseModel):
             return [cls.from_sqlite_row(row) for row in rows] if rows else []
 
     @classmethod
+    def count(
+            cls, 
+            source_note_id: Optional[int]=None,
+            todo_id: Optional[int]=None,
+            before: Optional[str | datetime]=None,
+            after: Optional[str | datetime]=None,
+    ):
+        """
+        Counts the number of actions in the database.
+        """
+        query = '''
+            SELECT COUNT(*) FROM actions WHERE 1=1
+        '''
+        params = []
+        if source_note_id:
+            query += ' AND source_note_id = ?'
+            params.append(source_note_id)
+        if todo_id:
+            query += ' AND todo_id = ?'
+            params.append(todo_id)
+        if before:
+            query += ' AND timestamp < ?'
+            if isinstance(before, datetime):
+                before = datetime.strftime(before, TIMESTAMP_FORMAT)
+            params.append(before)
+        if after:
+            query += ' AND timestamp > ?'
+            if isinstance(after, datetime):
+                after = datetime.strftime(after, TIMESTAMP_FORMAT)
+            params.append(after)
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            return cursor.fetchone()[0]
+
+    @classmethod
     def get_by_todo_complete(cls, todo_id: int) -> Optional["Action"]:
         """
         Retrieves actions by todo ID and completion status.
