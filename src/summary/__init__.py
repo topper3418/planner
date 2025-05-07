@@ -1,13 +1,13 @@
 from datetime import datetime
-import logging
 from typing import Tuple
 
+from ..logging import get_logger
 from ..llm import get_client
 from ..rendering import strf_notes
 from ..db import Note
 from ..util import format_time
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'summary.log')
 
 
 def get_summary(prompt: str) -> Tuple[str, str]:

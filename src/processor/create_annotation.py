@@ -6,8 +6,9 @@ from openai.types.responses import FunctionToolParam, ToolParam
 
 from ..config import TIMESTAMP_FORMAT
 from ..db import Note, Annotation
+from ..logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'processor.log')
 
 
 def create_annotation(

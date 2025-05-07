@@ -3,7 +3,9 @@ from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 from pydantic import BaseModel, Field
 
+
 from ..config import TIMESTAMP_FORMAT
+from ..logging import get_logger
 from ..util import format_time
 from .connection import get_connection
 
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
     from .curiosity import Curiosity
     from .annotation import Annotation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Note(BaseModel):

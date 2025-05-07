@@ -1,7 +1,8 @@
 from enum import Enum
-import logging
 
-logger = logging.getLogger(__name__)
+from ..logging import get_logger
+
+logger = get_logger(__name__, 'llm.log')
 
 class Role(Enum):
     SYSTEM = 'system'

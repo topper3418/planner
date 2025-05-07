@@ -1,16 +1,14 @@
-import logging
 from typing import List, Optional
 
 from openai.types.responses import FunctionToolParam
 
-
-
 from ..config import TIMESTAMP_FORMAT
 from ..db import Note, Todo
+from ..logging import get_logger
 
 from .find_todo import find_todo
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'processor.log')
 
 
 def create_todo(

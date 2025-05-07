@@ -1,12 +1,13 @@
 import logging
 from flask import request, jsonify, Blueprint
 
+from ..logging import get_logger
 from ..db import Curiosity
 from ..rendering import json_curiosity
 
 
 curiosities_bp = Blueprint('curiosities', __name__)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @curiosities_bp.get('/')

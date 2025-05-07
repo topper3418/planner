@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import List, Optional
-import logging
 
 from pydantic import BaseModel, Field, PrivateAttr
 
 from .note import Note
 from .connection import get_connection
 from ..util import format_time
+from ..logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Annotation(BaseModel):

@@ -1,12 +1,13 @@
 import logging
 from flask import request, jsonify, Blueprint
 
+from ..logging import get_logger
 from ..db import Todo
 from ..rendering import json_todo
 
 
 todos_bp = Blueprint('todos', __name__)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @todos_bp.get('/')

@@ -1,12 +1,13 @@
-import logging
 from typing import List, Optional
 from pydantic import BaseModel, Field, PrivateAttr
+
+from ..logging import get_logger
 
 from .note import Note
 from .connection import get_connection
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Command(BaseModel):

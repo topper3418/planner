@@ -1,16 +1,8 @@
-import logging
 from pprint import pformat
 
-from src import db, processor
+from src import db, processor, logging
 
-logger = logging.getLogger(__name__)
-text_file_logger = logging.getLogger("text_file_logger")
-text_file_logger.setLevel(logging.INFO)
-text_file_handler = logging.FileHandler("engine.log")
-text_file_handler.setLevel(logging.INFO)
-text_file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-text_file_handler.setFormatter(text_file_formatter)
-text_file_logger.addHandler(text_file_handler)
+logger = logging.get_logger(__name__)
 
 
 def cycle_note_processor():

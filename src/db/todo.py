@@ -1,16 +1,17 @@
-import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, Field, PrivateAttr
 
+
 from ..util import format_time, parse_time
+from ..logging import get_logger
 from .note import Note
 from .connection import get_connection
 
 if TYPE_CHECKING:
     from .action import Action
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Todo(BaseModel):

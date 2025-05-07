@@ -1,15 +1,15 @@
-import logging
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, PrivateAttr, ValidationError
 
 from ..config import TIMESTAMP_FORMAT
+from ..logging import get_logger
 from ..util import parse_time
 from .note import Note
 from .connection import get_connection
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Action(BaseModel):

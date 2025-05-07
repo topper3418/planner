@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template, request, Blueprint
 
+from ..logging import get_logger
 from ..db import Note, Action, Todo, Annotation
 from ..summary import get_summary
 from ..setup_logging import setup_normal_logging
@@ -10,11 +11,8 @@ from .todos import todos_bp
 from .actions import actions_bp
 from .curiosities import curiosities_bp
 
-import logging
 
-setup_normal_logging()
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 rest_server = Flask(__name__)
 
 logger.debug

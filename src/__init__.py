@@ -15,6 +15,7 @@ from . import (
 from .bulk_upload import bulk_upload_notes_list
 from .web import rest_server
 from .summary import get_summary
+from .logging import get_logger
 
 
 # both the data and log directories are created if they do not exist

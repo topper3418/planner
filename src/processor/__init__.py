@@ -2,12 +2,14 @@ import json
 import logging
 from pprint import pformat
 from typing import List
-from openai.types.responses import ToolParam 
+from openai.types.responses import ToolParam
+
 # we will import a newly created get_client equivalent, it will just give us the OpenAI client
 from ..llm import get_light_client
 from ..util import NL
 from ..db import Note, Annotation, Action, Todo
 from ..rendering import strf_action_light, strf_todo_light, strf_note_light
+from ..logging import get_logger 
 # we will import the various functions and and respective schemas from their files in this directory
 from .create_annotation import create_annotation, get_create_annotation_tool
 from .create_action import create_action, get_create_action_tool
@@ -19,7 +21,7 @@ from .update_todo import update_todo, get_update_todo_tool
 from .update_action import update_action, get_update_action_tool
 # we will define a processor class
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'processor.log')
 
 # moving this to outside of the class for unit testing purposes
 annotation_system_prompt_template = """

@@ -6,10 +6,11 @@ from openai.types.responses import FunctionToolParam, ToolParam
 
 from ..config import TIMESTAMP_FORMAT
 from ..db import Action, Todo, Note
+from ..logging import get_logger
 
 from .find_todo import find_todo
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'processor.log')
 
 
 def create_action(

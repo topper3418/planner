@@ -1,13 +1,10 @@
-import logging
-
 from openai.types.responses import FunctionToolParam, ToolParam
 
-
-
 from ..db import Note, Curiosity
+from ..logging import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, 'processor.log')
 
 
 def create_curiosity(

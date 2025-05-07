@@ -2,13 +2,14 @@ import logging
 import os
 from openai import OpenAI
 
+from ..logging import get_logger
 from ..config import CHAT_SERVICE
 
 from .grok import GrokChatClient
 from .openAI import OpenAIChatClient
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 logger.setLevel(logging.INFO)
 
 
