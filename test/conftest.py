@@ -26,8 +26,49 @@ def setup_database(mock_sqlite3_connect):
     # SETUP: ensure tables are created
     db.ensure_tables()
 
+
 @pytest.fixture
-def refresh_database():
+def refresh_database(setup_database):
     db.teardown()
     db.ensure_tables()
 
+
+@pytest.fixture
+def sample_todos(refresh_database):
+    first_note = db.Note.create("Placeholder")
+    first_annotation = db.Annotation.create(
+        note_id=first_note.id,
+        annotation_text="This is a test annotation",
+    )
+    ann_id = first_annotation.id
+    todos = [
+        db.Todo.create(
+            todo_text="finish my coding project", 
+            source_note_id=ann_id,
+        ),
+        db.Todo.create(
+            todo_text="talk to the vendor", 
+            source_note_id=ann_id,
+        ),
+        db.Todo.create(
+            todo_text="change the oil in the truck", 
+            source_note_id=ann_id,
+        ),
+        db.Todo.create(
+            todo_text="call my mom", 
+            source_note_id=ann_id,
+        ),
+        db.Todo.create(
+            todo_text="work out today", 
+            source_note_id=ann_id,
+        ),
+        db.Todo.create(
+            todo_text="do laundry", 
+            source_note_id=ann_id,
+        ),
+        db.Todo.create(
+            todo_text="clean the house", 
+            source_note_id=ann_id,
+        ),
+    ]
+    return todos

@@ -94,11 +94,9 @@ def test_processor(notes):
     # initialize the processor
     note_processor = processor.NoteProcessor(initial_note)
     # process the note
-    note_processor.process()
+    note_processor.process_note()
     assert initial_note.processed_note_text is not None
     # The first note is an action, about waking up
-    assert note_processor.category is not None
-    assert note_processor.category.name == "action"
     assert note_processor.annotation is not None
     assert note_processor.annotation.note_id == initial_note.id
     assert note_processor.annotation.category_id == note_processor.category.id

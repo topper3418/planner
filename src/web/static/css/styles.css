@@ -49,3 +49,13 @@ button[aria-pressed="true"] {
     background-color: #ffffff; /* White background on focus */
     color: #1f2937; /* Tailwind gray-900 */
 }
+pre {
+    background-color: #f4f4f4;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre-wrap;
+    max-width: 600px;
+    margin: 20px auto;
+    overflow-x: auto;
+}

@@ -21,13 +21,13 @@ def update_todo(
     if todo is None:
         raise ValueError(f"Todo with id {todo_id} not found")
     # Update the todo
-    if todo_text is not None:
+    if todo_text:
         todo.todo_text = todo_text
-    if target_start_time is not None:
+    if target_start_time:
         todo.target_start_time = parse_time(target_start_time)
-    if target_end_time is not None:
+    if target_end_time:
         todo.target_end_time = parse_time(target_end_time)
-    if parent_id is not None:
+    if parent_id:
         todo.parent_id = parent_id
     if complete is not None:
         todo.complete = complete
@@ -74,9 +74,9 @@ def get_update_todo_tool() -> FunctionToolParam:
                     "description": "Whether the todo is cancelled. The todo either wants to mark it cancelled if its marked incomplete, or mark it incomplete if its marked complete.",
                 },
             },
-            'required': ["todo_id"],
+            'required': ["todo_id", "todo_text", "target_start_time", "target_end_time", "parent_id", "complete", "cancelled"],
             "additionalProperties": False,
         },
-        strict=False
+        strict=True
     )
 

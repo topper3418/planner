@@ -36,7 +36,7 @@ def get_create_annotation_tool() -> ToolParam:
     return FunctionToolParam(
         type="function",
         name="create_annotation",
-        description="Clean up text for the note",
+        description="Clean up text for the note. This function should be called exactly once per note.",
         parameters={
             "type": "object",
             "properties": {
@@ -46,11 +46,11 @@ def get_create_annotation_tool() -> ToolParam:
                 },
                 "processed_note_text": {
                     "type": "string",
-                    "description": "Processed note text. Reword the note to be more concise and clear. Do not get creative, if it is already concise and clear and perfect you can leave this one out. Unlike the annotation text, this rewording should be from the perspective of the user",
+                    "description": "Processed note text. Reword the note to be more concise and clear. Do not get creative, if it is already concise and clear and perfect you can leave this one out and give an empty string. Unlike the annotation text, this rewording should be from the perspective of the user",
                 }
             },
-            "required": ["annotation_text"],
+            "required": ["annotation_text", "processed_note_text"],
             "additionalProperties": False,
         },
-        strict=False,
+        strict=True,
     )

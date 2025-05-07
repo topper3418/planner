@@ -24,10 +24,13 @@ logger = logging.getLogger(__name__)
 # moving this to outside of the class for unit testing purposes
 annotation_system_prompt_template = """
 You are a world class note taking assistant. The user will create notes throughout the day. You will be fed the notes one at a time, and be tasked with processing them. Your main job is to 
- - log any actions the user takes along with a precise timestamp as to when they took the actions
- - log any todos the user creates along with timestamps for when they intend to start and finish, when included in the users notes
+ - log any actions the user takes along with a precise timestamp as to when they took the actions, using the create_action tool.
+ - log any todos the user creates along with timestamps for when they intend to start and finish, when included in the users notes, using the create_todo tool. 
+ - Feel free to create as many actions or todos as necessary based on the user's note and the surrounding context. If their note contains two actions, call the create action twice. if their note contains two separate things they need to get done, create two todos.
+ Additionally,
  - provide short insights into things the user wonders about (curiosities)
- - finally, the user might ask you to modify an entry in their notebook, so you will be provided the tools to do so.
+ - the user might ask you to modify an entry in their notebook, so you will be provided the tools to do so.
+ - You may have to guess a bit with timestamps. Use the current timestamp provided in the user's note as context to get the full date.
 
 For context, you will be given a chunk of the most recent notes, actions, and todos from past annotations.
 
@@ -89,6 +92,7 @@ class NoteProcessor:
             input=self.note.model_dump_json(),
             tools=self.annotation_tools,
         )
+        logger.info(f"Response: {response}")
         for tool_response in response.output:
             tool_response_json = tool_response.model_dump()
             logger.info(f"Tool response: {tool_response_json}")

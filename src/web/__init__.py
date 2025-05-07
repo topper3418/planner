@@ -17,6 +17,8 @@ setup_normal_logging()
 logger = logging.getLogger(__name__)
 rest_server = Flask(__name__)
 
+logger.debug
+
 
 @rest_server.route('/')
 def index():

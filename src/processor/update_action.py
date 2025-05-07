@@ -20,11 +20,11 @@ def update_action(
     if action is None:
         raise ValueError(f"Action with id {action_id} not found")
     # Update the action
-    if action_text is not None:
+    if action_text:
         action.action_text = action_text
-    if timestamp is not None:
+    if timestamp:
         action.timestamp = parse_time(timestamp)
-    if todo_id is not None:
+    if todo_id:
         action.todo_id = todo_id
         if mark_complete is not None:
             action.mark_complete = mark_complete
@@ -52,23 +52,23 @@ def get_update_action_tool() -> FunctionToolParam:
                 },
                 "action_text": {
                     "type": "string",
-                    "description": "The text of the action.",
+                    "description": "The text of the action. Only update if the user has specified a new action text.",
                 },
                 "timestamp": {
                     "type": "string",
-                    "description": "The timestamp of the action.",
+                    "description": "The timestamp of the action. Only update if the user has specified a new timestamp.",
                 },
                 "todo_id": {
                     "type": "integer",
-                    "description": "The ID of the todo that the action is acting upon.",
+                    "description": "The ID of the todo that the action is acting upon. Only update if the user has specified a new todo ID.",
                 },
                 "mark_complete": {
                     "type": "boolean",
-                    "description": "Whether the action completes the todo",
+                    "description": "Whether the action completes the todo. Only update if the user has specified a new mark_complete value.",
                 },
             },
-            'required': ['action_id'],
+            'required': ['action_id', 'action_text', 'timestamp', 'todo_id', 'mark_complete'],
             "additionalProperties": False,
         },
-        strict=False,
+        strict=True,
     )
