@@ -9,7 +9,6 @@ from . import (
         config,
         rendering,
         util as utils, 
-        categories
 )
 from .bulk_upload import bulk_upload_notes_list
 from .web import rest_server

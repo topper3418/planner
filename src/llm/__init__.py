@@ -43,5 +43,11 @@ def get_light_client() -> OpenAI:
     elif CHAT_SERVICE == "openai":
         logger.info("Using OpenAI")
         return OpenAI()
+    elif CHAT_SERVICE == "ollama":
+        logger.info("Using Ollama")
+        return OpenAI(
+            base_url="http://localhost:11434/v1",  # Default Ollama local endpoint
+            api_key="ollama"  # Ollama doesn't require a real API key, using dummy value
+        )
     else:
         raise ValueError(f"Unsupported chat service: {CHAT_SERVICE}")

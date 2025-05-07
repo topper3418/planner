@@ -1,10 +1,7 @@
 from flask import Flask, jsonify, render_template, request, Blueprint
 
 from ..logging import get_logger
-from ..db import Note, Action, Todo, Annotation
 from ..summary import get_summary
-from ..setup_logging import setup_normal_logging
-from ..util import parse_time
 
 from .notes import notes_bp
 from .todos import todos_bp

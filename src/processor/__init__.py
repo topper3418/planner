@@ -4,6 +4,8 @@ from pprint import pformat
 from typing import List
 from openai.types.responses import ToolParam
 
+from src.config import CHAT_MODEL
+
 # we will import a newly created get_client equivalent, it will just give us the OpenAI client
 from ..llm import get_light_client
 from ..util import NL
@@ -22,6 +24,7 @@ from .update_action import update_action, get_update_action_tool
 # we will define a processor class
 
 logger = get_logger(__name__, 'processor.log')
+logger.setLevel(logging.DEBUG)
 
 # moving this to outside of the class for unit testing purposes
 annotation_system_prompt_template = """
@@ -76,7 +79,6 @@ class NoteProcessor:
             self.update_todo_tool,
             self.update_action_tool,
         ]
-        logger.info(f"Tools:\n{pformat(self.annotation_tools)}")
         logger.info(f"Generated system prompt with {len(self.context_notes)} notes, {len(self.context_actions)} actions, and {len(self.context_todos)} todos.")
 # 1. pass the raw note to a chatbot along with the last two hours (or 25, whichever is more), open todos, and actions from the past two hours
         self.annotation_system_prompt = annotation_system_prompt_template.format(
@@ -89,15 +91,15 @@ class NoteProcessor:
     def process_note(self):
 # 1a. the chatbot will be presented with tooling to categorize, annotate, and create spinoff objects
         response = self.client.responses.create(
-            model="gpt-3.5-turbo",
+            model=CHAT_MODEL,
             instructions=self.annotation_system_prompt,
             input=self.note.model_dump_json(),
             tools=self.annotation_tools,
         )
-        logger.info(f"Response: {response}")
+        logger.info(f"Response:\n{pformat([item.model_dump() for item in response.output])}")
         for tool_response in response.output:
             tool_response_json = tool_response.model_dump()
-            logger.info(f"Tool response: {tool_response_json}")
+            logger.info(f"Tool response:\n{pformat(tool_response_json)}")
             # get the tool name
             tool_name = tool_response_json.get("name")
             if not tool_name:
