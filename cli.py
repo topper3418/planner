@@ -1,10 +1,7 @@
 import argparse
 import time
 
-from src import db, rendering, engine, get_summary, setup_logging, utils
-
-
-setup_logging.setup_normal_logging()
+from src import db, rendering, engine, get_summary, utils
 
 
 def add_date_filters(parser):
