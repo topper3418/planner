@@ -33,7 +33,7 @@ def strf_action_light(action: Action) -> str:
 
 def strf_actions(actions: List[Action]) -> str:
     """
-    Pretty prints an action like: 
+    Pretty prints an action like:
 
     2023-04-12 06:00:00 - 2023-04-12 06:00:00
         action-text
@@ -43,7 +43,7 @@ def strf_actions(actions: List[Action]) -> str:
     pretty_actions = ""
     for action in actions:
         pretty_text = strf_action(action)
-        pretty_actions += pretty_text + "\n" + "-" * 75 + "\n"     
+        pretty_actions += pretty_text + "\n" + "-" * 75 + "\n"
     return pretty_actions
 
 
@@ -54,11 +54,9 @@ def json_action(action: Action) -> dict:
     # find the related objects
     todo = action.todo
     note = action.source_note
-    annotation = note.annotation
     # attach the related objects to the json
     output_json = {}
     output_json["action"] = action.model_dump()
     output_json["todo"] = todo.model_dump() if todo else None
-    output_json["annotation"] = annotation.model_dump() if annotation else None
     output_json["note"] = note.model_dump() if note else None
     return output_json

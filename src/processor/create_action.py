@@ -1,4 +1,3 @@
-import logging
 from typing import List, Optional
 
 from openai.types.responses import FunctionToolParam, ToolParam
@@ -10,15 +9,15 @@ from ..logging import get_logger
 
 from .find_todo import find_todo
 
-logger = get_logger(__name__, 'processor.log')
+logger = get_logger(__name__, "processor.log")
 
 
 def create_action(
-        note: Note,
-        action_text: str,
-        action_timestamp: str,
-        todo_id: Optional[int] = None,
-        mark_complete: bool = False,
+    note: Note,
+    action_text: str,
+    action_timestamp: str,
+    todo_id: Optional[int] = None,
+    mark_complete: bool = False,
 ) -> Action:
     # if a todo id of 0 is given, return all todos from the past three months and try again.
     action = Action.create(
@@ -35,9 +34,11 @@ def create_action(
     elif todo_id:
         todo = Todo.get_by_id(todo_id)
         if todo is None:
-            logger.warning("Todo with ID %s not found in the database.", todo_id)
+            logger.warning(
+                "Todo with ID %s not found in the database.", todo_id
+            )
             return action
-    else: 
+    else:
         return action
     action.todo_id = todo_id
     action.mark_complete = mark_complete
@@ -77,9 +78,13 @@ def get_create_action_tool(todos: List[Todo]) -> ToolParam:
                     "description": "True if the action marks the todo as complete. This is only relevant if a todo_id is specified",
                 },
             },
-            "required": ["action_text", "action_timestamp", "todo_id", "mark_complete"],
+            "required": [
+                "action_text",
+                "action_timestamp",
+                "todo_id",
+                "mark_complete",
+            ],
             "additionalProperties": False,
         },
         strict=True,
     )
-

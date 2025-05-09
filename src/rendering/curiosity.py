@@ -1,16 +1,17 @@
 from typing import List
 
-from ..db import Annotation, Curiosity
+from ..db import Curiosity
 from ..util import format_paragraph
 
-def strf_curiosity(curiosity: Annotation) -> str:
-    pretty_text = f"{curiosity.note.timestamp}\n{format_paragraph(curiosity.note.note_text, indents=0)}\n{format_paragraph(curiosity.annotation_text)}"
+
+def strf_curiosity(curiosity: Curiosity) -> str:
+    pretty_text = f"{curiosity.source_note.timestamp}\n{format_paragraph(curiosity.source_note.note_text, indents=0)}\n{format_paragraph(curiosity.curiosity_text, indents=1)}"
     return pretty_text
 
 
-def strf_curiosities(curiosities: List[Annotation]) -> str:
+def strf_curiosities(curiosities: List[Curiosity]) -> str:
     """
-    Pretty prints an observation like: 
+    Pretty prints an observation like:
 
     2023-04-12
     original-note
@@ -32,10 +33,8 @@ def json_curiosity(curiosity: Curiosity) -> dict:
     """
     # extract props for cleanliness
     note = curiosity.source_note
-    annotation = note.annotation
     # attach the related objects to the json
     output_json = {}
-    output_json['curiosity'] = curiosity.model_dump()
-    output_json['annotation'] = annotation.model_dump() if annotation else None
+    output_json["curiosity"] = curiosity.model_dump()
     output_json["note"] = note.model_dump() if note else None
     return output_json

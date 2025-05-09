@@ -1,4 +1,3 @@
-import logging
 import json
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
@@ -6,7 +5,7 @@ from typing import List, Optional, Tuple
 from openai.types.responses import FunctionToolParam, ToolParam
 
 from ..logging import get_logger
-from ..db import CRUD, Action, Todo
+from ..db import ToolCall, Action, Todo
 from ..llm import get_light_client
 from ..rendering import strf_todo_light
 from ..util import NL
@@ -15,7 +14,7 @@ logger = get_logger(__name__)
 
 
 def find_todo(
-    input_obj: CRUD | Action | Todo,
+    input_obj: ToolCall | Action | Todo,
     exclude_todo_id: Optional[int] = None,
     include_mark_complete: bool = True,
 ) -> Optional[Tuple[Todo, bool]]:

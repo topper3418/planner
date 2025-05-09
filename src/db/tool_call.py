@@ -17,9 +17,6 @@ class ToolCall(BaseModel):
 
     id: int = Field(..., description="Unique identifier for the tool call")
     source_note_id: int = Field(..., description="ID of the source note")
-    error_text: str = Field(
-        ..., description="Error message if the tool call fails in some way"
-    )
     target_table: str = Field(
         ..., description="name of table of the object being modified"
     )
@@ -67,7 +64,6 @@ class ToolCall(BaseModel):
             CREATE TABLE IF NOT EXISTS tool_calls (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 source_note_id INTEGER NOT NULL,
-                error_text TEXT,
                 target_table TEXT NOT NULL,
                 target_id INTEGER NOT NULL,
                 target TEXT,
@@ -88,11 +84,10 @@ class ToolCall(BaseModel):
         return cls(
             id=row[0],
             source_note_id=row[1],
-            error_text=row[2],
-            target_table=row[3],
-            target_id=row[4],
-            target=row[5],
-            tool_call=row[6],
+            target_table=row[2],
+            target_id=row[3],
+            target=row[4],
+            tool_call=row[5],
         )
 
     @classmethod
@@ -152,7 +147,6 @@ class ToolCall(BaseModel):
         copy = self.get_by_id(self.id)
         if copy:
             self.source_note_id = copy.source_note_id
-            self.error_text = copy.error_text
             self.target_table = copy.target_table
             self.target_id = copy.target_id
             self.target = copy.target
@@ -171,12 +165,11 @@ class ToolCall(BaseModel):
         """
         query = """
             UPDATE tool_calls
-            SET source_note_id = ?, error_text = ?, target_table = ?, target_id = ?, target = ?, tool_call = ?
+            SET source_note_id = ?, target_table = ?, target_id = ?, target = ?, tool_call = ?
             WHERE id = ?
         """
         args = (
             self.source_note_id,
-            self.error_text,
             self.target_table,
             self.target_id,
             self.target,
@@ -192,27 +185,26 @@ class ToolCall(BaseModel):
     def create(
         cls,
         source_note_id: int,
-        error_text: str,
         target_table: str,
+        target_id: int,
         target: Optional[str] = None,
-        target_id: Optional[int] = None,
         tool_call: str = "",
     ) -> "ToolCall":
         """
         Creates a new tool call instance and saves it to the database.
         """
         query = """
-            INSERT INTO tool_calls (source_note_id, error_text, target_table, target_id, target, tool_call)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO tool_calls (source_note_id, target_table, target_id, target, tool_call)
+            VALUES (?, ?, ?, ?, ?)
         """
         args = (
             source_note_id,
-            error_text,
             target_table,
-            target,
             target_id,
+            target,
             tool_call,
         )
+        logger.info(f"creating tool call with args: {args}")
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, args)
@@ -227,8 +219,8 @@ class ToolCall(BaseModel):
             return cls(
                 id=cursor.lastrowid,
                 source_note_id=source_note_id,
-                error_text=error_text,
                 target_table=target_table,
+                target_id=target_id,
                 target=target,
                 tool_call=tool_call,
             )

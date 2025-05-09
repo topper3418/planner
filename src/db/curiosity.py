@@ -211,17 +211,17 @@ class Curiosity(BaseModel):
         if before:
             if isinstance(before, datetime):
                 before = format_time(before)
-            query += " AND notes.created_at < ?"
+            query += " AND notes.timestamp < ?"
             args.append(before)
         if after:
             if isinstance(after, datetime):
                 after = format_time(after)
-            query += " AND notes.created_at > ?"
+            query += " AND notes.timestamp > ?"
             args.append(after)
         if search:
             query += " AND curiosities.curiosity_text LIKE ?"
             args.append(f"%{search}%")
-        query += " ORDER BY notes.created_at DESC"
+        query += " ORDER BY notes.timestamp DESC"
         query += " LIMIT ? OFFSET ?"
         args.append(limit)
         args.append(offset)

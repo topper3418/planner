@@ -1,59 +1,59 @@
-import logging
 from flask import request, jsonify, Blueprint
 
 
 from ..logging import get_logger
-from ..db import Note, Annotation
+from ..db import Note
 from ..util import parse_time
 from ..rendering import json_note, json_note_light
 
 
-notes_bp = Blueprint('notes', __name__)
+notes_bp = Blueprint("notes", __name__)
 logger = get_logger(__name__)
 
 
-@notes_bp.post('/')
+@notes_bp.post("/")
 def create_note():
     """
     Create a new note.
     """
     payload = request.get_json()
     if not payload:
-        return jsonify({'error': 'Invalid data'}), 400
+        return jsonify({"error": "Invalid data"}), 400
 
-    data = payload.get('data')
+    data = payload.get("data")
     if not data:
-        return jsonify({'error': 'No data provided'}), 400
+        return jsonify({"error": "No data provided"}), 400
 
-    note_text = data.get('note')
+    note_text = data.get("note")
     if not note_text:
-        return jsonify({'error': 'No note provided'}), 400
+        return jsonify({"error": "No note provided"}), 400
 
-
-    note= Note.create(note_text)
+    note = Note.create(note_text)
     return jsonify(note.model_dump()), 201
 
 
-@notes_bp.get('/')
+@notes_bp.get("/")
 def handle_notes():
     # get args
-    before_str = request.args.get('endTime')
+    before_str = request.args.get("endTime")
     before = parse_time(before_str) if before_str else None
-    after_str = request.args.get('startTime')
-    after =  parse_time(after_str) if after_str else None
-    search = request.args.get('search')
-    limit = request.args.get('limit', default=25, type=int)
+    after_str = request.args.get("startTime")
+    after = parse_time(after_str) if after_str else None
+    search = request.args.get("search")
+    limit = request.args.get("limit", default=25, type=int)
     try:
-        notes = Note.get_all(before=before, after=after, search=search, limit=limit)
+        notes = Note.get_all(
+            before=before, after=after, search=search, limit=limit
+        )
         notes.reverse()  # Match CLI behavior
         notes_json = [json_note_light(note) for note in notes]
-        return jsonify({'notes': notes_json})
+        return jsonify({"notes": notes_json})
     except Exception as e:
         logger.error(f"Error fetching notes: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-@notes_bp.get('/<int:note_id>')
+@notes_bp.get("/<int:note_id>")
 def get_note_details(note_id):
     """
     Get details of a specific note.
@@ -61,9 +61,9 @@ def get_note_details(note_id):
     try:
         note = Note.get_by_id(note_id)
         if note is None:
-            return jsonify({'error': 'Note not found'}), 404
+            return jsonify({"error": "Note not found"}), 404
         details = json_note(note)
-        return jsonify({'data': details})
+        return jsonify({"data": details})
     except Exception as e:
         logger.error(f"Error fetching note details: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500

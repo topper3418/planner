@@ -1,23 +1,26 @@
-from typing import Optional
 from openai.types.responses import FunctionToolParam
 from ..db import Note
+from ..logging import get_logger
 
+
+logger = get_logger(__name__)
 
 # TODO:
 # figure out if this is really necessary, or if just updating the derivative objects is enough
 
 
-def update_note(note_id: int, note_text: str) -> Optional[Note]:
+def update_note(note_id: int, note_text: str) -> Note:
     note = Note.get_by_id(note_id)
     if note is None:
-        return None
+        logger.error(f"Note with ID {note_id} not found in the database.")
+        raise ValueError(
+            f"Note with ID {note_id} not found in the database."
+        )
     # reset the note
-    note.note_text = note_text;
-    note.processed_note_text = "";
+    note.note_text = note_text
+    note.processed_note_text = ""
     note.processed = False
     # remove the derivatives
-    if note.annotation:
-        note.annotation.delete()
     for action in note.actions:
         action.delete()
     for todo in note.todos:
@@ -42,11 +45,11 @@ def get_update_note_tool() -> FunctionToolParam:
                 },
                 "note_text": {
                     "type": "string",
-                    "description": "the raw text of the note"
+                    "description": "the raw text of the note",
                 },
             },
             "required": ["note_id", "note_text"],
             "additionalProperties": False,
         },
-        strict=True
+        strict=True,
     )

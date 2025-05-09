@@ -4,7 +4,7 @@ from ..db import Note, Curiosity
 from ..logging import get_logger
 
 
-logger = get_logger(__name__, 'processor.log')
+logger = get_logger(__name__, "processor.log")
 
 
 def create_curiosity(
