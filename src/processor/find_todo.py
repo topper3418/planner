@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from openai.types.responses import FunctionToolParam, ToolParam
 
 from ..logging import get_logger
-from ..db import Command, Action, Todo  
+from ..db import CRUD, Action, Todo
 from ..llm import get_light_client
 from ..rendering import strf_todo_light
 from ..util import NL
@@ -14,14 +14,20 @@ from ..util import NL
 logger = get_logger(__name__)
 
 
-def find_todo(input_obj: Command | Action | Todo, exclude_todo_id: Optional[int] = None, include_mark_complete: bool=True) -> Optional[Tuple[Todo, bool]]:
+def find_todo(
+    input_obj: CRUD | Action | Todo,
+    exclude_todo_id: Optional[int] = None,
+    include_mark_complete: bool = True,
+) -> Optional[Tuple[Todo, bool]]:
     client = get_light_client()
     one_month_ago = datetime.now() - timedelta(days=30)
     todos = Todo.get_all(after=one_month_ago)
     # filter out the todo with the exclude_todo_id
     if exclude_todo_id is not None:
         todos = [todo for todo in todos if todo.id != exclude_todo_id]
-    tools: List[ToolParam] = [get_find_todo_tool(todos, include_mark_complete)]
+    tools: List[ToolParam] = [
+        get_find_todo_tool(todos, include_mark_complete)
+    ]
     tool_response_json = client.responses.create(
         model="gpt-4.1",
         instructions=f"""You are a master notetaking assistant. Your assignment is to match a command, action or child task to a todo.
@@ -30,11 +36,11 @@ def find_todo(input_obj: Command | Action | Todo, exclude_todo_id: Optional[int]
 
         {NL.join(strf_todo_light(todo) for todo in todos)}""",
         input=input_obj.model_dump_json(),
-        tools=tools
+        tools=tools,
     )
     # get the first tool response
     if len(tool_response_json.output) == 0:
-        return None 
+        return None
     tool_response = tool_response_json.output[0]
     tool_response_json = tool_response.model_dump()
     args = tool_response_json.get("arguments")
@@ -47,7 +53,9 @@ def find_todo(input_obj: Command | Action | Todo, exclude_todo_id: Optional[int]
         return None
     todo = Todo.get_by_id(todo_id)
     if todo is None:
-        logger.warning("Todo with ID %s not found in the database.", todo_id)
+        logger.warning(
+            "Todo with ID %s not found in the database.", todo_id
+        )
         return None
     mark_complete = args.get("mark_complete")
     if mark_complete is None:
@@ -55,7 +63,9 @@ def find_todo(input_obj: Command | Action | Todo, exclude_todo_id: Optional[int]
     return todo, mark_complete
 
 
-def get_find_todo_tool(todos: List[Todo], include_mark_complete: bool=True) -> ToolParam:
+def get_find_todo_tool(
+    todos: List[Todo], include_mark_complete: bool = True
+) -> ToolParam:
     params = {
         "type": "object",
         "properties": {
@@ -85,4 +95,3 @@ def get_find_todo_tool(todos: List[Todo], include_mark_complete: bool=True) -> T
         parameters=params,
         strict=True,
     )
-    

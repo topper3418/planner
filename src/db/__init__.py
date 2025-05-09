@@ -4,10 +4,9 @@ import sqlite3
 from ..config import NOTES_DATABASE_FILEPATH
 
 from .note import Note
-from .annotation import Annotation
 from .action import Action
 from .todo import Todo
-from .command import Command
+from .tool_call import ToolCall
 from .curiosity import Curiosity
 
 logger = logging.getLogger(__name__)
@@ -16,10 +15,9 @@ logger = logging.getLogger(__name__)
 def ensure_tables():
     logger.debug("ensuring tables...")
     Note.ensure_table()
-    Annotation.ensure_table()
     Action.ensure_table()
     Todo.ensure_table()
-    Command.ensure_table()
+    ToolCall.ensure_table()
     Curiosity.ensure_table()
     logger.info("tables ensured.")
 
@@ -30,11 +28,11 @@ def teardown():
         # Drop all tables
         cursor.execute("DROP TABLE IF EXISTS actions")
         cursor.execute("DROP TABLE IF EXISTS todos")
-        cursor.execute("DROP TABLE IF EXISTS commands")
-        cursor.execute("DROP TABLE IF EXISTS annotations")
+        cursor.execute("DROP TABLE IF EXISTS tool_calls")
         cursor.execute("DROP TABLE IF EXISTS curiosities")
         cursor.execute("DROP TABLE IF EXISTS notes")
         conn.commit()
+
 
 def strip_db():
     """
@@ -46,9 +44,10 @@ def strip_db():
         # Drop all tables except for notes
         cursor.execute("DROP TABLE IF EXISTS actions")
         cursor.execute("DROP TABLE IF EXISTS todos")
-        cursor.execute("DROP TABLE IF EXISTS commands")
-        cursor.execute("DROP TABLE IF EXISTS annotations")
+        cursor.execute("DROP TABLE IF EXISTS tool_calls")
         cursor.execute("DROP TABLE IF EXISTS curiosities")
-        cursor.execute("update notes set processed_note_text = '', processing_error = '', processed = 0")
+        cursor.execute(
+            "update notes set processed_note_text = '', processing_error = '', processed = 0"
+        )
         conn.commit()
     logger.info("database stripped.")
