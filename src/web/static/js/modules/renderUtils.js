@@ -2,6 +2,10 @@ import { fetchDetails } from "./api.js";
 
 
 export function formatParagraph(text, width = 75, indents = 1) {
+    if (typeof text !== 'string') {
+        console.error('Invalid text type:', typeof text);
+        return '';
+    }
     const space = width - 8 * indents;
     let prettyText = '';
     if (text.length > space) {
@@ -155,7 +159,7 @@ export function renderCuriosity(curiosity) {
     item.addEventListener('click', () => fetchAndRenderDetails('curiosities', curiosity.id));
     item.querySelector('.curiosity-timestamp').textContent = formatDateTime(curiosity.note.timestamp);
     item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
-    item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);
+    item.querySelector('.curiosity-text').textContent = formatParagraph(curiosity.curiosity_text, 75, 1);
     return item;
 }
 
