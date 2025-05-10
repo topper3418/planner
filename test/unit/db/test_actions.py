@@ -9,7 +9,7 @@ def test_action(setup_database):
         "I just woke up",
         timestamp="2023-04-12 12:00:00",
     )
-    category = db.Category.find_by_name("action")
+    category = db.Category.get_by_name("action")
     annotation = db.Annotation.create(
         note.id,
         category.id,
@@ -18,7 +18,7 @@ def test_action(setup_database):
     action = db.Action.create(
         "Test action",
         start_time=note.timestamp,
-        source_annotation_id=annotation.id,
+        source_note_id=annotation.id,
     )
     return note, category, annotation, action
 
@@ -66,7 +66,7 @@ def test_fetch_action(test_action):
         "I just woke up again",
         timestamp="2023-04-12 13:00:00",
     )
-    category2 = db.Category.find_by_name("action")
+    category2 = db.Category.get_by_name("action")
     annotation2 = db.Annotation.create(
         note2.id,
         category2.id,
@@ -75,14 +75,14 @@ def test_fetch_action(test_action):
     action2 = db.Action.create(
         "Test action 2",
         start_time=note2.timestamp,
-        source_annotation_id=annotation2.id,
+        source_note_id=annotation2.id,
     )
     # make one more set
     note3 = db.Note.create(
         "I just woke up again and again",
         timestamp="2023-04-12 14:00:00",
     )
-    category3 = db.Category.find_by_name("action")
+    category3 = db.Category.get_by_name("action")
     annotation3 = db.Annotation.create(
         note3.id,
         category3.id,
@@ -91,7 +91,7 @@ def test_fetch_action(test_action):
     action3 = db.Action.create(
         "Test action 3",
         start_time=note3.timestamp,
-        source_annotation_id=annotation3.id,
+        source_note_id=annotation3.id,
     )
     # fetch all actions
     all_actions = db.Action.get_all()
@@ -103,8 +103,8 @@ def test_fetch_action(test_action):
     assert fetched_action is not None
     assert fetched_action.id == action.id
     assert fetched_action.action_text == action.action_text
-    assert fetched_action.start_time == action.start_time
-    assert fetched_action.source_annotation_id == action.source_annotation_id
+    assert fetched_action.timestamp == action.start_time
+    assert fetched_action.source_note_id == action.source_annotation_id
     # search an action by text
     searched_actions = db.Action.get_all(search="Test action 2")
     assert len(searched_actions) > 0
@@ -116,8 +116,8 @@ def test_fetch_action(test_action):
         before=note3.timestamp,
     )
     assert len(timed_actions) > 0
-    assert all(action.start_time >= note.timestamp for action in timed_actions)
-    assert all(action.start_time <= note3.timestamp for action in timed_actions)
+    assert all(action.timestamp >= note.timestamp for action in timed_actions)
+    assert all(action.timestamp <= note3.timestamp for action in timed_actions)
 
 
 def test_action_delete(test_action):
@@ -126,7 +126,7 @@ def test_action_delete(test_action):
     todo = db.Todo.create(
         "Test todo",
         target_end_time=note.timestamp,
-        source_annotation_id=annotation.id,
+        source_note_id=annotation.id,
     )
     action.todo_id = todo.id
     action.mark_complete = True

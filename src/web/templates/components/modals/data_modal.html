@@ -1,69 +1,11 @@
 <div id="data-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" role="dialog" aria-labelledby="data-modal-title" aria-modal="true">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative overflow-auto max-h-500">
         <button id="data-modal-close-button" aria-label="Close Data View Modal" class="absolute top-2 left-2 text-gray-600 hover:text-gray-800 focus:ring-2 focus:ring-blue-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
         <h2 id="data-modal-title" class="text-lg font-bold mb-4 ml-8">Trace Data</h2>
-        <div class="text-sm text-gray-800">
-            <!-- Notes Section -->
-            <div id="note-modal-data" class="mb-4">
-                <h3 class="text-md font-medium text-gray-700 mb-2">Note</h3>
-                <div class="bg-gray-100 p-2 rounded-md shadow-sm">
-                    <p><span class="font-medium">ID:</span> <span id="note-id"></span></p>
-                    <p><span class="font-medium">Timestamp:</span> <span id="note-timestamp"></span></p>
-                    <p><span class="font-medium">Note Text:</span> <span id="note-text"></span></p>
-                    <p><span class="font-medium">Processed Note Text:</span> <span id="note-processed-text"></span></p>
-                    <p><span class="font-medium">Processing Error:</span> <span id="note-error"></span></p>
-                </div>
-            </div>
-            <!-- Annotations Section -->
-            <div id="annotation-modal-data" class="mb-4">
-                <h3 class="text-md font-medium text-gray-700 mb-2">Annotation</h3>
-                <div class="bg-gray-100 p-2 rounded-md shadow-sm">
-                    <p><span class="font-medium">ID:</span> <span id="annotation-id"></span></p>
-                    <p><span class="font-medium">Note ID:</span> <span id="annotation-note-id"></span></p>
-                    <p><span class="font-medium">Category ID:</span> <span id="annotation-category-id"></span></p>
-                    <p><span class="font-medium">Annotation Text:</span> <span id="annotation-text"></span></p>
-                </div>
-            </div>
-            <!-- Todos Section -->
-            <div id="todo-modal-data" class="mb-4">
-                <h3 class="text-md font-medium text-gray-700 mb-2">Todo</h3>
-                <div class="bg-gray-100 p-2 rounded-md shadow-sm">
-                    <p><span class="font-medium">ID:</span> <span id="todo-id"></span></p>
-                    <p><span class="font-medium">Start Time:</span> <span id="todo-start-time"></span></p>
-                    <p><span class="font-medium">End Time:</span> <span id="todo-end-time"></span></p>
-                    <p><span class="font-medium">Todo Text:</span> <span id="todo-text"></span></p>
-                    <p><span class="font-medium">Source Annotation ID:</span> <span id="todo-source-note-id"></span></p>
-                    <p><span class="font-medium">Complete:</span> <span id="todo-complete"></span></p>
-                    <p><span class="font-medium">Cancelled:</span> <span id="todo-cancelled"></span></p>
-                </div>
-            </div>
-            <!-- Actions Section -->
-            <div id="action-modal-data" class="mb-4">
-                <h3 class="text-md font-medium text-gray-700 mb-2">Action</h3>
-                <div class="bg-gray-100 p-2 rounded-md shadow-sm">
-                    <p><span class="font-medium">ID:</span> <span id="action-id"></span></p>
-                    <p><span class="font-medium">Start Time:</span> <span id="action-start-time"></span></p>
-                    <p><span class="font-medium">Action Text:</span> <span id="action-text"></span></p>
-                    <p><span class="font-medium">Source Annotation ID:</span> <span id="action-source-annotation-id"></span></p>
-                    <p><span class="font-medium">Todo ID:</span> <span id="action-todo-id"></span></p>
-                    <p><span class="font-medium">Mark Complete:</span> <span id="action-mark-complete"></span></p>
-                </div>
-            </div>
-            <div id="command-modal-data" class="mb-4">
-                <h3 class="text-md font-medium text-gray-700 mb-2">Command</h3>
-                <div class="bg-gray-100 p-2 rounded-md shadow-sm">
-                    <p><span class="font-medium">ID:</span> <span id="command-id"></span></p>
-                    <p><span class="font-medium">Command Text:</span> <span id="command-text"></span></p>
-                    <p><span class="font-medium">Value Before:</span> <span id="command-value-before"></span></p>
-                    <p><span class="font-medium">Desired Value:</span> <span id="command-desired-value"></span></p>
-                    <p><span class="font-medium">Source Annotation ID:</span> <span id="command-source-annotation-id"></span></p>
-                    <p><span class="font-medium">Target ID:</span> <span id="command-target-id"></span></p>
-                </div>
-            </div>
-        </div>
+        <pre id="data-modal-content"></pre>
     </div>
 </div>

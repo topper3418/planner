@@ -1,6 +1,8 @@
 import pytest
+import json
 
-from src import db, processor
+from src import db, processor_v2 as processor, llm
+from src.processor_v2.annotate_note import get_annotate_note_tool, annotate_note
 
 
 notes_categories = {
@@ -49,47 +51,42 @@ test_cases = [
     for note in notes
 ]
 
-@pytest.fixture
-def refresh_database():
-    db.teardown()
-    db.ensure_tables()
-    db.ensure_default_categories()
+client = llm.get_light_client()
+categories = db.Category.get_all()
 
 @pytest.mark.parametrize("expected_category,note_text", test_cases)
 def test_categorize_notes(refresh_database, expected_category, note_text):
     note = db.Note.create(note_text)
-    category = processor.categorize_note(note)
-    assert category is not None, f"Category should not be None for note: {note_text}"
-    assert category.name == expected_category, (
-        f"Failed to categorize note: {note_text}. "
-        f"Expected {expected_category}, got {category.name}"
+    response = client.responses.create(
+        model="gpt-4.1",
+        instructions=processor.annotation_system_prompt_template.format(
+            notes="no notes found",
+            actions="no actions found",
+            todos="no todos found",
+        ),
+        input=note.model_dump_json(),
+        tools=[get_annotate_note_tool(categories)]
     )
-#
-# def test_categorize_notes(setup_database):
-#     # create a test note to work with
-#     for category_name, notes in notes_categories.items():
-#         success_obj = {
-#             "success": 0,
-#             "fail": 0
-#         }
-#         success_rate = {
-#             "action": success_obj.copy(),
-#             "todo": success_obj.copy(),
-#             "curiosity": success_obj.copy(),
-#             "observation": success_obj.copy(),
-#             "command": success_obj.copy()
-#         }
-#         for note_text in notes:
-#             note = db.Note.create(note_text)
-#             category = processor.categorize_note(note)
-#             assert category is not None
-#             if category.name == category_name:
-#                 success_rate[category_name]["success"] += 1
-#             else:
-#                 print(f"Failed to categorize note: {note_text}. Expected {category_name}, got {category.name}")
-#                 success_rate[category_name]["fail"] += 1
-#         assert success_rate["action"]["fail"] == 0
-#         assert success_rate["todo"]["fail"] == 0
-#         assert success_rate["curiosity"]["fail"] == 0
-#         assert success_rate["observation"]["fail"] == 0
-#         assert success_rate["command"]["fail"] == 0
+    assert response.output, f"Response should not be None for note: {note_text}"
+    output_names = [output.name for output in response.output]
+    assert 'annotate_note' in output_names, (
+        f"annotate_note tool should be in the response for note: {note_text}. "
+        f"Got {output_names}"
+    )
+    annotation_output = [output for output in response.output if output.name == 'annotate_note'][0]
+    assert annotation_output, f"Annotation output should not be None for note: {note_text}"
+    assert annotation_output.arguments, f"Arguments should not be None for note: {note_text}"
+    annotation_args = json.loads(annotation_output.arguments)
+    assert "category_name" in annotation_args, (
+        f"category_name should be in the arguments for note: {note_text}. "
+        f"Got {annotation_args}"
+    )
+    assert "annotation_text" in annotation_args, (
+        f"annotation_text should be in the arguments for note: {note_text}. "
+        f"Got {annotation_args}"
+    )
+    print("ANNOTATION OUTPUT:", annotation_output.model_dump())
+    assert annotation_args["category_name"] == expected_category, (
+        f"Failed to categorize note: {note_text}. "
+        f"Expected {expected_category}, got {annotation_args['category_name']}"
+    )

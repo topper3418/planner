@@ -1,13 +1,15 @@
-import logging
 import json
 import os
 from pprint import pformat
 
-from .base import ChatClient
-
 from openai import OpenAI
 
-logger = logging.getLogger(__name__)
+from ..logging import get_logger
+
+from .base import ChatClient
+
+
+logger = get_logger(__name__, 'llm.log')
 
 
 class GrokChatClient(ChatClient):

@@ -2,6 +2,10 @@ import { fetchDetails } from "./api.js";
 
 
 export function formatParagraph(text, width = 75, indents = 1) {
+    if (typeof text !== 'string') {
+        console.error('Invalid text type:', typeof text);
+        return '';
+    }
     const space = width - 8 * indents;
     let prettyText = '';
     if (text.length > space) {
@@ -52,61 +56,8 @@ export function formatDateTimeFromUTC(date, include_year = false) {
 }
 
 export function renderDataModal(data) {
-    // Notes Section
-    document.getElementById('note-id').textContent = data.note?.id || '';
-    document.getElementById('note-timestamp').textContent = data.note?.timestamp || '';
-    document.getElementById('note-text').textContent = data.note?.note_text || '';
-    document.getElementById('note-processed-text').textContent = data.note?.processed_note_text || '';
-    document.getElementById('note-error').textContent = data.note?.processing_error || '';
-
-    // Annotations Section
-    document.getElementById('annotation-id').textContent = data.annotation?.id || '';
-    document.getElementById('annotation-note-id').textContent = data.annotation?.note_id || '';
-    document.getElementById('annotation-category-id').textContent = data.annotation?.category_id || '';
-    document.getElementById('annotation-text').textContent = data.annotation?.annotation_text || '';
-
-    // Todos Section
-    const todoSection = document.getElementById('todo-modal-data');
-    if (!data.todo) {
-        todoSection.classList.add('hidden');
-    } else {
-        todoSection.classList.remove('hidden');
-        document.getElementById('todo-id').textContent = data.todo.id || '';
-        document.getElementById('todo-start-time').textContent = data.todo.target_start_time || '';
-        document.getElementById('todo-end-time').textContent = data.todo.target_end_time || '';
-        document.getElementById('todo-text').textContent = data.todo.todo_text || '';
-        document.getElementById('todo-source-note-id').textContent = data.todo.source_note_id || '';
-        document.getElementById('todo-complete').textContent = data.todo.complete ? 'Yes' : 'No';
-        document.getElementById('todo-cancelled').textContent = data.todo.cancelled ? 'Yes' : 'No';
-    }
-
-    // Actions Section
-    const actionSection = document.getElementById('action-modal-data');
-    if (!data.action) {
-        actionSection.classList.add('hidden');
-    } else {
-        actionSection.classList.remove('hidden');
-        document.getElementById('action-id').textContent = data.action.id || '';
-        document.getElementById('action-start-time').textContent = data.action.start_time || '';
-        document.getElementById('action-text').textContent = data.action.action_text || '';
-        document.getElementById('action-source-annotation-id').textContent = data.action.source_annotation_id || '';
-        document.getElementById('action-todo-id').textContent = data.action.todo_id || '';
-        document.getElementById('action-mark-complete').textContent = data.action.mark_complete ? 'Yes' : 'No';
-    }
-
-    // Command Section
-    const commandSection = document.getElementById('command-modal-data');
-    if (!data.command) {
-        commandSection.classList.add('hidden');
-    } else {
-        commandSection.classList.remove('hidden');
-        document.getElementById('command-id').textContent = data.command.id || '';
-        document.getElementById('command-text').textContent = data.command.command_text || '';
-        document.getElementById('command-value-before').textContent = data.command.value_before || '';
-        document.getElementById('command-desired-value').textContent = data.command.desired_value || '';
-        document.getElementById('command-source-annotation-id').textContent = data.command.source_annotation_id || '';
-        document.getElementById('command-target-id').textContent = data.command.target_id || '';
-    }
+    console.log('Rendering data modal with data:', data);
+    document.getElementById('data-modal-content').textContent = JSON.stringify(data, null, 2);
 }
 
 async function fetchAndRenderDetails(type, id) {
@@ -127,7 +78,18 @@ export function renderNote(note) {
     item.addEventListener('click', () => fetchAndRenderDetails('notes', note.id));
     item.querySelector('.note-id').textContent = `[${String(note.id).padStart(4, '0')}]`;
     item.querySelector('.note-timestamp').textContent = formatDateTime(note.timestamp);
-    item.querySelector('.note-category').textContent = note.category ? note.category.name : 'Uncategorized';
+    if (note.processed) {
+        item.querySelector('.note-unprocessed').textContent = "";
+        let statusText = "";
+        console.log('rendering note:', note);
+        if (note.num_actions) statusText += `Actions: ${note.num_actions}`;
+        if (note.num_todos) statusText += `${statusText ? ' | ' : ''}Todos: ${note.num_todos}`;
+        if (!note.num_todos && !note.num_actions) statusText = "Note";
+        item.querySelector('.note-processed').textContent = statusText;
+    } else {
+        item.querySelector('.note-processed').textContent = "";
+        item.querySelector('.note-unprocessed').textContent = "Unprocessed";
+    }
     if (note.processing_error) {
         const errorDiv = item.querySelector('.note-error');
         errorDiv.textContent = `Error: ${note.processing_error}`;
@@ -186,7 +148,7 @@ export function renderAction(action) {
     }
     item.classList.add(action.mark_complete ? 'text-green-500' : 'text-gray-800');
     item.querySelector('.action-id').textContent = `[${String(action.id).padStart(4, '0')}]`;
-    item.querySelector('.action-timestamp').textContent = formatDateTime(action.start_time);
+    item.querySelector('.action-timestamp').textContent = formatDateTime(action.timestamp);
     item.querySelector('.action-text-content').textContent = actionText;
     return item;
 }
@@ -197,7 +159,7 @@ export function renderCuriosity(curiosity) {
     item.addEventListener('click', () => fetchAndRenderDetails('curiosities', curiosity.id));
     item.querySelector('.curiosity-timestamp').textContent = formatDateTime(curiosity.note.timestamp);
     item.querySelector('.curiosity-note-text').textContent = formatParagraph(curiosity.note.note_text, 75, 0);
-    item.querySelector('.curiosity-annotation-text').textContent = formatParagraph(curiosity.annotation_text, 75, 1);
+    item.querySelector('.curiosity-text').textContent = formatParagraph(curiosity.curiosity_text, 75, 1);
     return item;
 }
 
