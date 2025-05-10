@@ -283,6 +283,7 @@ class Todo(BaseModel):
         query = """
             SELECT * FROM todos
             WHERE complete = 0
+            AND cancelled = 0
             LIMIT ?, ?;
         """
         with get_connection() as conn:
