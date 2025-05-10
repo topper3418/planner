@@ -2,6 +2,7 @@ PRAGMA foreign_keys=off;
 
 -- Add 'processed' column to notes
 ALTER TABLE notes ADD COLUMN processed INTEGER DEFAULT 0;
+
 -- set all to processed, hopefully they let the engine run
 UPDATE notes SET processed = 1;
 
