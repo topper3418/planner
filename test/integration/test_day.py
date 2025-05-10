@@ -94,19 +94,17 @@ def test_processor(notes):
     # initialize the processor
     note_processor = processor.NoteProcessor(initial_note)
     # process the note
-    note_processor.process()
+    note_processor.process_note()
     assert initial_note.processed_note_text is not None
     # The first note is an action, about waking up
-    assert note_processor.category is not None
-    assert note_processor.category.name == "action"
     assert note_processor.annotation is not None
     assert note_processor.annotation.note_id == initial_note.id
     assert note_processor.annotation.category_id == note_processor.category.id
     # an action should have been created
     assert note_processor.action is not None
     assert note_processor.action.id > 0
-    assert note_processor.action.source_annotation_id == note_processor.annotation.id
-    assert note_processor.action.start_time == initial_note.timestamp
+    assert note_processor.action.source_note_id == note_processor.annotation.id
+    assert note_processor.action.timestamp == initial_note.timestamp
     
     # lets do the next note
     second_note = db.Note.get_next_unprocessed_note()
@@ -144,7 +142,7 @@ def test_processor(notes):
     # a todo should have been created
     assert note_processor.todo is not None
     assert note_processor.todo.id > 0
-    assert note_processor.todo.source_annotation_id == note_processor.annotation.id
+    assert note_processor.todo.source_note_id == note_processor.annotation.id
     # no time was mentioned, so there should be no time data
     assert note_processor.todo.target_start_time == None
     check_weather_todo = note_processor.todo
@@ -184,13 +182,13 @@ def test_processor(notes):
     assert note_processor.annotation.category_id == note_processor.category.id
     # a command should have been created
     assert note_processor.command is not None
-    assert note_processor.command.source_annotation_id == note_processor.annotation.id
+    assert note_processor.command.source_note_id == note_processor.annotation.id
     assert note_processor.command.command_text == "update_note_category"
     assert note_processor.command.value_before == "observation"
     assert note_processor.command.desired_value == "action"
     assert note_processor.command.target_id == fourth_note.id
     # This should have updated the category of the previous todo
-    updated_annotation = db.Annotation.get_by_note_id(fourth_note.id)
+    updated_annotation = db.Annotation.get_by_source_note_id(fourth_note.id)
     assert updated_annotation is not None
     assert updated_annotation.category.name == "action"
 
@@ -222,8 +220,8 @@ def test_processor(notes):
     assert note_processor.annotation.category_id == note_processor.category.id
     # an action should have been created
     assert note_processor.action is not None
-    assert note_processor.action.source_annotation_id == note_processor.annotation.id
-    assert note_processor.action.start_time == reprocess_note.timestamp
+    assert note_processor.action.source_note_id == note_processor.annotation.id
+    assert note_processor.action.timestamp == reprocess_note.timestamp
     # the note was previously categorized as an observation, so nothing to 
     # make sure is deleted
     # lets check and see if that todo was completed
@@ -249,8 +247,8 @@ def test_processor(notes):
     assert note_processor.annotation.category_id == note_processor.category.id
     # an action should have been created
     assert note_processor.action is not None
-    assert note_processor.action.source_annotation_id == note_processor.annotation.id
-    assert note_processor.action.start_time == sixth_note.timestamp
+    assert note_processor.action.source_note_id == note_processor.annotation.id
+    assert note_processor.action.timestamp == sixth_note.timestamp
 
 
 

@@ -9,21 +9,25 @@ from ..util import format_time
 
 def strf_todo(todo: Todo) -> str:
     # create the text
-    checkbox_inner = "X" if todo.complete else "O" if todo.cancelled else " "
+    checkbox_inner = (
+        "X" if todo.complete else "O" if todo.cancelled else " "
+    )
     pretty_text = f"[{checkbox_inner}] [{str(todo.id).rjust(4, '0')}]: {todo.todo_text}"
     if todo.target_start_time and todo.target_end_time:
-        pretty_text += f"\n    {todo.target_start_time} -> {todo.target_end_time}"
+        pretty_text += (
+            f"\n    {todo.target_start_time} -> {todo.target_end_time}"
+        )
     elif todo.target_start_time:
         pretty_text += f"\n    {todo.target_start_time} -> *"
     elif todo.target_end_time:
         pretty_text += f"\n    * -> {todo.target_end_time}"
-    created = todo.source_annotation.note.timestamp
+    created = todo.source_note.timestamp
     pretty_text += f"\n    Created: {format_time(created)}"
     if todo.complete:
         # gotta find the completed time
         complete_action = Action.get_by_todo_complete(todo.id)
         if complete_action:
-            pretty_text += f"\n    Completed: {format_time(todo.source_annotation.note.timestamp)}"
+            pretty_text += f"\n    Completed: {format_time(todo.source_note.timestamp)}"
         # TODO: add cancelled time if applicable
     now = datetime.now()
     # color the text based on status
@@ -54,7 +58,7 @@ def strf_todo(todo: Todo) -> str:
     elif white:
         pretty_text = colored(pretty_text, "white")
     else:
-        print('todo is not anything')
+        print("todo is not anything")
         pretty_text = colored(pretty_text, "magenta")
     return pretty_text
 
@@ -65,7 +69,7 @@ def strf_todo_light(todo: Todo) -> str:
 
 def strf_todos(todos: List[Todo]) -> str:
     """
-    Pretty prints a todo like: 
+    Pretty prints a todo like:
 
     [ ] 1: todo-text - 2023-04-12 06:00:00 - 2023-04-12 06:00:00
     """
@@ -82,12 +86,14 @@ def json_todo(todo: Todo) -> dict:
     """
     Converts a todo to a json object
     """
+    # extract props for cleanliness
+    note = todo.source_note
+    parent = todo.parent
+    children = todo.children
+    # attach the related objects to the json
     output_json = {}
     output_json["todo"] = todo.model_dump()
-    # find the related objects
-    annotation = todo.source_annotation
-    note = annotation.note if annotation else None
-    # attach the related objects to the json
-    output_json["annotation"] = annotation.model_dump() if annotation else None
     output_json["note"] = note.model_dump() if note else None
+    output_json["parent"] = parent.model_dump() if parent else None
+    output_json["children"] = [child.model_dump() for child in children]
     return output_json

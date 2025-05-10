@@ -1,42 +1,45 @@
 import logging
 from flask import request, jsonify, Blueprint
 
-from ..db import Annotation
+from ..logging import get_logger
+from ..db import Curiosity
 from ..rendering import json_curiosity
 
 
-curiosities_bp = Blueprint('curiosities', __name__)
-logger = logging.getLogger(__name__)
+curiosities_bp = Blueprint("curiosities", __name__)
+logger = get_logger(__name__)
 
 
-@curiosities_bp.get('/')
+@curiosities_bp.get("/")
 def handle_curiosities():
-    logger.warning('Fetching curiosities')
-    before = request.args.get('endTime')
-    after = request.args.get('startTime')
-    search = request.args.get('search')
-    limit = request.args.get('limit', default=25, type=int)
+    before = request.args.get("endTime")
+    after = request.args.get("startTime")
+    search = request.args.get("search")
+    limit = request.args.get("limit", default=25, type=int)
     try:
-        logger.warning(f"Fetching curiosities with before={before}, after={after}, search={search}, limit={limit}")
-        annotations = Annotation.get_by_category_name('curiosity', before=before, after=after, search=search, limit=limit)
-        logger.warning(f"Curiosities found: {annotations}")
-        curiosities = [annotation.model_dump() for annotation in annotations]
-        for curiosity, annotation in zip(curiosities, annotations):
-            curiosity['note'] = annotation.note.model_dump()
-        return jsonify({'curiosities': curiosities})
+        curiosities = Curiosity.get_all(
+            before=before, after=after, search=search, limit=limit
+        )
+        curiosity_jsons = [
+            curiosity.model_dump() for curiosity in curiosities
+        ]
+        for curiosity_json, curiosity in zip(curiosity_jsons, curiosities):
+            curiosity_json["note"] = curiosity.source_note.model_dump()
+        logger.info(f"Fetched {len(curiosity_jsons)} curiosities")
+        return jsonify({"curiosities": curiosity_jsons})
     except Exception as e:
         logger.error(f"Error fetching curiosities: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-@curiosities_bp.get('/<int:annotation_id>')
-def get_curiosity_details(annotation_id):
+@curiosities_bp.get("/<int:curiosity_id>")
+def get_curiosity_details(curiosity_id):
     try:
-        annotation = Annotation.get_by_id(annotation_id)
-        if annotation is None:
-            return jsonify({'error': 'Curiosity not found'}), 404
-        details = json_curiosity(annotation)
-        return jsonify({'data': details})
+        curiosity = Curiosity.get_by_id(curiosity_id)
+        if curiosity is None:
+            return jsonify({"error": "Curiosity not found"}), 404
+        details = json_curiosity(curiosity)
+        return jsonify({"data": details})
     except Exception as e:
         logger.error(f"Error fetching curiosity details: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500

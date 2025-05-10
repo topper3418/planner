@@ -7,7 +7,7 @@ from src import db
 def sample_annotations(setup_database):
     # reset the database
     db.teardown()
-    db.ensure_tables()
+    db.init_db()
     db.ensure_default_categories()
     note = db.Note.create(
         "I just woke up",
@@ -95,7 +95,7 @@ def test_delete_annotation(sample_annotations):
 def test_get_by_note_id(sample_annotations):
     note, category, annotation = sample_annotations
     # test get by note id
-    fetched_annotation = db.Annotation.get_by_note_id(note.id)
+    fetched_annotation = db.Annotation.get_by_source_note_id(note.id)
     assert fetched_annotation is not None
     assert fetched_annotation.id == annotation.id
     assert fetched_annotation.note_id == note.id
@@ -104,7 +104,7 @@ def test_get_by_note_id(sample_annotations):
 def test_get_by_category_name(setup_database):
     # reset the database
     db.teardown()
-    db.ensure_tables()
+    db.init_db()
     db.ensure_default_categories()
     # test get by category name
     action_category = db.Category.get_by_name("action")
@@ -119,13 +119,17 @@ def test_get_by_category_name(setup_database):
     todo_category = db.Category.get_by_name("todo")
     assert todo_category is not None
     assert todo_category.name == "todo"
-    categories = [category.model_dump() for category in [
-        action_category,
-        curiosity_category,
-        observation_category,
-        todo_category,
-    ]]
+    categories = [
+        category.model_dump()
+        for category in [
+            action_category,
+            curiosity_category,
+            observation_category,
+            todo_category,
+        ]
+    ]
     from pprint import pformat
+
     print(f"Categories:\n{pformat(categories)}")
     first_action_annotation = db.Annotation.create(
         note_id=1,
@@ -160,19 +164,30 @@ def test_get_by_category_name(setup_database):
     # test get by category name
     action_annotations = db.Annotation.get_by_category_name("action")
     assert len(action_annotations) == 2
-    assert action_annotations[1].annotation_text == "First action annotation"
-    assert action_annotations[0].annotation_text == "Second action annotation"
+    assert (
+        action_annotations[1].annotation_text == "First action annotation"
+    )
+    assert (
+        action_annotations[0].annotation_text == "Second action annotation"
+    )
     curiosity_annotations = db.Annotation.get_by_category_name("curiosity")
     assert len(curiosity_annotations) == 2
-    assert curiosity_annotations[1].annotation_text == "First curiosity annotation"
-    assert curiosity_annotations[0].annotation_text == "Second curiosity annotation"
-    observation_annotations = db.Annotation.get_by_category_name("observation")
+    assert (
+        curiosity_annotations[1].annotation_text
+        == "First curiosity annotation"
+    )
+    assert (
+        curiosity_annotations[0].annotation_text
+        == "Second curiosity annotation"
+    )
+    observation_annotations = db.Annotation.get_by_category_name(
+        "observation"
+    )
     assert len(observation_annotations) == 1
-    assert observation_annotations[0].annotation_text == "First observation annotation"
+    assert (
+        observation_annotations[0].annotation_text
+        == "First observation annotation"
+    )
     todo_annotations = db.Annotation.get_by_category_name("todo")
     assert len(todo_annotations) == 1
     assert todo_annotations[0].annotation_text == "First todo annotation"
-
-    
-
-
