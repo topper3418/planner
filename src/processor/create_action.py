@@ -21,7 +21,7 @@ def create_action(
 ) -> Action:
     # if a todo id of 0 is given, return all todos from the past three months and try again.
     action = Action.create(
-        start_time=action_timestamp,
+        timestamp=action_timestamp,
         action_text=action_text,
         source_note_id=note.id,
     )
