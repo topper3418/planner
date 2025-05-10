@@ -12,4 +12,5 @@ def get_logger(
     attach_rolling_file_handler(logger)
     if additional_logfile:
         attach_rolling_file_handler(logger, additional_logfile)
+    logger.setLevel(logging.INFO)
     return logger
