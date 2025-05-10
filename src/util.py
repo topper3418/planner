@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from datetime import datetime
+import subprocess
 
 from .config import TIMESTAMP_FORMAT
 
@@ -43,3 +45,35 @@ def format_paragraph(text: str, width: int = 75, indents=1) -> str:
 
 
 NL = "\n"
+
+
+@dataclass
+class GitVersion:
+    commit: str
+    branch: str
+
+
+def get_git_version() -> GitVersion:
+    """
+    Get the current git commit hash.
+    """
+    commit = ""
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], stderr=subprocess.STDOUT
+        ).strip()
+        commit = commit.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting git commit: {e.output.decode('utf-8')}")
+        commit = "unknown"
+    branch = ""
+    try:
+        branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            stderr=subprocess.STDOUT,
+        ).strip()
+        branch = branch.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting git branch: {e.output.decode('utf-8')}")
+        branch = "unknown"
+    return GitVersion(commit=commit, branch=branch)
