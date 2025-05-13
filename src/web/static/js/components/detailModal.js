@@ -10,6 +10,9 @@ class DetailModal {
       },
       content: document.getElementById("detail-modal-content"),
     };
+    this.setContent = this.setContent.bind(this);
+    this.open = this.open.bind(this);
+    this.close = this.close.bind(this);
   }
 
   open() {
@@ -25,3 +28,5 @@ class DetailModal {
     this.elements.content.innerHTML = `<pre>${JSON.stringify(contentJSON, null, 2)}</pre>`;
   }
 }
+
+export default DetailModal;

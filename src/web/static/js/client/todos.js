@@ -50,3 +50,17 @@ async function getTodos(filterValues) {
   );
   return topTodo.children;
 }
+
+async function getTodoById(todoId) {
+  const response = await fetch(`/api/todos/${todoId}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  const data = await response.json();
+  if (data.error) {
+    console.error("Error fetching todo:", data.error);
+    throw new Error(data.error);
+  } else {
+    console.log("Fetched todo:", data);
+  }
+  return data.data || {};
+}

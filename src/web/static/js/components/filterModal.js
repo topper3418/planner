@@ -32,7 +32,8 @@ class FilterModal {
       todos: { completed: false, cancelled: false, active: true },
     };
     this.clear();
-    this.registerClickListeners();
+    this.initClickListeners();
+    this.getValues = this.getValues.bind(this);
   }
 
   update() {
@@ -69,7 +70,7 @@ class FilterModal {
     this.elements.inputs.cancelled.checked = this.initialValues.todos.cancelled;
   }
 
-  registerClickListeners() {
+  initClickListeners() {
     this.elements.buttons.openButton.addEventListener("click", () =>
       this.open(),
     );
@@ -82,22 +83,25 @@ class FilterModal {
     });
   }
 
+  getValues() {
+    return {
+      search: this.elements.inputs.search.value.trim(),
+      startTime: this.elements.inputs.startTime.value,
+      endTime: this.elements.inputs.endTime.value,
+      notes: { category: this.elements.inputs.category.value.trim() },
+      actions: { appliedToTodo: this.elements.inputs.appliedToTodo.checked },
+      todos: {
+        completed: this.elements.inputs.completed.checked,
+        cancelled: this.elements.inputs.cancelled.checked,
+        active: this.elements.inputs.active.checked,
+      },
+    };
+  }
+
   registerApplyCallback(callback) {
     this.elements.buttons.applyButton.addEventListener("click", () => {
-      const filterValues = {
-        search: this.elements.inputs.search.value.trim(),
-        startTime: this.elements.inputs.startTime.value,
-        endTime: this.elements.inputs.endTime.value,
-        notes: { category: this.elements.inputs.category.value.trim() },
-        actions: { appliedToTodo: this.elements.inputs.appliedToTodo.checked },
-        todos: {
-          completed: this.elements.inputs.completed.checked,
-          cancelled: this.elements.inputs.cancelled.checked,
-          active: this.elements.inputs.active.checked,
-        },
-      };
-      callback(filterValues);
       this.close();
+      callback();
     });
   }
 }

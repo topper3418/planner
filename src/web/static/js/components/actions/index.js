@@ -1,10 +1,10 @@
-import { getNotes, getNoteById } from "../../client";
-import { NoteTemplate } from "./noteTemplate";
+import { getActions, getAction } from "../../client";
+import ActionTemplate from "./actionTemplate";
 
-class NotesContent {
+class ActionsContent {
   constructor() {
     this.elements = {
-      container: document.getElementById("notes-content"),
+      container: document.getElementById("actions-content"),
     };
     this.getFiltersCallback = null;
     this.renderDetailModalCallback = null;
@@ -29,24 +29,23 @@ class NotesContent {
 
   async fetchAndRender() {
     const filters = this.getFilters();
-    const notes = await getNotes(filters);
-    this.renderNotes(notes);
+    const actions = await getActions(filters);
+    this.renderActions(actions);
   }
 
-  renderNotes(notes) {
+  renderActions(actions) {
     const container = this.elements.container;
     container.innerHTML = ""; // Clear previous content
-    notes.forEach((note) => {
-      const noteTemplate = new NoteTemplate();
-      const noteElement = noteTemplate.render(note);
-      noteTemplate.registerClickListener(async (noteId) => {
-        const noteDetails = await getNoteById(noteId);
-        this.renderDetailModalCallback(noteDetails);
+    actions.forEach((action) => {
+      const actionTemplate = new ActionTemplate();
+      const actionElement = actionTemplate.render(action);
+      actionTemplate.registerClickListener(async (actionId) => {
+        const actionDetails = await getAction(actionId);
+        this.renderDetailModalCallback(actionDetails);
       });
-      container.appendChild(noteElement);
+      container.appendChild(actionElement);
     });
   }
-
   ///////////////////////////////////////////////////////////////////////////
   //                           HOOK REGISTRATIONS                          //
   ///////////////////////////////////////////////////////////////////////////
@@ -59,4 +58,4 @@ class NotesContent {
   }
 }
 
-export default NotesContent;
+export default ActionsContent;

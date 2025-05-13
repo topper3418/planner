@@ -1,4 +1,4 @@
-import { formatDateTime, formatParagraph } from "../utils";
+import { formatDateTime, formatParagraph } from "../../utils";
 
 class NoteTemplate {
   constructor() {

@@ -32,7 +32,18 @@ async function getNoteById(noteId) {
   return data.data || {};
 }
 
+async function createNote(noteText) {
+  const response = await fetch("/api/notes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: { note: noteText } }),
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error);
+}
+
 export default {
   getNotes,
   getNoteById,
+  createNote,
 };

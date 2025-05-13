@@ -1,4 +1,4 @@
-import { formatDateTime } from "../utils";
+import { formatDateTime } from "../../utils";
 
 class TodoTemplate {
   constructor() {
@@ -11,6 +11,7 @@ class TodoTemplate {
         main: template.querySelector(".todo-main"),
         details: template.querySelector(".todo-details"),
       },
+      childrenContainer: template.querySelector(".todo-children"),
     };
   }
 
@@ -51,6 +52,18 @@ class TodoTemplate {
     this.elements.item.classList.add(colorClass);
     this.elements.item.querySelector(".todo-main").textContent = mainText;
     this.elements.item.querySelector(".todo-details").textContent = detailsText;
+    if (todo.children && todo.children.length > 0) {
+      this.elements.childrenContainer.innerHTML = ""; // Clear previous children
+      todo.children.forEach((child) => {
+        const childTemplate = new TodoTemplate();
+        const childElement = childTemplate.render(child);
+        this.elements.childrenContainer.appendChild(childElement);
+      });
+    }
+  }
+
+  registerClickListener(callback) {
+    this.elements.item.addEventListener("click", callback);
   }
 }
 

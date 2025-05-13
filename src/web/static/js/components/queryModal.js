@@ -1,3 +1,5 @@
+import { submitQuery } from "../client";
+
 class QueryModal {
   constructor() {
     this.elements = {
@@ -35,7 +37,7 @@ class QueryModal {
     });
   }
 
-  registerSubmitCallback(callback) {
+  initClickListeners() {
     this.elements.buttons.submitButton.addEventListener("click", async () => {
       const query = this.elements.input.query.value.trim();
       if (!query) {
@@ -44,7 +46,7 @@ class QueryModal {
         return;
       }
       this.elements.response.innerHTML = "<p>Processing query...</p>";
-      const response = await callback(query);
+      const response = await submitQuery(query);
       if (response.error) {
         this.elements.response.innerHTML = `<p class="text-red-500">Error: ${response.error}</p>`;
       } else {
@@ -56,3 +58,5 @@ class QueryModal {
     });
   }
 }
+
+export default QueryModal;
