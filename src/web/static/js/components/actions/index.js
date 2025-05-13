@@ -1,5 +1,5 @@
-import { getActions, getAction } from "../../client";
-import ActionTemplate from "./actionTemplate";
+import { getActions, getActionById } from "../../client/actions.js";
+import ActionTemplate from "./actionTemplate.js";
 
 class ActionsContent {
   constructor() {
@@ -40,7 +40,7 @@ class ActionsContent {
       const actionTemplate = new ActionTemplate();
       const actionElement = actionTemplate.render(action);
       actionTemplate.registerClickListener(async (actionId) => {
-        const actionDetails = await getAction(actionId);
+        const actionDetails = await getActionById(actionId);
         this.renderDetailModalCallback(actionDetails);
       });
       container.appendChild(actionElement);

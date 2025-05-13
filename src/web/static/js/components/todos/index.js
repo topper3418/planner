@@ -1,5 +1,5 @@
-import { getTodos, getTodoById } from "../../client";
-import { TodoTemplate } from "./todoTemplate.js";
+import { getTodos, getTodoById } from "../../client/todos.js";
+import TodoTemplate from "./todoTemplate.js";
 
 class TodosContent {
   constructor() {

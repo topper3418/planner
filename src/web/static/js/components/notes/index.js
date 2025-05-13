@@ -1,5 +1,5 @@
-import { getNotes, getNoteById } from "../../client";
-import { NoteTemplate } from "./noteTemplate";
+import { getNotes, getNoteById } from "../../client/notes.js";
+import NoteTemplate from "./noteTemplate.js";
 
 class NotesContent {
   constructor() {
@@ -34,6 +34,7 @@ class NotesContent {
   }
 
   renderNotes(notes) {
+    console.log("Rendering notes");
     const container = this.elements.container;
     container.innerHTML = ""; // Clear previous content
     notes.forEach((note) => {
@@ -44,6 +45,7 @@ class NotesContent {
         this.renderDetailModalCallback(noteDetails);
       });
       container.appendChild(noteElement);
+      console.log("note attached");
     });
   }
 

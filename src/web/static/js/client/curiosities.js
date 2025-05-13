@@ -1,4 +1,4 @@
-async function getCuriosities(filterValues) {
+export async function getCuriosities(filterValues) {
   const { startTime, endTime, search } = filterValues;
   const params = new URLSearchParams();
   if (startTime) params.append("startTime", startTime);
@@ -18,7 +18,7 @@ async function getCuriosities(filterValues) {
   return data.curiosities || [];
 }
 
-async function getCuriosityById(curiosityId) {
+export async function getCuriosityById(curiosityId) {
   const response = await fetch(`/api/curiosities/${curiosityId}`, {
     headers: { "Content-Type": "application/json" },
   });
@@ -31,8 +31,3 @@ async function getCuriosityById(curiosityId) {
   }
   return data.data || {};
 }
-
-export default {
-  getCuriosities,
-  getCuriosityById,
-};

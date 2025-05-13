@@ -1,15 +1,17 @@
-import FilterModal from "./filterModal";
-import QueryModal from "./queryModal";
-import DetailModal from "./detailModal";
-import NotesContent from "./notes";
-import TodosContent from "./todos";
-import CuriositiesContent from "./curiosities";
+import FilterModal from "./filterModal.js";
+import QueryModal from "./queryModal.js";
+import DetailModal from "./detailModal.js";
+import NotesContent from "./notes/index.js";
+import TodosContent from "./todos/index.js";
+import ActionsContent from "./actions/index.js";
+import CuriositiesContent from "./curiosities/index.js";
 
-export default {
+export {
   FilterModal,
   QueryModal,
   DetailModal,
   NotesContent,
+  ActionsContent,
   TodosContent,
   CuriositiesContent,
 };

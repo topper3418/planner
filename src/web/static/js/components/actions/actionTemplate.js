@@ -1,4 +1,4 @@
-import { formatDateTime } from "../../utils";
+import { formatDateTime } from "../../utils.js";
 
 class ActionTemplate {
   constructor() {
@@ -14,7 +14,7 @@ class ActionTemplate {
   }
 
   render(action) {
-    const { template, display } = this.elements;
+    const { template, item, display } = this.elements;
     display.id.textContent = `[${String(action.id).padStart(4, "0")}]`;
     display.timestamp.textContent = formatDateTime(action.timestamp);
     let actionText = action.action_text;
@@ -25,7 +25,7 @@ class ActionTemplate {
       action.mark_complete ? "text-green-500" : "text-gray-800",
     );
     display.textContent.textContent = actionText;
-    return template;
+    return item;
   }
 
   registerClickListener(callback) {

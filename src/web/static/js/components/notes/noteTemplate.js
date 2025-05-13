@@ -1,24 +1,25 @@
-import { formatDateTime, formatParagraph } from "../../utils";
+import { formatDateTime, formatParagraph } from "../../utils.js";
 
 class NoteTemplate {
   constructor() {
     const template = document.getElementById("note-template").cloneNode(true);
     this.elements = {
       template,
-      item: template.querySelector(".note-item"),
+      item: template.content.querySelector(".note-item"),
       display: {
-        id: template.querySelector(".note-id"),
-        timestamp: template.querySelector(".note-timestamp"),
-        noteUnprocessed: template.querySelector(".note-unprocessed"),
-        noteProcessed: template.querySelector(".note-processed"),
-        error: template.querySelector(".note-error"),
-        textContent: template.querySelector(".note-text-content"),
+        id: template.content.querySelector(".note-id"),
+        timestamp: template.content.querySelector(".note-timestamp"),
+        noteUnprocessed: template.content.querySelector(".note-unprocessed"),
+        noteProcessed: template.content.querySelector(".note-processed"),
+        error: template.content.querySelector(".note-error"),
+        textContent: template.content.querySelector(".note-text-content"),
       },
     };
   }
 
   render(note) {
-    const { template, display } = this.elements;
+    console.log(`Rendering note ${note.id}`);
+    const { template, item, display } = this.elements;
     display.id.textContent = `[${String(note.id).padStart(4, "0")}]`;
     display.timestamp.textContent = formatDateTime(note.timestamp);
     if (note.processed) {
@@ -41,7 +42,7 @@ class NoteTemplate {
     display.textContent.textContent = formatParagraph(
       note.processed_note_text || note.note_text,
     );
-    return template;
+    return item;
   }
 
   registerClickListener(callback) {

@@ -1,4 +1,4 @@
-import { formatDateTime, formatParagraph } from "../../utils";
+import { formatDateTime, formatParagraph } from "../../utils.js";
 
 class CuriosityTemplate {
   constructor() {
@@ -17,13 +17,13 @@ class CuriosityTemplate {
   }
 
   render(curiosity) {
-    const { template, display } = this.elements;
+    const { item, display } = this.elements;
     display.timestamp.textContent = formatDateTime(curiosity.timestamp);
     display.noteText.textContent = formatParagraph(curiosity.note_text || "");
     display.textContent.textContent = formatParagraph(
       curiosity.curiosity_text || "",
     );
-    return template;
+    return item;
   }
 
   registerClickListener(callback) {

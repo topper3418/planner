@@ -1,5 +1,5 @@
-import { getCuriosities, getCuriosityById } from "./curiosities";
-import CuriosityTemplate from "./curiositiesTemplate";
+import { getCuriosities, getCuriosityById } from "../../client/curiosities.js";
+import CuriosityTemplate from "./curiositiesTemplate.js";
 
 class CuriositiesContent {
   constructor() {

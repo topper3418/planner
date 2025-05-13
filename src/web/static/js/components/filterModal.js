@@ -11,7 +11,6 @@ class FilterModal {
         search: document.getElementById("filter-search"),
         startTime: document.getElementById("filter-start-time"),
         endTime: document.getElementById("filter-end-time"),
-        category: document.getElementById("filter-category"),
         appliedToTodo: document.getElementById("filter-applied-to-todo"),
         completed: document.getElementById("filter-completed"),
         cancelled: document.getElementById("filter-cancelled"),
@@ -63,7 +62,6 @@ class FilterModal {
     this.elements.inputs.search.value = this.initialValues.search;
     this.elements.inputs.startTime.value = this.initialValues.startTime;
     this.elements.inputs.endTime.value = this.initialValues.endTime;
-    this.elements.inputs.category.value = this.initialValues.notes.category;
     this.elements.inputs.appliedToTodo.checked =
       this.initialValues.actions.appliedToTodo;
     this.elements.inputs.completed.checked = this.initialValues.todos.completed;
@@ -88,7 +86,6 @@ class FilterModal {
       search: this.elements.inputs.search.value.trim(),
       startTime: this.elements.inputs.startTime.value,
       endTime: this.elements.inputs.endTime.value,
-      notes: { category: this.elements.inputs.category.value.trim() },
       actions: { appliedToTodo: this.elements.inputs.appliedToTodo.checked },
       todos: {
         completed: this.elements.inputs.completed.checked,

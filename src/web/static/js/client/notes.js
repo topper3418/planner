@@ -1,4 +1,4 @@
-async function getNotes(filterValues) {
+export async function getNotes(filterValues) {
   const { startTime, endTime, search } = filterValues;
   const params = new URLSearchParams();
   if (startTime) params.append("startTime", startTime);
@@ -18,7 +18,7 @@ async function getNotes(filterValues) {
   return data.notes || [];
 }
 
-async function getNoteById(noteId) {
+export async function getNoteById(noteId) {
   const response = await fetch(`/api/notes/${noteId}`, {
     headers: { "Content-Type": "application/json" },
   });
@@ -32,7 +32,7 @@ async function getNoteById(noteId) {
   return data.data || {};
 }
 
-async function createNote(noteText) {
+export async function createNote(noteText) {
   const response = await fetch("/api/notes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -41,9 +41,3 @@ async function createNote(noteText) {
   const data = await response.json();
   if (data.error) throw new Error(data.error);
 }
-
-export default {
-  getNotes,
-  getNoteById,
-  createNote,
-};

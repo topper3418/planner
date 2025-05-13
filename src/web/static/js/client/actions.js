@@ -1,4 +1,4 @@
-async function getActions(filterValues) {
+export async function getActions(filterValues) {
   const {
     startTime,
     endTime,
@@ -25,7 +25,7 @@ async function getActions(filterValues) {
   return data.actions;
 }
 
-async function getTodoById(todoId) {
+export async function getActionById(todoId) {
   const response = await fetch(`/api/todos/${todoId}`, {
     headers: { "Content-Type": "application/json" },
   });

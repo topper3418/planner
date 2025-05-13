@@ -1,4 +1,4 @@
-import { formatDateTime } from "../../utils";
+import { formatDateTime } from "../../utils.js";
 
 class TodoTemplate {
   constructor() {
@@ -60,6 +60,7 @@ class TodoTemplate {
         this.elements.childrenContainer.appendChild(childElement);
       });
     }
+    return this.elements.item;
   }
 
   registerClickListener(callback) {

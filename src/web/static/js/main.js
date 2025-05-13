@@ -4,10 +4,10 @@ import {
   NotesContent,
   TodosContent,
   CuriositiesContent,
-} from "./components";
-import ActionsContent from "./components/actions";
-import DetailModal from "./components/detailModal";
-import { createNote } from "./client";
+  ActionsContent,
+  DetailModal,
+} from "./components/index.js";
+import { createNote } from "./client/notes.js";
 
 class Planner {
   constructor() {
@@ -40,11 +40,12 @@ class Planner {
     };
     this.currentTab = "notes";
     this.configure();
+    this.switchTab("notes");
     this.refresh = this.refresh.bind(this);
   }
 
   refresh() {
-    this.tabEnum[tab].fetchAndRender();
+    this.tabEnum[this.currentTab].fetchAndRender();
   }
 
   switchTab(tab) {
@@ -57,8 +58,8 @@ class Planner {
     if (this.currentTab !== tab) {
       this.tabEnum[this.currentTab].hide();
       this.currentTab = tab;
-      this.tabEnum[tab].show();
     }
+    this.tabEnum[tab].show();
     this.refresh();
   }
 

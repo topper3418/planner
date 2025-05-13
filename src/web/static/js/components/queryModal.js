@@ -1,4 +1,4 @@
-import { submitQuery } from "../client";
+import { submitQuery } from "../client/query.js";
 
 class QueryModal {
   constructor() {
