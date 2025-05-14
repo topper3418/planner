@@ -4,10 +4,13 @@ import TodoTemplate from "./todoTemplate.js";
 class TodosContent {
   constructor() {
     this.elements = {
-      consainer: document.getElementById("todos-content"),
+      container: document.getElementById("todos-content"),
     };
     this.getFiltersCallback = null;
     this.renderDetailModalCallback = null;
+    this.hide = this.hide.bind(this);
+    this.show = this.show.bind(this);
+    this.fetchAndRender = this.fetchAndRender.bind(this);
   }
 
   hide() {

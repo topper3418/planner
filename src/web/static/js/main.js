@@ -32,11 +32,23 @@ class Planner {
         addNote: document.getElementById("add-note-button"),
       },
     };
-    this.tabEnum = {
-      notes: this.components.containers.notes,
-      todos: this.components.containers.todos,
-      actions: this.components.containers.actions,
-      curiosities: this.components.containers.curiosities,
+    this.tabDir = {
+      notes: {
+        container: this.components.containers.notes,
+        button: this.components.buttons.notes,
+      },
+      todos: {
+        container: this.components.containers.todos,
+        button: this.components.buttons.todos,
+      },
+      actions: {
+        container: this.components.containers.actions,
+        button: this.components.buttons.actions,
+      },
+      curiosities: {
+        container: this.components.containers.curiosities,
+        button: this.components.buttons.curiosities,
+      },
     };
     this.currentTab = "notes";
     this.configure();
@@ -45,21 +57,33 @@ class Planner {
   }
 
   refresh() {
-    this.tabEnum[this.currentTab].fetchAndRender();
+    this.tabDir[this.currentTab].container.fetchAndRender();
   }
 
   switchTab(tab) {
     // make sure its a valid tab
-    if (!this.tabEnum[tab]) {
+    if (!this.tabDir[tab]) {
       console.error(`Invalid tab: ${tab}`);
       return;
     }
     // hide current tab if not the same as the new tab
+    // and switch the button styles
     if (this.currentTab !== tab) {
-      this.tabEnum[this.currentTab].hide();
+      console.log(`Switching from ${this.currentTab} to ${tab}`);
+      this.tabDir[this.currentTab].container.hide();
+      this.tabDir[this.currentTab].button.classList.remove(
+        "bg-white",
+        "text-blue-500",
+      );
+      this.tabDir[this.currentTab].button.classList.add(
+        "bg-blue-500",
+        "text-white",
+      );
+      this.tabDir[tab].button.classList.remove("bg-blue-500", "text-white");
+      this.tabDir[tab].button.classList.add("bg-white", "text-blue-500");
       this.currentTab = tab;
     }
-    this.tabEnum[tab].show();
+    this.tabDir[tab].container.show();
     this.refresh();
   }
 
@@ -92,6 +116,19 @@ class Planner {
     this.components.containers.curiosities.registerGetFiltersCallback(
       this.components.modals.filterModal.getValues,
     );
+    // tabs
+    this.components.buttons.notes.addEventListener("click", () => {
+      this.switchTab("notes");
+    });
+    this.components.buttons.todos.addEventListener("click", () => {
+      this.switchTab("todos");
+    });
+    this.components.buttons.actions.addEventListener("click", () => {
+      this.switchTab("actions");
+    });
+    this.components.buttons.curiosities.addEventListener("click", () => {
+      this.switchTab("curiosities");
+    });
     // filter modal
     this.components.modals.filterModal.registerApplyCallback(this.refresh());
     // note input

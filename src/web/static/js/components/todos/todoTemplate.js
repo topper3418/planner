@@ -5,14 +5,15 @@ class TodoTemplate {
     const template = document.getElementById("todo-template").cloneNode(true);
     this.elements = {
       template,
-      item: template.querySelector(".todo-item"),
+      item: template.content.querySelector(".todo-item"),
       display: {
-        checkbox: template.querySelector(".todo-checkbox"),
-        main: template.querySelector(".todo-main"),
-        details: template.querySelector(".todo-details"),
+        checkbox: template.content.querySelector(".todo-checkbox"),
+        main: template.content.querySelector(".todo-main"),
+        details: template.content.querySelector(".todo-details"),
       },
-      childrenContainer: template.querySelector(".todo-children"),
+      childrenContainer: template.content.querySelector(".todo-children"),
     };
+    console.log("TodoTemplate initialized", this.elements);
   }
 
   render(todo) {

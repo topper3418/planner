@@ -15,10 +15,10 @@ class NoteTemplate {
         textContent: template.content.querySelector(".note-text-content"),
       },
     };
+    console.log("NoteTemplate initialized", this.elements);
   }
 
   render(note) {
-    console.log(`Rendering note ${note.id}`);
     const { template, item, display } = this.elements;
     display.id.textContent = `[${String(note.id).padStart(4, "0")}]`;
     display.timestamp.textContent = formatDateTime(note.timestamp);
