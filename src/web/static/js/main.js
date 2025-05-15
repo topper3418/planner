@@ -6,6 +6,7 @@ import {
   CuriositiesContent,
   ActionsContent,
   DetailModal,
+  TabButton,
 } from "./components/index.js";
 import { createNote } from "./client/notes.js";
 
@@ -25,10 +26,10 @@ class Planner {
       },
       noteInput: document.getElementById("note-input"),
       buttons: {
-        notes: document.getElementById("notes-button"),
-        todos: document.getElementById("todos-button"),
-        actions: document.getElementById("actions-button"),
-        curiosities: document.getElementById("curiosities-button"),
+        notes: new TabButton("notes"),
+        todos: new TabButton("todos"),
+        actions: new TabButton("actions"),
+        curiosities: new TabButton("curiosities"),
         addNote: document.getElementById("add-note-button"),
       },
     };
@@ -51,9 +52,10 @@ class Planner {
       },
     };
     this.currentTab = "notes";
+    this.refresh = this.refresh.bind(this);
+    this.switchTab = this.switchTab.bind(this);
     this.configure();
     this.switchTab("notes");
-    this.refresh = this.refresh.bind(this);
   }
 
   refresh() {
@@ -72,20 +74,8 @@ class Planner {
       "to",
       this.tabDir[tab],
     );
-    // set the previous tab to default styles
-    this.tabDir[this.currentTab].button.classList.remove(
-      "bg-blue-500",
-      "text-white",
-    );
-    this.tabDir[this.currentTab].button.classList.add(
-      "bg-white",
-      "text-blue-500",
-    );
-    // set the new tab to active styles
-    this.tabDir[tab].button.classList.remove("bg-white", "text-blue-500");
-    this.tabDir[tab].button.classList.add("bg-blue-500", "text-white");
-    // hide current tab if not the same as the new tab
     if (this.currentTab !== tab) {
+      this.tabDir[this.currentTab].button.setInactive();
       this.tabDir[this.currentTab].container.hide();
     }
     this.currentTab = tab;
@@ -122,19 +112,6 @@ class Planner {
     this.components.containers.curiosities.registerGetFiltersCallback(
       this.components.modals.filterModal.getValues,
     );
-    // tabs
-    this.components.buttons.notes.addEventListener("click", () => {
-      this.switchTab("notes");
-    });
-    this.components.buttons.todos.addEventListener("click", () => {
-      this.switchTab("todos");
-    });
-    this.components.buttons.actions.addEventListener("click", () => {
-      this.switchTab("actions");
-    });
-    this.components.buttons.curiosities.addEventListener("click", () => {
-      this.switchTab("curiosities");
-    });
     // filter modal
     this.components.modals.filterModal.registerApplyCallback(this.refresh());
     // note input
@@ -152,6 +129,17 @@ class Planner {
         alert(`Error: ${error.message}`);
       }
     });
+    this.components.noteInput.addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.components.buttons.addNote.click();
+      }
+    });
+    // tab switching
+    this.components.buttons.notes.registerClickCallback(this.switchTab);
+    this.components.buttons.todos.registerClickCallback(this.switchTab);
+    this.components.buttons.actions.registerClickCallback(this.switchTab);
+    this.components.buttons.curiosities.registerClickCallback(this.switchTab);
   }
 }
 
