@@ -13,59 +13,100 @@ class TodoTemplate {
       },
       childrenContainer: template.content.querySelector(".todo-children"),
     };
-    console.log("TodoTemplate initialized", this.elements);
+    this.todo = null;
+  }
+
+  isLate() {
+    const endTime = this.todo.target_end_time
+      ? new Date(this.todo.target_end_time)
+      : null;
+    const now = new Date();
+    return endTime && endTime < now;
+  }
+
+  isStarted() {
+    const startTime = this.todo.target_start_time
+      ? new Date(this.todo.target_start_time)
+      : null;
+    const now = new Date();
+    return startTime && startTime < now;
+  }
+
+  isComplete() {
+    return this.todo.complete;
+  }
+
+  isCancelled() {
+    return this.todo.cancelled;
+  }
+
+  isScheduled() {
+    const startTime = this.todo.target_start_time;
+    const endTime = this.todo.target_end_time;
+    return startTime || endTime;
+  }
+
+  getStatus() {
+    if (this.isComplete()) return "complete";
+    if (this.isCancelled()) return "cancelled";
+    if (this.isLate()) return "late";
+    if (this.isStarted()) return "started";
+    if (this.isScheduled()) return "scheduled";
+    return "new";
+  }
+
+  getTimeText() {
+    const startTime = this.todo.target_start_time
+      ? new Date(this.todo.target_start_time)
+      : null;
+    const endTime = this.todo.target_end_time
+      ? new Date(this.todo.target_end_time)
+      : null;
+    if (startTime && endTime) {
+      return `${formatDateTime(startTime)} -> ${formatDateTime(endTime)}`;
+    } else if (startTime) {
+      return `${formatDateTime(startTime)} -> *`;
+    } else if (endTime) {
+      return `* -> ${formatDateTime(endTime)}`;
+    }
+    return "* -> *";
   }
 
   render(todo) {
-    this.elements.display.checkbox.checked = todo.complete;
-    let mainText = `[${String(todo.id).padStart(4, "0")}]: ${todo.todo_text}`;
-    let detailsText = "";
-    if (todo.target_start_time || todo.target_end_time) {
-      detailsText += `${formatDateTime(todo.target_start_time) || "*"} -> ${formatDateTime(todo.target_end_time) || "*"}`;
-    }
-    const created = todo.source_annotation?.note?.timestamp || "";
-    if (created)
-      detailsText += `${detailsText ? " | " : ""}Created: ${formatDateTime(created)}`;
-    if (todo.complete && todo.source_annotation?.note?.timestamp) {
-      detailsText += `${detailsText ? " | " : ""}Done: ${formatDateTime(todo.source_annotation.note.timestamp)}`;
-    }
-    const now = new Date();
-    const startTime = todo.target_start_time
-      ? new Date(todo.target_start_time)
-      : null;
-    const endTime = todo.target_end_time
-      ? new Date(todo.target_end_time)
-      : null;
-    const started = startTime && startTime < now;
-    const late = endTime && endTime < now;
-    const yellow = started && !late;
-    const red = late;
-    const green = todo.complete;
-    const grey = todo.cancelled;
-    const white = !started && !endTime;
-    let colorClass = "text-gray-800";
-    if (green) colorClass = "text-green-500";
-    else if (grey) colorClass = "text-gray-400";
-    else if (red) colorClass = "text-red-500";
-    else if (yellow) colorClass = "text-yellow-500";
-    else if (white) colorClass = "text-gray-800";
-    else colorClass = "text-pink-500";
-    this.elements.item.classList.add(colorClass);
-    this.elements.item.querySelector(".todo-main").textContent = mainText;
-    this.elements.item.querySelector(".todo-details").textContent = detailsText;
+    this.todo = todo;
+    const { item, display, childrenContainer } = this.elements;
+    display.checkbox.checked = todo.complete;
+    const mainText = `[${String(todo.id).padStart(4, "0")}]: ${todo.todo_text}`;
+    const detailsText = this.getTimeText();
+    const colorMap = {
+      new: "text-gray-800",
+      complete: "text-green-500",
+      cancelled: "text-gray-400",
+      late: "text-red-500",
+      started: "text-yellow-500",
+      scheduled: "text-gray-800",
+    };
+    const colorClass = colorMap[this.getStatus()] || "text-pink-500";
+    item.classList.add(colorClass);
+    item.querySelector(".todo-main").textContent = mainText;
+    item.querySelector(".todo-details").textContent = detailsText;
+    console.log("rendered todo, moving to its children", todo.children);
     if (todo.children && todo.children.length > 0) {
-      this.elements.childrenContainer.innerHTML = ""; // Clear previous children
+      childrenContainer.innerHTML = ""; // Clear previous children
       todo.children.forEach((child) => {
         const childTemplate = new TodoTemplate();
         const childElement = childTemplate.render(child);
-        this.elements.childrenContainer.appendChild(childElement);
+        console.log("rendering child", childElement);
+        childrenContainer.appendChild(childElement);
       });
     }
-    return this.elements.item;
+    return item;
   }
 
   registerClickListener(callback) {
-    this.elements.item.addEventListener("click", callback);
+    this.elements.item.addEventListener("click", () => {
+      callback(this.todo.id);
+    });
   }
 }
 

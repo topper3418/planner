@@ -9,6 +9,11 @@ class DataModal {
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
     this.elements.closeButton.addEventListener("click", this.close);
+    this.elements.modal.addEventListener("click", (event) => {
+      if (event.target === this.elements.modal) {
+        this.close();
+      }
+    });
   }
 
   open() {

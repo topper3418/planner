@@ -16,12 +16,11 @@ class NoteTemplate {
       },
     };
     this.note = null;
-    console.log("NoteTemplate initialized", this.elements);
   }
 
   render(note) {
     this.note = note;
-    const { template, item, display } = this.elements;
+    const { item, display } = this.elements;
     display.id.textContent = `[${String(note.id).padStart(4, "0")}]`;
     display.timestamp.textContent = formatDateTime(note.timestamp);
     if (note.processed) {
