@@ -66,23 +66,29 @@ class Planner {
       console.error(`Invalid tab: ${tab}`);
       return;
     }
+    console.log(
+      "switching from ",
+      this.tabDir[this.currentTab],
+      "to",
+      this.tabDir[tab],
+    );
+    // set the previous tab to default styles
+    this.tabDir[this.currentTab].button.classList.remove(
+      "bg-blue-500",
+      "text-white",
+    );
+    this.tabDir[this.currentTab].button.classList.add(
+      "bg-white",
+      "text-blue-500",
+    );
+    // set the new tab to active styles
+    this.tabDir[tab].button.classList.remove("bg-white", "text-blue-500");
+    this.tabDir[tab].button.classList.add("bg-blue-500", "text-white");
     // hide current tab if not the same as the new tab
-    // and switch the button styles
     if (this.currentTab !== tab) {
-      console.log(`Switching from ${this.currentTab} to ${tab}`);
       this.tabDir[this.currentTab].container.hide();
-      this.tabDir[this.currentTab].button.classList.remove(
-        "bg-white",
-        "text-blue-500",
-      );
-      this.tabDir[this.currentTab].button.classList.add(
-        "bg-blue-500",
-        "text-white",
-      );
-      this.tabDir[tab].button.classList.remove("bg-blue-500", "text-white");
-      this.tabDir[tab].button.classList.add("bg-white", "text-blue-500");
-      this.currentTab = tab;
     }
+    this.currentTab = tab;
     this.tabDir[tab].container.show();
     this.refresh();
   }
