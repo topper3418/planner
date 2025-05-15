@@ -15,10 +15,12 @@ class NoteTemplate {
         textContent: template.content.querySelector(".note-text-content"),
       },
     };
+    this.note = null;
     console.log("NoteTemplate initialized", this.elements);
   }
 
   render(note) {
+    this.note = note;
     const { template, item, display } = this.elements;
     display.id.textContent = `[${String(note.id).padStart(4, "0")}]`;
     display.timestamp.textContent = formatDateTime(note.timestamp);
@@ -46,7 +48,9 @@ class NoteTemplate {
   }
 
   registerClickListener(callback) {
-    this.elements.item.addEventListener("click", callback);
+    this.elements.item.addEventListener("click", () => {
+      callback(this.note.id);
+    });
   }
 }
 

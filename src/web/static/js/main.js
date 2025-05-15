@@ -5,7 +5,7 @@ import {
   TodosContent,
   CuriositiesContent,
   ActionsContent,
-  DetailModal,
+  DataModal,
   TabButton,
 } from "./components/index.js";
 import { createNote } from "./client/notes.js";
@@ -16,7 +16,7 @@ class Planner {
       modals: {
         queryModal: new QueryModal(),
         filterModal: new FilterModal(),
-        detailModal: new DetailModal(),
+        detailModal: new DataModal(),
       },
       containers: {
         notes: new NotesContent(),
