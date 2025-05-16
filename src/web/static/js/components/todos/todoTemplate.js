@@ -1,10 +1,11 @@
-import { formatDateTime } from "../../utils.js";
+import { formatDateTime, getLocalTime } from "../../utils.js";
 
 class TodoTemplate {
   constructor() {
     const template = document.getElementById("todo-template").cloneNode(true);
     this.elements = {
       template,
+      wrapper: template.content.querySelector(".todo-wrapper"),
       item: template.content.querySelector(".todo-item"),
       display: {
         checkbox: template.content.querySelector(".todo-checkbox"),
@@ -14,22 +15,21 @@ class TodoTemplate {
       childrenContainer: template.content.querySelector(".todo-children"),
     };
     this.todo = null;
+    this.now = getLocalTime();
   }
 
   isLate() {
     const endTime = this.todo.target_end_time
       ? new Date(this.todo.target_end_time)
       : null;
-    const now = new Date();
-    return endTime && endTime < now;
+    return endTime && endTime < this.now;
   }
 
   isStarted() {
     const startTime = this.todo.target_start_time
       ? new Date(this.todo.target_start_time)
       : null;
-    const now = new Date();
-    return startTime && startTime < now;
+    return startTime && startTime < this.now;
   }
 
   isComplete() {
@@ -74,7 +74,7 @@ class TodoTemplate {
 
   render(todo) {
     this.todo = todo;
-    const { item, display, childrenContainer } = this.elements;
+    const { wrapper, item, display, childrenContainer } = this.elements;
     display.checkbox.checked = todo.complete;
     const mainText = `[${String(todo.id).padStart(4, "0")}]: ${todo.todo_text}`;
     const detailsText = this.getTimeText();
@@ -90,17 +90,15 @@ class TodoTemplate {
     item.classList.add(colorClass);
     item.querySelector(".todo-main").textContent = mainText;
     item.querySelector(".todo-details").textContent = detailsText;
-    console.log("rendered todo, moving to its children", todo.children);
     if (todo.children && todo.children.length > 0) {
       childrenContainer.innerHTML = ""; // Clear previous children
       todo.children.forEach((child) => {
         const childTemplate = new TodoTemplate();
         const childElement = childTemplate.render(child);
-        console.log("rendering child", childElement);
         childrenContainer.appendChild(childElement);
       });
-    }
-    return item;
+      return wrapper;
+    } else return item;
   }
 
   registerClickListener(callback) {

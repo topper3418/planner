@@ -50,3 +50,12 @@ export function formatDateTimeFromUTC(date, include_year = false) {
   }
   return `${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
+export function getLocalTime() {
+  const now = new Date();
+
+  // Create a local, timezone-unaware representation
+  const offset = now.getTimezoneOffset();
+  const localTime = new Date(now.getTime() - offset * 60 * 1000);
+  return localTime;
+}

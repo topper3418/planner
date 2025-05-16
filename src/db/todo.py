@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 
 from ..util import format_time, parse_time
+from ..errors import CreateDBObjectError, SaveDBObjectError
 from ..logging import get_logger
 from .note import Note
 from .connection import get_connection
@@ -248,9 +249,23 @@ class Todo(BaseModel):
         """
         Saves the Todo instance to the database.
         """
+        # ensure the the parent id is not equal to the actual todo
+        if self.parent_id == self.id:
+            logger.error(
+                "Parent ID cannot be the same as the actual todo ID."
+            )
+            raise SaveDBObjectError(
+                "Parent ID cannot be the same as the actual todo ID."
+            )
         query = """
             UPDATE todos
-            SET target_start_time = ?, target_end_time = ?, todo_text = ?, complete = ?, cancelled = ?, parent_id = ?
+            SET 
+                target_start_time = ?, 
+                target_end_time = ?, 
+                todo_text = ?, 
+                complete = ?, 
+                cancelled = ?, 
+                parent_id = ?
             WHERE id = ?;
         """
         args = (
@@ -318,6 +333,14 @@ class Todo(BaseModel):
         """
         Creates a new Todo instance and saves it to the database.
         """
+        # make sure the parent is not equal to the actual todo
+        if parent_id == source_note_id:
+            logger.error(
+                "Parent ID cannot be the same as the source note ID."
+            )
+            raise CreateDBObjectError(
+                "Parent ID cannot be the same as the source note ID."
+            )
         query = """
             INSERT INTO todos (target_start_time, target_end_time, todo_text, source_note_id, parent_id)
             VALUES (?, ?, ?, ?, ?);

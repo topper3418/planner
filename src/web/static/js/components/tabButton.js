@@ -7,6 +7,12 @@ class TabButton {
       this.handleClick();
     });
     this.clickCallback = null;
+    // when user is tabbing around, load the content
+    this.button.addEventListener("focus", () => {
+      if (!this.clicked) {
+        this.handleClick();
+      }
+    });
   }
 
   handleClick() {

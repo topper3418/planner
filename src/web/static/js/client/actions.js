@@ -3,14 +3,19 @@ export async function getActions(filterValues) {
     startTime,
     endTime,
     search,
-    actions: { appliedToTodo },
+    actions: { appliedToTodo, notAppliedToTodo },
   } = filterValues;
   const params = new URLSearchParams();
   if (startTime) params.append("startTime", startTime);
   if (endTime) params.append("endTime", endTime);
   if (search) params.append("search", search);
-  if (appliedToTodo !== undefined)
-    params.append("appliedToTodo", appliedToTodo);
+  // appliedToTodo
+  // don't append if both, true if just applied todo, false if just not applied
+  if (appliedToTodo && !notAppliedToTodo) {
+    params.append("appliedToTodo", "true");
+  } else if (!appliedToTodo && notAppliedToTodo) {
+    params.append("appliedToTodo", "false");
+  }
   params.append("limit", "50");
   const response = await fetch(`/api/actions?${params.toString()}`, {
     headers: { "Content-Type": "application/json" },
@@ -26,15 +31,15 @@ export async function getActions(filterValues) {
 }
 
 export async function getActionById(todoId) {
-  const response = await fetch(`/api/todos/${todoId}`, {
+  const response = await fetch(`/api/actions/${todoId}`, {
     headers: { "Content-Type": "application/json" },
   });
   const data = await response.json();
   if (data.error) {
-    console.error("Error fetching todo:", data.error);
+    console.error("Error fetching action:", data.error);
     throw new Error(data.error);
   } else {
-    console.log("Fetched todo:", data);
+    console.log("Fetched action:", data);
   }
   return data.data;
 }

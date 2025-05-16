@@ -7,19 +7,23 @@ class CuriosityTemplate {
       .cloneNode(true);
     this.elements = {
       template,
-      item: template.querySelector(".curiosity-item"),
+      item: template.content.querySelector(".curiosity-item"),
       display: {
-        timestamp: template.querySelector(".curiosity-timestamp"),
-        noteText: template.querySelector(".curiosity-note-text"),
-        textContent: template.querySelector(".curiosity-text"),
+        timestamp: template.content.querySelector(".curiosity-timestamp"),
+        noteText: template.content.querySelector(".curiosity-note-text"),
+        textContent: template.content.querySelector(".curiosity-text"),
       },
     };
+    this.curiosity = null;
   }
 
   render(curiosity) {
+    this.curiosity = curiosity;
     const { item, display } = this.elements;
-    display.timestamp.textContent = formatDateTime(curiosity.timestamp);
-    display.noteText.textContent = formatParagraph(curiosity.note_text || "");
+    display.timestamp.textContent = formatDateTime(curiosity.note.timestamp);
+    display.noteText.textContent = formatParagraph(
+      curiosity.note.note_text || "",
+    );
     display.textContent.textContent = formatParagraph(
       curiosity.curiosity_text || "",
     );
@@ -27,7 +31,9 @@ class CuriosityTemplate {
   }
 
   registerClickListener(callback) {
-    this.elements.item.addEventListener("click", callback);
+    this.elements.item.addEventListener("click", () => {
+      callback(this.curiosity.id);
+    });
   }
 }
 

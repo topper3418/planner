@@ -113,7 +113,7 @@ class Planner {
       this.components.modals.filterModal.getValues,
     );
     // filter modal
-    this.components.modals.filterModal.registerApplyCallback(this.refresh());
+    this.components.modals.filterModal.registerApplyCallback(this.refresh);
     // note input
     this.components.buttons.addNote.addEventListener("click", async () => {
       const noteText = this.components.noteInput.value.trim();
@@ -140,6 +140,20 @@ class Planner {
     this.components.buttons.todos.registerClickCallback(this.switchTab);
     this.components.buttons.actions.registerClickCallback(this.switchTab);
     this.components.buttons.curiosities.registerClickCallback(this.switchTab);
+    // refresh hotkey "ctrl+r"
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && event.key === "r") {
+        event.preventDefault();
+        this.refresh();
+      }
+    });
+    // back to note input hotkey "ctrl+enter"
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && event.key === "Enter") {
+        event.preventDefault();
+        this.components.noteInput.focus();
+      }
+    });
   }
 }
 

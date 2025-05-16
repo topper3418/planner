@@ -28,27 +28,26 @@ export async function getTodos(filterValues) {
   ///////////////////////////////////////////////////////////////////////////
   const todos = data.todos || [];
   const todoIds = todos.map((todo) => todo.id);
-  // assemble the todos into a tree, culminating in this placeholder
-  const topTodo = todos.reduce(
-    (acc, todo) => {
-      // if there is no parent or the parent is not in the list of todos
-      if (todo.parent_id === null || !todoIds.includes(todo.parent_id)) {
-        acc.children.push(todo);
+  const orphanTodos = [];
+  const childTodos = [];
+  for (const todo of todos) {
+    if (todo.parent_id === null || !todoIds.includes(todo.parent_id)) {
+      orphanTodos.push(todo);
+    } else {
+      childTodos.push(todo);
+    }
+  }
+  for (const todo of childTodos) {
+    const parent = todos.find((t) => t.id === todo.parent_id);
+    if (parent) {
+      if (!parent.children) {
+        parent.children = [];
       }
-      // find the parent
-      const parent = todos.find((t) => t.id === todo.parent_id);
-      if (parent) {
-        // add the todo to the parent's children
-        if (!parent.children) {
-          parent.children = [];
-        }
-        parent.children.push(todo);
-      }
-      return acc;
-    },
-    { children: [] },
-  );
-  return topTodo.children;
+      parent.children.push(todo);
+    }
+  }
+  console.log("returning todos", orphanTodos);
+  return orphanTodos;
 }
 
 export async function getTodoById(todoId) {

@@ -28,24 +28,15 @@ class QueryModal {
     this.elements.containers.modal.classList.add("hidden");
   }
 
-  registerClickListeners() {
-    this.elements.buttons.openButton.addEventListener("click", () => {
-      this.open();
-    });
-    this.elements.buttons.closeButton.addEventListener("click", () => {
-      this.close();
-    });
-  }
-
-  initClickListeners() {
-    this.elements.buttons.submitButton.addEventListener("click", async () => {
-      const query = this.elements.input.query.value.trim();
-      if (!query) {
-        this.elements.response.innerHTML =
-          '<p class="text-red-500">Please enter a query</p>';
-        return;
-      }
-      this.elements.response.innerHTML = "<p>Processing query...</p>";
+  async submitQuery() {
+    const query = this.elements.input.query.value.trim();
+    if (!query) {
+      this.elements.response.innerHTML =
+        '<p class="text-red-500">Please enter a query</p>';
+      return;
+    }
+    this.elements.response.innerHTML = "<p>Processing query...</p>";
+    try {
       const response = await submitQuery(query);
       if (response.error) {
         this.elements.response.innerHTML = `<p class="text-red-500">Error: ${response.error}</p>`;
@@ -54,6 +45,26 @@ class QueryModal {
           .map((paragraph) => `<p>${paragraph}</p>`)
           .join("");
         this.elements.response.innerHTML = `<h3>Response:</h3>${paragraphs}`;
+      }
+    } catch (error) {
+      this.elements.response.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+    }
+  }
+
+  registerClickListeners() {
+    this.elements.buttons.openButton.addEventListener("click", () => {
+      this.open();
+    });
+    this.elements.buttons.closeButton.addEventListener("click", () => {
+      this.close();
+    });
+    this.elements.buttons.submitButton.addEventListener("click", () => {
+      this.submitQuery();
+    });
+    this.elements.input.query.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        this.elements.buttons.submitButton.click();
       }
     });
   }

@@ -5,6 +5,7 @@ from typing import List
 from openai.types.responses import ToolParam
 
 from src.config import CHAT_MODEL
+from src.errors import SaveDBObjectError
 
 # we will import a newly created get_client equivalent, it will just give us the OpenAI client
 from ..llm import get_light_client
@@ -57,6 +58,7 @@ here are the todos:
 class NoteProcessor:
     def __init__(self, note: Note):
         self.note = note
+        logger.info(f"Processing note: {self.note.note_text}")
         self.client = get_light_client()
         # load context
         self.context_notes = Note.get_all(
@@ -86,7 +88,7 @@ class NoteProcessor:
             self.update_todo_tool,
             self.update_action_tool,
         ]
-        logger.info(
+        logger.debug(
             f"Generated system prompt with {len(self.context_notes)} notes, {len(self.context_actions)} actions, and {len(self.context_todos)} todos."
         )
         # 1. pass the raw note to a chatbot along with the last two hours (or 25, whichever is more), open todos, and actions from the past two hours
@@ -158,6 +160,9 @@ class NoteProcessor:
                 tool_call = ToolCall.create(**tool_call_payload)
             elif tool_name == "create_todo":
                 todo = create_todo(self.note, **args)
+                if todo is None:
+                    logger.warning("Failed to create todo.")
+                    continue
                 logger.info(f"created todo with id {todo.id}")
                 tool_call_payload["target_table"] = "todos"
                 tool_call_payload["target_id"] = todo.id
@@ -176,7 +181,13 @@ class NoteProcessor:
                 tool_call_payload["target"] = note.model_dump_json()
                 tool_call = ToolCall.create(**tool_call_payload)
             elif tool_name == "update_todo":
-                todo = update_todo(**args)
+                try:
+                    todo = update_todo(**args)
+                except SaveDBObjectError as e:
+                    logger.error("Error updating todo: %s", e)
+                    self.note.processing_error = str(e)
+                    self.note.save()
+                    continue
                 logger.info(f"updated todo with id {todo.id}")
                 tool_call_payload["target_table"] = "todos"
                 tool_call_payload["target_id"] = todo.id
@@ -192,9 +203,12 @@ class NoteProcessor:
             else:
                 logger.warning(f"Unknown tool name: {tool_name}")
                 continue
-            self.note.processed = True
-            self.note.save()
             tool_calls.append(tool_call)
+        self.note.processed = True
+        self.note.save()
+        logger.info(
+            f"Processed note {self.note.id} with {len(tool_calls)} tool calls."
+        )
         return tool_calls
 
 
