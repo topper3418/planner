@@ -7,6 +7,7 @@ import {
   ActionsContent,
   DataModal,
   TabButton,
+  NotebookSelectorModal,
 } from "./components/index.js";
 import { createNote } from "./client/notes.js";
 
@@ -17,6 +18,7 @@ class Planner {
         queryModal: new QueryModal(),
         filterModal: new FilterModal(),
         detailModal: new DataModal(),
+        notebookSelectorModal: new NotebookSelectorModal(),
       },
       containers: {
         notes: new NotesContent(),

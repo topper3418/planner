@@ -1,7 +1,7 @@
 import argparse
 import time
 
-from src import db, rendering, engine, get_summary, utils
+from src import db, rendering, engine, get_summary, utils, init_settings_db
 
 
 def add_date_filters(parser):
@@ -266,5 +266,6 @@ def main():
 
 
 if __name__ == "__main__":
+    init_settings_db()
     db.init_db()
     main()

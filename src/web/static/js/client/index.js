@@ -1,7 +1,8 @@
-import { getNotes, getNoteById, createNote } from "./notes";
+import { getNotes, getNoteById, createNote } from "./notes.js";
 import { getTodos, getTodoById } from "./todos";
 import { getActions, getActionById } from "./actions";
 import { submitQuery } from "./query";
+import { getCurrentNotebook, setNotebook, getAllNotebooks } from "./notebooks";
 
 export default {
   getNotes,
@@ -12,4 +13,7 @@ export default {
   getActions,
   getActionById,
   submitQuery,
+  getCurrentNotebook,
+  setNotebook,
+  getAllNotebooks,
 };

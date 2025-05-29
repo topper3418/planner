@@ -6,6 +6,7 @@ import TodosContent from "./todos/index.js";
 import ActionsContent from "./actions/index.js";
 import CuriositiesContent from "./curiosities/index.js";
 import TabButton from "./tabButton.js";
+import NotebookSelectorModal from "./notebookSelectorModal.js";
 
 export {
   FilterModal,
@@ -16,4 +17,5 @@ export {
   TodosContent,
   CuriositiesContent,
   TabButton,
+  NotebookSelectorModal,
 };
