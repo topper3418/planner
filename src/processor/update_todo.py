@@ -1,17 +1,20 @@
 from typing import Optional
 
 from openai.types.responses import FunctionToolParam
+
+from src.errors import ProcessUpdateError, SaveDBObjectError
 from ..db import Action, Todo
 from ..util import parse_time
 
+
 def update_todo(
-        todo_id: int,
-        todo_text: Optional[str] = None,
-        target_start_time: Optional[str] = None,
-        target_end_time: Optional[str] = None,
-        parent_id: Optional[int] = None,
-        complete: Optional[bool] = None,
-        cancelled: Optional[bool] = None,
+    todo_id: int,
+    todo_text: Optional[str] = None,
+    target_start_time: Optional[str] = None,
+    target_end_time: Optional[str] = None,
+    parent_id: Optional[int] = None,
+    complete: Optional[bool] = None,
+    cancelled: Optional[bool] = None,
 ) -> Todo:
     """
     Update a todo with the processed todo text.
@@ -33,7 +36,10 @@ def update_todo(
         todo.complete = complete
     if cancelled is not None:
         todo.cancelled = cancelled
-    todo.save()
+    try:
+        todo.save()
+    except SaveDBObjectError as e:
+        raise ProcessUpdateError(f"Error saving todo: {e}")
     return todo
 
 
@@ -74,9 +80,16 @@ def get_update_todo_tool() -> FunctionToolParam:
                     "description": "Whether the todo is cancelled. The todo either wants to mark it cancelled if its marked incomplete, or mark it incomplete if its marked complete.",
                 },
             },
-            'required': ["todo_id", "todo_text", "target_start_time", "target_end_time", "parent_id", "complete", "cancelled"],
+            "required": [
+                "todo_id",
+                "todo_text",
+                "target_start_time",
+                "target_end_time",
+                "parent_id",
+                "complete",
+                "cancelled",
+            ],
             "additionalProperties": False,
         },
-        strict=True
+        strict=True,
     )
-

@@ -1,8 +1,8 @@
 from flask import request, jsonify, Blueprint
 
-from ..logging import get_logger
-from ..db import Todo
-from ..rendering import json_todo
+from ...logging import get_logger
+from ...db import Todo
+from ...rendering import json_todo
 
 
 todos_bp = Blueprint("todos", __name__)

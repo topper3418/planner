@@ -1,9 +1,16 @@
 <template id="todo-template">
-    <div class="todo-item bg-gray-100 p-1 rounded-md shadow-sm flex items-center space-x-1 mb-1 hover:bg-gray-200">
-        <input type="checkbox" class="todo-checkbox h-4 w-4 text-green-500 rounded focus:ring-0" disabled>
-        <div class="flex-1">
-            <div class="todo-main text-sm font-medium leading-tight"></div>
-            <div class="todo-details text-xs text-gray-500 leading-tight"></div>
+    <div class="todo-wrapper flex flex-col items-start bg-gray-100 p-1 rounded-md shadow-sm">
+        <div class="todo-item bg-gray-100 p-1 rounded-md shadow-sm flex items-center space-x-1 mb-1 hover:bg-gray-200">
+            <input type="checkbox" class="todo-checkbox h-4 w-4 text-green-500 rounded focus:ring-0" disabled>
+            <div class="flex-1">
+                <div class="todo-main text-sm font-medium leading-tight"></div>
+                <div class="todo-details text-xs text-gray-500 leading-tight"></div>
+            </div>
+        </div>
+        <div class="flex flex-row items-start">
+            <div style="width: 20px;"></div>
+            <div class="todo-children flex flex-col items-start">
+            </div>
         </div>
     </div>
 </template>

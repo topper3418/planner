@@ -1,9 +1,8 @@
-import logging
 from flask import request, jsonify, Blueprint
 
-from ..logging import get_logger
-from ..db import Curiosity
-from ..rendering import json_curiosity
+from ...logging import get_logger
+from ...db import Curiosity
+from ...rendering import json_curiosity
 
 
 curiosities_bp = Blueprint("curiosities", __name__)
@@ -26,6 +25,7 @@ def handle_curiosities():
         for curiosity_json, curiosity in zip(curiosity_jsons, curiosities):
             curiosity_json["note"] = curiosity.source_note.model_dump()
         logger.info(f"Fetched {len(curiosity_jsons)} curiosities")
+        curiosity_jsons.reverse()  # Match CLI behavior
         return jsonify({"curiosities": curiosity_jsons})
     except Exception as e:
         logger.error(f"Error fetching curiosities: {e}")

@@ -3,48 +3,55 @@ from typing import List, Optional
 from openai.types.responses import FunctionToolParam
 
 from ..config import TIMESTAMP_FORMAT
+from ..errors import CreateDBObjectError, SaveDBObjectError
 from ..db import Note, Todo
 from ..logging import get_logger
 
 from .find_todo import find_todo
 
-logger = get_logger(__name__, 'processor.log')
+logger = get_logger(__name__, "processor.log")
 
 
 def create_todo(
-        note: Note,
-        todo_text: str,
-        target_start_time: Optional[str] = None,
-        target_end_time: Optional[str] = None,
-        parent_id: Optional[int] = None,
-) -> Todo:
+    note: Note,
+    todo_text: str,
+    target_start_time: Optional[str] = None,
+    target_end_time: Optional[str] = None,
+    parent_id: Optional[int] = None,
+) -> Optional[Todo]:
     # if a todo id of 0 is given, return all todos from the past three months and try again.
-    todo = Todo.create(
-        todo_text=todo_text,
-        target_start_time=target_start_time,
-        target_end_time=target_end_time,
-        source_note_id=note.id,
-    )
+    try:
+        todo = Todo.create(
+            todo_text=todo_text,
+            target_start_time=target_start_time,
+            target_end_time=target_end_time,
+            source_note_id=note.id,
+        )
+    except CreateDBObjectError as e:
+        logger.error("Error creating todo: %s", e)
+        note.processing_error = str(e)
+        note.save()
+        return None
     if parent_id == 0:
-        todo_response = find_todo(todo, exclude_todo_id=todo.id, include_mark_complete=False)
+        todo_response = find_todo(
+            todo, exclude_todo_id=todo.id, include_mark_complete=False
+        )
         if todo_response is None:
             logger.warning("No parent todo found for todo %s", todo_text)
             return todo
-        todo, _ = todo_response
-        parent_id = todo.id
+        found_todo, _ = todo_response
+        parent_id = found_todo.id
     elif not parent_id:
         return todo
     # ensure the parent todo is not the same as the child todo
-    if parent_id == todo.id:
-        logger.warning("Parent todo ID %s is the same as child todo ID %s", parent_id, todo.id)
-        return todo
-    # ensure the parent exists
-    parent_todo = Todo.get_by_id(parent_id)
-    if parent_todo is None:
-        logger.warning("Parent todo with ID %s not found in the database.", parent_id)
-        return todo
-    todo.parent_id = todo.id
-    todo.save()
+    logger.info(f"doing parent check on todo: {todo} {parent_id}")
+    todo.parent_id = parent_id
+    try:
+        todo.save()
+    except SaveDBObjectError as e:
+        logger.error("Error updating todo parent: %s", e)
+        note.processing_error = str(e)
+        note.save()
     return todo
 
 
@@ -92,10 +99,13 @@ def get_create_todo_tool(todos: List[Todo]) -> FunctionToolParam:
                     "enum": [0] + [todo.id for todo in todos],
                 },
             },
-            "required": ['todo_text', 'target_start_time', 'target_end_time', 'parent_id'],
+            "required": [
+                "todo_text",
+                "target_start_time",
+                "target_end_time",
+                "parent_id",
+            ],
             "additionalProperties": False,
         },
         strict=True,
     )
-
-

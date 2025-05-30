@@ -67,7 +67,27 @@ cd planner
 python3 -m venv venv
 ```
 
-4) Load the .bashrc file. This will load the virtual environment and load helpful aliases
+4) Acquire an XAI API token. This can be done at their console at
+   https://console.x.ai/team/2134b8bb-7660-4c9b-949a-8a1e2c5cd6ad. Else, you can ask your
+   son to text one to you.
+
+5) If you are running windows, you'll have to google it or use Windows Subsystem for Linux.
+   On mac/linux, add the following line to the end of the .bashrc file, replacing <api key> with the
+   API key you acquired in the previous step:
+
+   ```bash
+   export XAI_API_KEY=<api key>
+   ```
+   
+   If you are uncomfortable editing it in the command line, run the command (mac)
+
+   ```bash
+   open .bashrc
+   ```
+
+   then you can make the edits and save
+
+7) Load the .bashrc file. This will load the virtual environment and load helpful aliases
    for running the project. You'll use this command each time you start a new session with
    the planner. Paste the following command into the terminal and press enter:
 
@@ -75,7 +95,7 @@ python3 -m venv venv
 source .bashrc
 ```
 
-5) Use the pip package manager to install the requirements. This will install all the
+7) Use the pip package manager to install the requirements. This will install all the
    packages needed for the project. Paste the following command into the terminal and
    press enter:
 
