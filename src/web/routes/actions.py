@@ -1,9 +1,8 @@
-import logging
 from flask import request, jsonify, Blueprint
 
-from ..logging import get_logger
-from ..db import Action
-from ..rendering import json_action
+from ...logging import get_logger
+from ...db import Action
+from ...rendering import json_action
 
 
 actions_bp = Blueprint("actions", __name__)

@@ -5,7 +5,6 @@ class NotebookSelectorModal {
     this.elements = {
       modal: document.getElementById("notebook-selector-modal"),
       list: document.getElementById("notebook-selector-list"),
-      addNewButton: document.getElementById("notebook-selector-add-new-button"),
       openButton: document.getElementById("notebook-selector-open-button"),
     };
     this.elements.openButton.addEventListener("click", () => this.open());
@@ -50,17 +49,6 @@ class NotebookSelectorModal {
 
   close() {
     this.elements.modal.classList.add("hidden");
-  }
-
-  registerAddNewButtonCallback(callback) {
-    this.addNewButtonCallback = callback;
-    this.elements.addNewButton.addEventListener("click", () => {
-      if (this.addNewButtonCallback) {
-        this.addNewButtonCallback();
-      } else {
-        console.error("addNewButtonCallback is not set");
-      }
-    });
   }
 }
 

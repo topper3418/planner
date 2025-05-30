@@ -5,7 +5,7 @@
  * @returns {Promise<string>} The current notebook name.
  */
 export async function getCurrentNotebook() {
-  const response = await fetch("/api/notebook", {
+  const response = await fetch("/api/notebooks/active", {
     headers: { "Content-Type": "application/json" },
   });
   const data = await response.json();
@@ -45,7 +45,7 @@ export async function setNotebook(notebook) {
   if (!notebook) {
     throw new Error("Notebook name is required");
   }
-  const response = await fetch("/api/notebook", {
+  const response = await fetch("/api/notebooks/active", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ notebook }),
@@ -58,4 +58,27 @@ export async function setNotebook(notebook) {
     console.log("Set notebook:", data);
   }
   return data.notebook;
+}
+
+/**
+ * Creates a notebook.
+ * @param {string} notebook - The name of the notebook to create.
+ * @returns {Promise<void>}
+ */
+export async function createNotebook(notebook) {
+  if (!notebook) {
+    throw new Error("Notebook name is required");
+  }
+  const response = await fetch("/api/notebooks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notebook }),
+  });
+  const data = await response.json();
+  if (data.error) {
+    console.error("Error creating notebook:", data.error);
+    throw new Error(data.error);
+  } else {
+    console.log("Created notebook:", data);
+  }
 }

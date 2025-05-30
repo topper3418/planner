@@ -7,6 +7,8 @@ import ActionsContent from "./actions/index.js";
 import CuriositiesContent from "./curiosities/index.js";
 import TabButton from "./tabButton.js";
 import NotebookSelectorModal from "./notebookSelectorModal.js";
+import AddNewNotebookModal from "./addNewNotebookModal.js";
+import Header from "./header.js";
 
 export {
   FilterModal,
@@ -18,4 +20,6 @@ export {
   CuriositiesContent,
   TabButton,
   NotebookSelectorModal,
+  AddNewNotebookModal,
+  Header,
 };

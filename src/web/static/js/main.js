@@ -8,6 +8,8 @@ import {
   DataModal,
   TabButton,
   NotebookSelectorModal,
+  AddNewNotebookModal,
+  Header,
 } from "./components/index.js";
 import { createNote } from "./client/notes.js";
 
@@ -19,6 +21,7 @@ class Planner {
         filterModal: new FilterModal(),
         detailModal: new DataModal(),
         notebookSelectorModal: new NotebookSelectorModal(),
+        addNewNotebookModal: new AddNewNotebookModal(),
       },
       containers: {
         notes: new NotesContent(),
@@ -26,6 +29,7 @@ class Planner {
         actions: new ActionsContent(),
         curiosities: new CuriositiesContent(),
       },
+      header: new Header(),
       noteInput: document.getElementById("note-input"),
       buttons: {
         notes: new TabButton("notes"),
@@ -62,6 +66,7 @@ class Planner {
 
   refresh() {
     this.tabDir[this.currentTab].container.fetchAndRender();
+    this.components.header.setTitle();
   }
 
   switchTab(tab) {
