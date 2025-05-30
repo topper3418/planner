@@ -251,7 +251,7 @@ class Action(BaseModel):
     def create(
         cls,
         action_text: str,
-        start_time: str | datetime,
+        timestamp: str | datetime,
         source_note_id: int,
         todo_id: Optional[int] = None,
         mark_complete: bool = False,
@@ -269,11 +269,9 @@ class Action(BaseModel):
                 query,
                 (
                     (
-                        start_time
-                        if isinstance(start_time, str)
-                        else datetime.strftime(
-                            start_time, TIMESTAMP_FORMAT
-                        )
+                        timestamp
+                        if isinstance(timestamp, str)
+                        else datetime.strftime(timestamp, TIMESTAMP_FORMAT)
                     ),
                     action_text,
                     source_note_id,

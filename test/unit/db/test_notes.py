@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 def test_create_note(setup_database):
-    timestamp = datetime.strptime("2025-04-05 10:00:00", config.TIMESTAMP_FORMAT)
+    timestamp = datetime.strptime(
+        "2025-04-05 10:00:00", config.TIMESTAMP_FORMAT
+    )
     initial_note = db.Note.create(
         "I just woke up",
         timestamp=timestamp,
@@ -26,7 +28,7 @@ def test_create_note(setup_database):
 @pytest.fixture
 def sample_notes(setup_database):
     return bulk_upload_notes_list(sample_note_list)
-    
+
 
 def test_save_note(sample_notes):
     # Test saving a new note
@@ -36,7 +38,7 @@ def test_save_note(sample_notes):
     assert wake_up_note.note_text == "Woke up and rolled out of bed."
     wake_up_note.note_text = "I just woke up"
     wake_up_note.save()
-    wake_up_note.reload()
+    wake_up_note.refresh()
     assert wake_up_note.note_text == "I just woke up"
     # make sure the reload worked with a new fetch
     wake_up_note_doublecheck = db.Note.get_by_id(wake_up_note.id)
@@ -45,8 +47,13 @@ def test_save_note(sample_notes):
     # make sure processing errors can be saved
     wake_up_note.processing_error = "Test error"
     wake_up_note.save()
-    wake_up_note.reload()
+    wake_up_note.refresh()
     assert wake_up_note.processing_error == "Test error"
+    # make sure processed can be saved
+    wake_up_note.processed = True
+    wake_up_note.save()
+    wake_up_note.refresh()
+    assert wake_up_note.processed
     # last check
     note_fetched = db.Note.get_by_id(wake_up_note.id)
     assert note_fetched is not None
@@ -86,12 +93,10 @@ def test_unprocessed_note_search(sample_notes):
     assert first_unprocessed_note is not None
     assert first_unprocessed_note.processed_note_text == ""
     assert first_unprocessed_note.note_text is not None
-    first_unprocessed_note.processed_note_text = "processed"
+    first_unprocessed_note.processed = True
     first_unprocessed_note.save()
     second_unprocessed_note = db.Note.get_next_unprocessed_note()
     assert second_unprocessed_note is not None
     assert second_unprocessed_note.processed_note_text == ""
     assert second_unprocessed_note.note_text is not None
     assert second_unprocessed_note.id != first_unprocessed_note.id
-
-
