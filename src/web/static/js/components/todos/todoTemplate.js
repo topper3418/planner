@@ -5,17 +5,21 @@ class TodoTemplate {
     const template = document.getElementById("todo-template").cloneNode(true);
     this.elements = {
       template,
-      wrapper: template.content.querySelector(".todo-wrapper"),
-      item: template.content.querySelector(".todo-item"),
+      wrapper: template.content.querySelector(".todo-template-wrapper"),
+      item: template.content.querySelector(".todo-template-item"),
       display: {
-        checkbox: template.content.querySelector(".todo-checkbox"),
-        main: template.content.querySelector(".todo-main"),
-        details: template.content.querySelector(".todo-details"),
+        checkbox: template.content.querySelector(".todo-template-checkbox"),
+        main: template.content.querySelector(".todo-template-main"),
+        details: template.content.querySelector(".todo-template-details"),
+        collapse: template.content.querySelector(".todo-template-collapse"),
       },
-      childrenContainer: template.content.querySelector(".todo-children"),
+      childrenContainer: template.content.querySelector(
+        ".todo-template-children",
+      ),
     };
     this.todo = null;
     this.now = getLocalTime();
+    this.collapsed = false;
   }
 
   isLate() {
@@ -74,8 +78,7 @@ class TodoTemplate {
 
   render(todo) {
     this.todo = todo;
-    const { wrapper, item, display, childrenContainer } = this.elements;
-    display.checkbox.checked = todo.complete;
+    this.elements.display.checkbox.checked = todo.complete;
     const mainText = `[${String(todo.id).padStart(4, "0")}]: ${todo.todo_text}`;
     const detailsText = this.getTimeText();
     const colorMap = {
@@ -87,24 +90,52 @@ class TodoTemplate {
       scheduled: "text-gray-800",
     };
     const colorClass = colorMap[this.getStatus()] || "text-pink-500";
-    item.classList.add(colorClass);
-    item.querySelector(".todo-main").textContent = mainText;
-    item.querySelector(".todo-details").textContent = detailsText;
+    this.elements.item.classList.add(colorClass);
+    this.elements.display.main.textContent = mainText;
+    this.elements.display.details.textContent = detailsText;
     if (todo.children && todo.children.length > 0) {
-      childrenContainer.innerHTML = ""; // Clear previous children
+      this.elements.childrenContainer.innerHTML = ""; // Clear previous children
+      this.elements.display.collapse.addEventListener("click", () => {
+        this.toggleCollapse();
+      });
       todo.children.forEach((child) => {
         const childTemplate = new TodoTemplate();
         const childElement = childTemplate.render(child);
-        childrenContainer.appendChild(childElement);
+        this.elements.childrenContainer.appendChild(childElement);
       });
-      return wrapper;
-    } else return item;
+      return this.elements.wrapper;
+    } else {
+      // no children, no need for a collapse.
+      // instead of hiding it and affecting the layout, I'll make it invisible.
+      this.elements.display.collapse.classList.add("text-transparent");
+      return this.elements.item;
+    }
   }
 
+  toggleCollapse() {
+    if (this.collapsed) {
+      this.expandChildren();
+    } else {
+      this.collapseChildren();
+    }
+    this.collapsed = !this.collapsed;
+  }
+
+  collapseChildren() {
+    this.elements.childrenContainer.classList.toggle("hidden");
+    this.elements.display.collapse.classList.toggle("-rotate-90");
+  }
+
+  expandChildren() {
+    this.elements.childrenContainer.classList.remove("hidden");
+    this.elements.display.collapse.classList.remove("-rotate-90");
+  }
+
+  // TODO: deprecate this, I don't think I like the drilldown thing on anything but notes.
   registerClickListener(callback) {
-    this.elements.item.addEventListener("click", () => {
-      callback(this.todo.id);
-    });
+    //this.elements.item.addEventListener("click", () => {
+    //  callback(this.todo.id);
+    //});
   }
 }
 
