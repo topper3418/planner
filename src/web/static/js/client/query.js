@@ -2,7 +2,7 @@ export async function submitQuery(query) {
   console.log("submitQueryApi called with query:", query);
   try {
     const response = await fetch(
-      `/api/summary?prompt=${encodeURIComponent(query)}`,
+      `/api/summaries/query?prompt=${encodeURIComponent(query)}`,
       {
         method: "GET",
         headers: { "Content-Type": "application/json" },

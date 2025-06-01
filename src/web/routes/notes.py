@@ -1,10 +1,9 @@
 from flask import request, jsonify, Blueprint
 
-
-from ..logging import get_logger
-from ..db import Note
-from ..util import parse_time
-from ..rendering import json_note, json_note_light
+from ...logging import get_logger
+from ...db import Note
+from ...util import parse_time
+from ...rendering import json_note, json_note_light
 
 
 notes_bp = Blueprint("notes", __name__)

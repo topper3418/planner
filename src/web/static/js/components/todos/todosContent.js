@@ -6,6 +6,7 @@ class TodosContent {
     this.elements = {
       container: document.getElementById("todos-content"),
     };
+    this.collapsedTodos = [];
     this.getFiltersCallback = null;
     this.renderDetailModalCallback = null;
     this.hide = this.hide.bind(this);
